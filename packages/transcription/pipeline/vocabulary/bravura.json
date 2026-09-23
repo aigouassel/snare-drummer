@@ -4,40 +4,112 @@
  "method": "contact sheet, packages/transcription/work/bravura-sheet.png",
  "symbols": [
   {
+   "bits": "000000003f806070c018800c8006800280018001c001600130011801060303fc",
+   "aspect": 1.18,
+   "seen": 750,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "0000000000000000000300010007003801e08f008c0083800070000e00030001",
+   "aspect": 1.39,
+   "seen": 256,
+   "symbol": "articulation.accent"
+  },
+  {
+   "bits": "00010003000200020005000f000e001c00180018003000300030003000180018",
+   "aspect": 0.32,
+   "seen": 104,
+   "symbol": "flag.eighth"
+  },
+  {
    "bits": "0000000000000000800100008801000000000000000000000000801100008001",
    "aspect": 1.34,
-   "seen": 72,
+   "seen": 91,
    "symbol": "roll.buzz"
   },
   {
    "bits": "fc3f8621822182618341f9cf0e38026006600c30f9cf8241826182218621fc3f",
    "aspect": 0.98,
-   "seen": 32,
+   "seen": 68,
    "symbol": "notehead.cross"
+  },
+  {
+   "bits": "0000000000000000000000000000c0038001800100000000000000008001c003",
+   "aspect": 1.96,
+   "seen": 39,
+   "symbol": "rest.rectangle"
+  },
+  {
+   "bits": "039f02d103710101017f01ec00a000a000b000500050005800680028002c003c",
+   "aspect": 0.58,
+   "seen": 28,
+   "symbol": "rest.eighth"
+  },
+  {
+   "bits": "0060000000000000000000000000000000000000003c0026004100610031001f",
+   "aspect": 0.4,
+   "seen": 24,
+   "symbol": "text.noteValue"
+  },
+  {
+   "bits": "18b10000000000000000000000000000000000000000000000000000000018b1",
+   "aspect": 0.76,
+   "seen": 24,
+   "symbol": "clef.percussion"
+  },
+  {
+   "bits": "0000000000000000000000000000000000000000000000000000c0038001c003",
+   "aspect": 7.09,
+   "seen": 24,
+   "symbol": "ledger"
   },
   {
    "bits": "00000000000000000000000000000000fffff77bf3f9bbe8f9a978ff00000d80",
    "aspect": 2.03,
-   "seen": 17,
+   "seen": 21,
    "symbol": "dynamic.m"
   },
   {
    "bits": "0ff03bcc2e76581ab00da1c5a265e423e423a265a1c5b00d581a2e763bcc0ff0",
    "aspect": 0.99,
-   "seen": 17,
-   "symbol": "articulation.stopped"
+   "seen": 20,
+   "symbol": "notehead.circleDot"
+  },
+  {
+   "bits": "00070007000e001a00320012001b0009000a000e001f0031003d00050007000e",
+   "aspect": 0.36,
+   "seen": 18,
+   "symbol": "rest.quarter"
   },
   {
    "bits": "3f002f802ac03a400e780f38012001000180008000800050005f002d003f001f",
    "aspect": 0.85,
-   "seen": 9,
+   "seen": 16,
    "symbol": "dynamic.f"
   },
   {
-   "bits": "0060000000000000000000000000000000000000003c0026004100610031001f",
-   "aspect": 0.4,
-   "seen": 9,
-   "symbol": "text.noteValue"
+   "bits": "0ff03bdc6e76581af00fa3c5e265c423c423e667a3c5b00d581a6e763bcc0ff0",
+   "aspect": 1.0,
+   "seen": 15,
+   "symbol": "notehead.circleDot"
+  },
+  {
+   "bits": "0000000000800000000000000000000000000000000000000000000000008001",
+   "aspect": 1.17,
+   "seen": 13,
+   "symbol": "notehead.triangle"
+  },
+  {
+   "bits": "01c000000000000000000000000000300070005000480088008c018441074303",
+   "aspect": 0.93,
+   "seen": 12,
+   "symbol": "articulation.marcato"
+  },
+  {
+   "bits": "000000000000f7c0fde0f7a014b076981ad0084008400c60052807ff03ff01ef",
+   "aspect": 1.25,
+   "seen": 8,
+   "symbol": "dynamic.f"
   },
   {
    "bits": "000000000000000000000000fff0fff0efb86aac3320111011101ddc0fff07ff",
@@ -46,16 +118,88 @@
    "symbol": "dynamic.f"
   },
   {
-   "bits": "000000000000f7c0fde0f7a014b076981ad0084008400c60052807ff03ff01ef",
-   "aspect": 1.25,
-   "seen": 4,
-   "symbol": "dynamic.f"
+   "bits": "07f00210011007980088004800640076001a000f244524410000044018701830",
+   "aspect": 0.86,
+   "seen": 8,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "0000000080010000000000000000000000000000000000000000000000000080",
+   "aspect": 1.17,
+   "seen": 7,
+   "symbol": "notehead.triangleDown"
+  },
+  {
+   "bits": "000000001008300c6006e007c003c003c003c003c003c003c003e007700e300c",
+   "aspect": 1.22,
+   "seen": 6,
+   "symbol": "text.parenthesis"
   },
   {
    "bits": "0000000000000000f000f800e8001dfe77ff11fb19d909e809fb0fc0074003c0",
    "aspect": 1.41,
-   "seen": 3,
+   "seen": 5,
    "symbol": "dynamic.m"
+  },
+  {
+   "bits": "00007de0de7096789658901c99008900cd0067003b800f0000000000002600a3",
+   "aspect": 1.09,
+   "seen": 4,
+   "symbol": "dynamic.p"
+  },
+  {
+   "bits": "fc3f8621822182618341f9cf0e38026006600c30f9cf8341826182218621fc3f",
+   "aspect": 0.98,
+   "seen": 3,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "0060000000000000000000000000000000000000003c0027004100610031001f",
+   "aspect": 0.4,
+   "seen": 3,
+   "symbol": "text.noteValue"
+  },
+  {
+   "bits": "0180000000000000000000000000818181810000000000000000000000000180",
+   "aspect": 1.0,
+   "seen": 3,
+   "symbol": "articulation.plus"
+  },
+  {
+   "bits": "00de00f200f6007c00600072003f0019000f000600000000000000000000000e",
+   "aspect": 0.47,
+   "seen": 3,
+   "symbol": "rest.sixteenth"
+  },
+  {
+   "bits": "000000000000000000000000000000000000000031883188000035e88001c463",
+   "aspect": 3.15,
+   "seen": 3,
+   "symbol": "tremolo.wavy"
+  },
+  {
+   "bits": "00000000000000000001070118e0302020183008100c18040c0c060801f08000",
+   "aspect": 1.37,
+   "seen": 2,
+   "symbol": "notehead.slashed"
+  },
+  {
+   "bits": "0ff0380c60064002c003800180018001800180018001800140026006380c0ff0",
+   "aspect": 1.0,
+   "seen": 2,
+   "symbol": "dot"
+  },
+  {
+   "bits": "00000000c003800100000000000000000080024000800000000000008001c003",
+   "aspect": 1.16,
+   "seen": 2,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "0000800180010840000000000000001000000000000000400000000000000180",
+   "aspect": 1.14,
+   "seen": 1,
+   "symbol": "notehead.triangleOpen"
   },
   {
    "bits": "0000000000000000000000000000edd8fffcd7eea956a950f9f0387000000d9b",
@@ -69,22 +213,10 @@
    "seen": 1
   },
   {
-   "bits": "0180000000000000000000000000818181810000000000000000000000000180",
-   "aspect": 1.0,
-   "seen": 1,
-   "symbol": "articulation.plus"
-  },
-  {
    "bits": "0000000000008001000000000000000000000000000000000000000000008001",
    "aspect": 1.25,
    "seen": 1,
    "symbol": "notehead.squareFilled"
-  },
-  {
-   "bits": "000000001008300c6006e007c003c003c003c003c003c003c003e007700e300c",
-   "aspect": 1.22,
-   "seen": 1,
-   "symbol": "text.parenthesis"
   },
   {
    "bits": "00180000000000100000000000000000000000000000000000000000000001c3",
@@ -97,6 +229,30 @@
    "aspect": 1.0,
    "seen": 1,
    "symbol": "articulation.plus"
+  },
+  {
+   "bits": "0008001c0014003600220022006300410055004100000000000000000000001c",
+   "aspect": 0.43,
+   "seen": 1,
+   "symbol": "text.arrow"
+  },
+  {
+   "bits": "000100030006000c001f001f003e003f003e0038003800300030003000300030",
+   "aspect": 0.34,
+   "seen": 1,
+   "symbol": "flag.sixteenth"
+  },
+  {
+   "bits": "0ff0300c200640028001800180018001800180018001800140022006300c0ff0",
+   "aspect": 1.0,
+   "seen": 1,
+   "symbol": "dot"
+  },
+  {
+   "bits": "0000000000000000a900a90000070005000700030000c000a000a000e0000095",
+   "aspect": 1.44,
+   "seen": 1,
+   "symbol": "repeat.bar"
   }
  ]
 }

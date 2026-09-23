@@ -8,6 +8,7 @@ how many are flagged, and prints the totals -- which is the only way to tell
 whether a change to the pipeline helped, since nobody is going to proof read
 the result.
 
+    python3 batch.py --repertoire         # each corps' most recent season
     python3 batch.py --sample 80          # a spread across the catalogue
     python3 batch.py 2019-circus-1 ...    # named sequences
     python3 batch.py --all                # everything listed
@@ -37,15 +38,25 @@ AGENT = 'snare-drummer/0.1'
 PAUSE = 0.3          # between requests, because this is someone else's server
 
 
-def sequences():
+def sequences(repertoire=False):
+    """Every sequence, carrying the work it belongs to.
+
+    `repertoire` narrows it to each corps' most recent season, which is the
+    reduction the app works from. Which season that is comes from the
+    catalogue file rather than being worked out here: the same rule computed
+    twice, once in TypeScript and once in Python, would drift, and both sides
+    would go on producing a plausible library.
+    """
     with open(CATALOGUE, encoding='utf-8') as f:
         data = json.load(f)
+    works = [w for w in data['works'] if w.get('current')] if repertoire \
+        else data['works']
     return data, [
         {**sequence, 'workId': work['id'], 'corps': work['corps'],
          'circuit': work['circuit'], 'listedAt': data['source'],
          'read': data['read'],
          **({'year': work['year']} if work.get('year') else {})}
-        for work in data['works'] for sequence in work['sequences']
+        for work in works for sequence in work['sequences']
     ]
 
 
@@ -67,22 +78,28 @@ def fetch(entry):
 
 
 def score(piece):
-    """How much of a piece was read well enough to be trusted, bar by bar.
+    """How many bars of a piece are both trustworthy and worth playing.
 
-    The count mirrors what @snare-drummer/core will decide once the piece
+    The trust half mirrors what @snare-drummer/core will decide once the piece
     crosses into TypeScript -- it is not the authority, which stays there,
     only a way of seeing the run.
+
+    A bar also has to contain a stroke. A bar of rests that fills its metre
+    is verified and silent, and one score here came out as 204 bars holding
+    five rests and nothing else: entirely trustworthy, and nothing to practise.
     """
-    trusted = 0
+    playable = 0
     for bar in piece['bars']:
         if bar['unnamedSymbols'] or bar['readFrom'] != 'notation':
             continue
         if bar['meter'] is None or not bar['events']:
             continue
+        if not any(not e.get('rest') for e in bar['events']):
+            continue
         played = sum(Fraction(*e['duration']) for e in bar['events'])
         if played == Fraction(bar['meter'][0] * 4, bar['meter'][1]):
-            trusted += 1
-    return trusted
+            playable += 1
+    return playable
 
 
 MANIFEST_HEAD = '''/**
@@ -114,11 +131,13 @@ def main():
     parser.add_argument('ids', nargs='*')
     parser.add_argument('--sample', type=int, help='that many, spread at random')
     parser.add_argument('--all', action='store_true')
+    parser.add_argument('--repertoire', action='store_true',
+                        help="each corps' most recent season")
     parser.add_argument('--seed', type=int, default=7)
     args = parser.parse_args()
 
-    _data, entries = sequences()
-    if args.all:
+    _data, entries = sequences(repertoire=args.repertoire)
+    if args.repertoire or args.all:
         chosen = entries
     elif args.sample:
         random.seed(args.seed)
@@ -130,7 +149,7 @@ def main():
             raise SystemExit(f"inconnu: {', '.join(missing)}")
         chosen = [by_id[i] for i in args.ids]
     else:
-        parser.error('donner des ids, --sample N ou --all')
+        parser.error('donner des ids, --sample N, --repertoire ou --all')
 
     os.makedirs(CORPUS, exist_ok=True)
     os.makedirs(PIECES, exist_ok=True)
@@ -160,7 +179,8 @@ def main():
             # verified has no such neighbours -- there is nothing to play and
             # nothing to compare against -- so it is left out rather than
             # shipped as a score that cannot be believed anywhere.
-            skipped.append((entry['id'], f"0/{len(piece['bars'])} mesures vérifiées"))
+            skipped.append((entry['id'],
+                            f"0/{len(piece['bars'])} mesures jouables"))
             continue
         with open(os.path.join(PIECES, entry['id'] + '.json'), 'w',
                   encoding='utf-8') as f:
@@ -176,7 +196,7 @@ def main():
 
     written.sort(key=lambda r: -(r[1] / r[2]))
     for piece_id, good, total in written[:10]:
-        print(f"  {piece_id:<40} {good:>4}/{total:<4} mesures vérifiées")
+        print(f"  {piece_id:<40} {good:>4}/{total:<4} mesures jouables")
     if len(written) > 10:
         print(f"  … et {len(written) - 10} autres")
     print()
@@ -184,7 +204,7 @@ def main():
     for piece_id, why in skipped[:8]:
         print(f"    {piece_id:<40} {why}")
     if bars_total:
-        print(f"{bars_total} mesures, {bars_trusted} vérifiées "
+        print(f"{bars_total} mesures, {bars_trusted} jouables "
               f"({100 * bars_trusted / bars_total:.1f}%)")
     print(f"{len(ids)} pièces dans src/pieces/")
 
