@@ -1,0 +1,115 @@
+{
+ "family": "Reprise",
+ "read": "2026-09-23",
+ "method": "contact sheet, packages/transcription/work/reprise-sheet.png",
+ "symbols": [
+  {
+   "bits": "000000001f0061c0c030800c800680028001800180018001c0016001380107fe",
+   "aspect": 1.21,
+   "seen": 95,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "003e006200c201800110023004200c401880310021c00070001e00030071001f",
+   "aspect": 0.85,
+   "seen": 28,
+   "symbol": "articulation.accent"
+  },
+  {
+   "bits": "00e000a000900090013801380138017c014c0248024802c60287028703830003",
+   "aspect": 0.62,
+   "seen": 8,
+   "symbol": "articulation.marcato"
+  },
+  {
+   "bits": "00ff0181017f014001400170019c018403fc0280028002830287034d01fb00fe",
+   "aspect": 0.6,
+   "seen": 6,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "00000002000778094c034306618c301818300c18190e63c3cc319819b00de007",
+   "aspect": 1.14,
+   "seen": 5,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "006000c0008001b0013801680346024701c701e500ad0079003b00120016000c",
+   "aspect": 0.58,
+   "seen": 5,
+   "symbol": "notehead.diamond"
+  },
+  {
+   "bits": "0000000000000000000080000000000000000001000080000000000000000001",
+   "aspect": 1.56,
+   "seen": 5,
+   "symbol": "tremolo.slash"
+  },
+  {
+   "bits": "01e701250125012d0128012801280128012801280328022802280228036c01c7",
+   "aspect": 0.57,
+   "seen": 4,
+   "symbol": "clef.percussion"
+  },
+  {
+   "bits": "01ff017f0143014301c000e000a000e000500070003800280028002800280038",
+   "aspect": 0.54,
+   "seen": 2,
+   "symbol": "digit.7"
+  },
+  {
+   "bits": "00cf00e900fd0041007f0030002f003d0015001d001f0014000c000c000c000c",
+   "aspect": 0.5,
+   "seen": 2,
+   "symbol": "rest.eighth"
+  },
+  {
+   "bits": "00200030003000300030003000300030003000200038002f002100210031001f",
+   "aspect": 0.36,
+   "seen": 1,
+   "symbol": "text.noteValue"
+  },
+  {
+   "bits": "00000000000000007fe7c0018001c0013ffe000000007ffec00380018003fffe",
+   "aspect": 1.35,
+   "seen": 1,
+   "symbol": "text.equals"
+  },
+  {
+   "bits": "001e00120005000700070004000400040004000400040004000400040077007f",
+   "aspect": 0.39,
+   "seen": 1,
+   "symbol": "digit.1"
+  },
+  {
+   "bits": "00f801fc01de028a028f0385030503030303030303030383028703c501bb00fe",
+   "aspect": 0.62,
+   "seen": 1,
+   "symbol": "digit.0"
+  },
+  {
+   "bits": "00ff01bd01670140014001f000dc01b403fc028002800283028301cd01fb00fc",
+   "aspect": 0.59,
+   "seen": 1,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "01fc01fa018a000e0007003d00ed01f903cf038007000703038702cd017b01fc",
+   "aspect": 0.63,
+   "seen": 1,
+   "symbol": "digit.5"
+  },
+  {
+   "bits": "01f00108030402660332012b01ed00c5000500050705058d04f90603030601fc",
+   "aspect": 0.64,
+   "seen": 1,
+   "symbol": "meter.common"
+  },
+  {
+   "bits": "0001000300030005000d001300360038007000500050005000700038001c000c",
+   "aspect": 0.39,
+   "seen": 1,
+   "symbol": "flag"
+  }
+ ]
+}

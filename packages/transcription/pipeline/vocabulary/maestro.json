@@ -1,0 +1,342 @@
+{
+ "family": "Maestro",
+ "read": "2026-09-23",
+ "method": "contact sheet, packages/transcription/work/maestro-sheet.png",
+ "symbols": [
+  {
+   "bits": "0000000000003fc0403080188006800280038001c0014001600130010c0307fc",
+   "aspect": 1.24,
+   "seen": 3947,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "0000000000000001000000010000000000009000000000000000000000010001",
+   "aspect": 1.31,
+   "seen": 1184,
+   "symbol": "articulation.accent"
+  },
+  {
+   "bits": "0000000000003fe0c03080188006800280038001c0014001600130010c0307fc",
+   "aspect": 1.24,
+   "seen": 673,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "8000000000000000000000008000000000000001000000000000000000000001",
+   "aspect": 1.01,
+   "seen": 632,
+   "symbol": "tremolo.slash"
+  },
+  {
+   "bits": "0000000000000000000000000000000000000000000000000000000080018001",
+   "aspect": 8.94,
+   "seen": 226,
+   "symbol": "ledger"
+  },
+  {
+   "bits": "000100030006000f001f001b0036003f003e0038001000300030003000300030",
+   "aspect": 0.33,
+   "seen": 179,
+   "symbol": "flag"
+  },
+  {
+   "bits": "00010001000300060004000f001c001800180030003000300030003000300010",
+   "aspect": 0.33,
+   "seen": 173,
+   "symbol": "flag"
+  },
+  {
+   "bits": "0451000000000000000000000000000000000000000000000000000000000451",
+   "aspect": 0.63,
+   "seen": 154,
+   "symbol": "clef.percussion"
+  },
+  {
+   "bits": "8001800100000000000000000000018001000000000000000000000080018001",
+   "aspect": 1.0,
+   "seen": 137,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "001f033101a100e100c100bb00cc004000400060002000200030001000100038",
+   "aspect": 0.57,
+   "seen": 122,
+   "symbol": "rest.eighth"
+  },
+  {
+   "bits": "000300020006000400160012001b0009000b000e001e001b003d00070007000e",
+   "aspect": 0.34,
+   "seen": 113,
+   "symbol": "rest.quarter"
+  },
+  {
+   "bits": "0040000000000000000000000000000000200000000000000000000000004103",
+   "aspect": 0.91,
+   "seen": 113,
+   "symbol": "articulation.marcato"
+  },
+  {
+   "bits": "0ff03c3c700e6006c003c003c00181818081c001c003e0036006700e3c3c0ff0",
+   "aspect": 1.0,
+   "seen": 105,
+   "symbol": "notehead.circleX"
+  },
+  {
+   "bits": "8811081008100430f66f1a580db00660024007e01ff8f66f0430081008108811",
+   "aspect": 1.0,
+   "seen": 66,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "80408000000000000ff00618030000801c6012303218267c3fc61603183f0fe3",
+   "aspect": 1.07,
+   "seen": 64,
+   "symbol": "roll.buzz"
+  },
+  {
+   "bits": "041002100710019000d80068006c0014000e000714471441000004400c601820",
+   "aspect": 0.81,
+   "seen": 63,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "07e01818300c4002c003800180018001800180018001800140026006300c0ff0",
+   "aspect": 1.03,
+   "seen": 56,
+   "symbol": "dot"
+  },
+  {
+   "bits": "0040000000000000000000000020000000000000000000000070005800c8227b",
+   "aspect": 0.87,
+   "seen": 44,
+   "symbol": "articulation.marcato"
+  },
+  {
+   "bits": "0000000000000000000000000000000000008001000000000000000000008001",
+   "aspect": 2.48,
+   "seen": 41,
+   "symbol": "rest.half"
+  },
+  {
+   "bits": "0000000000000000000000000000000080010000000000000000000000008001",
+   "aspect": 2.21,
+   "seen": 34,
+   "symbol": "rest.whole"
+  },
+  {
+   "bits": "8001000080010000000000000080014000000080000000000000800100008001",
+   "aspect": 0.94,
+   "seen": 31,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "001000300030002000200030003000300018001c000f00040006000300010001",
+   "aspect": 0.34,
+   "seen": 28,
+   "symbol": "flag"
+  },
+  {
+   "bits": "3f003f803e801ac00b480d280120012001b0009000d00050007f002d003f001f",
+   "aspect": 0.83,
+   "seen": 26,
+   "symbol": "dynamic.f"
+  },
+  {
+   "bits": "000000000000f780ffc0ffe077b877d81a500a500b780d28052807ff03ff01ef",
+   "aspect": 1.24,
+   "seen": 24,
+   "symbol": "dynamic.f"
+  },
+  {
+   "bits": "0000000000000000f000f800fc0075fe15fb167b1b810ba00efb07c007c003c0",
+   "aspect": 1.34,
+   "seen": 16,
+   "symbol": "dynamic.m"
+  },
+  {
+   "bits": "0ff037ec781e700ea007c003c003c003c003c003c003a007700e781e37ec0ff0",
+   "aspect": 1.0,
+   "seen": 16,
+   "symbol": "notehead.circle"
+  },
+  {
+   "bits": "00000000000000000000000000006cf6feffd7fbff81ef807afb3b4001000b40",
+   "aspect": 1.95,
+   "seen": 14,
+   "symbol": "dynamic.m"
+  },
+  {
+   "bits": "00000000fbe0bef0acb0b6d892589260db206f2037101e1000180008000c0145",
+   "aspect": 1.15,
+   "seen": 14,
+   "symbol": "dynamic.p"
+  },
+  {
+   "bits": "001f033100a100e100c100bf00cc004000400040002000200020001000100038",
+   "aspect": 0.57,
+   "seen": 14,
+   "symbol": "rest.eighth"
+  },
+  {
+   "bits": "03fc04fe0c9b08b108a10cb306fe03b80f7808df199111111991089906db03fe",
+   "aspect": 0.76,
+   "seen": 11,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "00100030006000c004f005c001800110011001120110019e019300110019000f",
+   "aspect": 0.64,
+   "seen": 11,
+   "symbol": "grace.eighth"
+  },
+  {
+   "bits": "40004000000007f00f781c1c180c180c180c180c0c1c0f7807f0000000010001",
+   "aspect": 0.92,
+   "seen": 10,
+   "symbol": "notehead.circleSlash"
+  },
+  {
+   "bits": "041002100710019000c80068006c0014000a000714431441000004400c401820",
+   "aspect": 0.81,
+   "seen": 9,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "0000000000000000000000000000000000000c180c108000e3c6030500011870",
+   "aspect": 2.42,
+   "seen": 9,
+   "symbol": "tremolo.wavy"
+  },
+  {
+   "bits": "000000000100030006800c0010006000c00480012006000c00180120004000c0",
+   "aspect": 1.18,
+   "seen": 7,
+   "symbol": "notehead.diamond"
+  },
+  {
+   "bits": "00de00f200f2007e00600066006f00390039003f0010001800180018000c000c",
+   "aspect": 0.46,
+   "seen": 6,
+   "symbol": "rest.sixteenth"
+  },
+  {
+   "bits": "0180000000000000000000000000818181810000000000000000000000000180",
+   "aspect": 1.0,
+   "seen": 6,
+   "symbol": "articulation.plus"
+  },
+  {
+   "bits": "00100030006000c004f0058001800110011001120110019e019300110019000f",
+   "aspect": 0.64,
+   "seen": 5,
+   "symbol": "grace.eighth"
+  },
+  {
+   "bits": "07fc0cde198b11191131112119b30cde07f000f8187c1fca0a030c01043f07e3",
+   "aspect": 0.79,
+   "seen": 4,
+   "symbol": "digit.2"
+  },
+  {
+   "bits": "0000000000007fe0d038fe0cc386c0e2e033b00ddc07470361833077181f07fe",
+   "aspect": 1.23,
+   "seen": 4,
+   "symbol": "notehead.half"
+  },
+  {
+   "bits": "80408000000000000ff00418020001801e401220321026783fc41603183f07e3",
+   "aspect": 1.07,
+   "seen": 4,
+   "symbol": "roll.buzz"
+  },
+  {
+   "bits": "07f80dbc089608920991071103f90e3908f11991111111111913099206be03f8",
+   "aspect": 0.77,
+   "seen": 4,
+   "symbol": "digit.6"
+  },
+  {
+   "bits": "0100000000000000000000000000800100000000000000000000000000000080",
+   "aspect": 1.0,
+   "seen": 4,
+   "symbol": "notehead.diamondBlack"
+  },
+  {
+   "bits": "000000000000000000000000ffe0fff0fff86aec3bb81ddc15541fff0fff07ff",
+   "aspect": 1.64,
+   "seen": 3,
+   "symbol": "dynamic.f"
+  },
+  {
+   "bits": "000300020006000400160012001b0009000b000a000e0019003d00070007000e",
+   "aspect": 0.34,
+   "seen": 3,
+   "symbol": "rest.quarter"
+  },
+  {
+   "bits": "00de00f20072007e00600066002d00390019003f0010001800180008000c000c",
+   "aspect": 0.46,
+   "seen": 3,
+   "symbol": "rest.sixteenth"
+  },
+  {
+   "bits": "03fc079e0a0d0a0d0a390ae107830606081e18671183190309030d8506ff03fc",
+   "aspect": 0.76,
+   "seen": 3,
+   "symbol": "digit.8"
+  },
+  {
+   "bits": "03c002403bfc2da435bc1ff0e7e7bfcdbffde7e70ff83dbc25943fdc024003c0",
+   "aspect": 1.0,
+   "seen": 3,
+   "symbol": "articulation.asterisk"
+  },
+  {
+   "bits": "0000000000000000000000008f8098e020302008200c300418040c04061801f1",
+   "aspect": 1.64,
+   "seen": 3,
+   "symbol": "notehead.slashed"
+  },
+  {
+   "bits": "07fc079e0a0d0a0d0a390ae107830e06081e18f71183190309030d8506ff03fc",
+   "aspect": 0.76,
+   "seen": 2,
+   "symbol": "digit.8"
+  },
+  {
+   "bits": "0000000000000000010000000000000000000000800100000000000000000100",
+   "aspect": 1.33,
+   "seen": 1,
+   "symbol": "notehead.diamondBlack"
+  },
+  {
+   "bits": "008800000008000c0004000600020003000100000000000000000080008c0186",
+   "aspect": 0.55,
+   "seen": 1,
+   "symbol": "digit.1"
+  },
+  {
+   "bits": "07f81e6c16363113211131111b190e09000900193011381118121c360fec07f8",
+   "aspect": 0.83,
+   "seen": 1,
+   "symbol": "meter.common"
+  },
+  {
+   "bits": "00000000000000000000000000004c90fffcfefcf7aebfe8fbfc7ae401060d5b",
+   "aspect": 2.0,
+   "seen": 1,
+   "symbol": "dynamic.p"
+  },
+  {
+   "bits": "0ff01bcc6e36581af005a007e003c003c003e003a007f005580a6e363bcc0ff0",
+   "aspect": 0.99,
+   "seen": 1
+  },
+  {
+   "bits": "0000000000000000010000000000000000000000000000000000000000008001",
+   "aspect": 1.33,
+   "seen": 1,
+   "symbol": "notehead.triangle"
+  }
+ ]
+}

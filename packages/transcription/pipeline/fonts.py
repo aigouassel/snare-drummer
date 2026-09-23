@@ -38,7 +38,8 @@ GRID = 16    # fingerprint resolution: a 16x16 occupancy grid, 256 bits
 STEPS = 12   # samples per curve segment when flattening
 
 MUSIC_FAMILIES = ('Bravura', 'Maestro', 'Opus', 'MScore', 'Engraver',
-                  'Petaluma', 'Sonata', 'November', 'Emmentaler')
+                  'Gootville', 'Reprise', 'Petaluma', 'Sonata', 'November',
+                  'Emmentaler')
 
 
 def family_of(basefont):
