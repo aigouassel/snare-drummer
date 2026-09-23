@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    // Deliberately no DOM. A transcription is data: it is read by playback,
+    // by the renderer and by the confidence checks alike, and none of those
+    // three readers may be the one that owns it. Every package that extends
+    // this without adding DOM back cannot reach `window` or `AudioContext`,
+    // so the rule is a compiler error rather than a convention.
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+
+    "noEmit": true,
+    "skipLibCheck": true
+  }
+}

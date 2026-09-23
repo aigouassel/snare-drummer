@@ -1,0 +1,27 @@
+node_modules/
+dist/
+.yarn/cache
+.yarn/install-state.gz
+*.tsbuildinfo
+.DS_Store
+
+# Python side of the extraction pipeline
+.venv/
+__pycache__/
+*.pyc
+
+# Source PDFs are never committed.
+#
+# They are transcriptions of copyrighted shows, hosted by someone else, and a
+# transcribed score does not need them any more: the piece carries the URL it
+# was read from, so the source is one click away from the page that shows it.
+# Downloaded copies are working files, and working files are disposable.
+#
+# This is an allowlist rather than a list of extensions: anything dropped into
+# a working directory is ignored unless named as safe below. A new kind of
+# artefact is therefore ignored by default, and un-ignoring one is a decision
+# made about a file somebody has read.
+packages/transcription/work/**
+!packages/transcription/work/
+!packages/transcription/work/README.md
+!packages/transcription/work/**/fingerprints.json
