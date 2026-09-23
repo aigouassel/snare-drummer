@@ -5,8 +5,16 @@ score can be *heard* before it is practised on a pad.
 
 The material comes from the snare drum transcriptions listed at
 [lothype.com](https://lothype.com/transcriptions/snare-drum-transcriptions/) —
-884 scores, from DCI, WGI and DCA. Every piece the app shows carries the URL
-it was read from, and the app prints it.
+884 PDFs from DCI, WGI and DCA. Every piece the app shows carries the URL it
+was read from, and the app prints it.
+
+**A PDF is not a piece of music.** A corps performs one show per season and
+writes it in passages — Opener, Drum Feature, Lick, Movement 2 Part 1, 2 and
+3 — and the site publishes one PDF per passage. So the library is 327 *works*
+(one corps, one season), each holding its *sequences*. The page states that
+grouping only in the link text, as the year each title begins with; there is
+no section markup on it at all. The passages of one season are worked
+together, and flat they were 884 unrelated rows.
 
 ## What makes it hard
 
@@ -70,12 +78,18 @@ suspect — never matched to the nearest thing and waved through.
 packages/
   core/           Fraction, Duration, Stroke, Bar, Piece, timeline — and the
                   confidence rule. Depends on nothing.
-  catalogue/      The 884 listed scores, and the scraper that reads them.
-  transcription/  The transcribed pieces, and the pipeline that produces them:
-                  pipeline/ is Python, src/ is the data it writes.
+  catalogue/      327 works and their 884 sequences, and the scraper.
+  transcription/  The transcribed sequences, and the pipeline that produces
+                  them: pipeline/ is Python, src/ is the data it writes.
+  notation/       VexFlow adapter. Layout is arithmetic and tested; drawing
+                  is not.
 apps/
-  web/            The player.
+  web/            The player: library, score, transport, audio engine.
 ```
+
+The hierarchy is circuit → corps → **work (a season)** → **sequence (a PDF)**
+→ bars. A transcription is a sequence read into bars, and carries the
+`workId` that puts it back beside the passages it was written with.
 
 **No package may reach a browser API.** `tsconfig.base.json` sets
 `lib: ["ES2022"]` with no DOM, so `window` and `AudioContext` are type errors
@@ -137,11 +151,12 @@ yarn dev         # the player
 
 ## State
 
-- [x] Catalogue: 884 entries scraped, filterable, with provenance
+- [x] Catalogue: 327 works / 884 sequences, filterable, with provenance
 - [x] Domain model, and the confidence rule, with tests
 - [x] Extraction: content stream, staves, barlines, shape fingerprints
 - [x] Vocabulary for Opus — 59 of 76 symbols named
 - [x] First piece read end to end: 10 of 11 bars verified by arithmetic
 - [ ] Vocabularies for Maestro, MScore, Engraver, Bravura
-- [ ] Notation rendering, and playback
+- [x] Notation rendering, one line per bar, doubts outlined on the music
+- [x] Playback: lookahead scheduler, snare voice, metronome, bar ranges
 - [ ] Reading rhythm from beams and flags rather than from spacing
