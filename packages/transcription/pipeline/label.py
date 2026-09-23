@@ -84,7 +84,7 @@ def _outline(doc, font, code):
     """
     try:
         _n, _fmt, _ft, buf = doc.extract_font(font['xref'])
-        glyphs, order, builtin = _glyphset(buf)
+        glyphs, order, builtin, _adv = _glyphset(buf)
     except Exception:
         return None
     if font['bytes'] == 2:

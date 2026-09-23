@@ -49,7 +49,7 @@ TOKEN = re.compile(rb"""
 IGNORED = {
     'ET', 'gs', 'g', 'G', 'rg', 'RG', 'k', 'K', 'w', 'J', 'j', 'M', 'd', 'i',
     'ri', 'cs', 'CS', 'sc', 'scn', 'SC', 'SCN', 'W', 'W*', 'BDC', 'EMC',
-    'BMC', 'DP', 'MP', 'Do', 'sh', 'TL', 'Tc', 'Tw', 'Tz', 'Ts', 'Tr', 'BX',
+    'BMC', 'DP', 'MP', 'Do', 'sh', 'Tc', 'Tw', 'Tz', 'Ts', 'Tr', 'BX',
     'EX', 'd0', 'd1',
 }
 
@@ -124,7 +124,7 @@ def replay(content, fonts, unhandled, base=IDENTITY):
     """
     ctm, stack = base, []
     tm = tlm = IDENTITY
-    font_ref, size = None, 0.0
+    font_ref, size, leading = None, 0.0, 0.0
     px = py = sx = sy = 0.0
     glyphs, segments, pending, operands = [], [], [], []
 
@@ -163,29 +163,56 @@ def replay(content, fonts, unhandled, base=IDENTITY):
             size = number(-1)
             name = operands[-2] if len(operands) >= 2 else None
             font_ref = name[1:] if isinstance(name, str) and name.startswith('/') else None
+        elif op == 'TL':
+            leading = number(-1)
         elif op in ('Td', 'TD'):
+            if op == 'TD':
+                leading = -number(-1)
             tlm = mul((1, 0, 0, 1, number(-2), number(-1)), tlm)
             tm = tlm
         elif op == 'Tm':
             tm = tlm = tuple(number(i) for i in range(-6, 0))
         elif op == 'T*':
-            tlm = mul((1, 0, 0, 1, 0, -size), tlm)
+            tlm = mul((1, 0, 0, 1, 0, -leading), tlm)
             tm = tlm
         elif op in ('Tj', 'TJ', "'", '"'):
+            if op in ("'", '"'):
+                # Quote shows text on the *next* line: it is T* followed by
+                # Tj. Read as a plain Tj it leaves the second line sitting on
+                # top of the first -- which is exactly how a stacked time
+                # signature came out with its numerator and denominator at
+                # one height, and how whole pieces came out metreless.
+                tlm = mul((1, 0, 0, 1, 0, -leading), tlm)
+                tm = tlm
             font = fonts.get(font_ref or '', {})
-            codes = _codes([o for o in operands if isinstance(o, tuple)],
-                           font.get('bytes', 1))
-            if codes:
-                matrix = mul(tm, ctm)
-                x, y = apply(matrix, 0, 0)
-                glyphs.append({
-                    'font': font_ref,
-                    'basefont': font.get('basefont'),
-                    'family': font.get('family'),
-                    'codes': codes,
-                    'x': round(x, 3), 'y': round(y, 3),
-                    'size': round(size * (matrix[3] or 1), 3),
-                })
+            advances = font.get('advances', {})
+            # Walk the run the way a renderer does: place a glyph, then move
+            # on by its advance. Recording the run's origin for all of them
+            # puts a time signature's numerator and denominator at identical
+            # coordinates, and nothing downstream can then say which is on
+            # top -- whole pieces came out metreless for exactly that.
+            for operand in operands:
+                if not isinstance(operand, tuple):
+                    # A number inside a TJ array shifts the next glyph back
+                    # by that many thousandths of the text size.
+                    try:
+                        tm = mul((1, 0, 0, 1, -float(operand) / 1000 * size, 0), tm)
+                    except (TypeError, ValueError):
+                        pass
+                    continue
+                for code in _codes([operand], font.get('bytes', 1)):
+                    matrix = mul(tm, ctm)
+                    x, y = apply(matrix, 0, 0)
+                    glyphs.append({
+                        'font': font_ref,
+                        'basefont': font.get('basefont'),
+                        'family': font.get('family'),
+                        'codes': [code],
+                        'x': round(x, 3), 'y': round(y, 3),
+                        'size': round(size * (matrix[3] or 1), 3),
+                    })
+                    tm = mul((1, 0, 0, 1,
+                              advances.get(code, 0.0) / 1000 * size, 0), tm)
 
         elif op == 'm':
             px, py = sx, sy = number(-2), number(-1)

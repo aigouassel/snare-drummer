@@ -103,9 +103,11 @@ def read_meter(named, system):
     metreless that way.
     """
     span = system['top'] - system['bottom']
-    digits = [(g, int(s.split('.')[1])) for g, s in named
+    digits = [({**g, 'y': g.get('inkY', g['y'])}, int(s.split('.')[1]))
+              for g, s in named
               if s and s.startswith('digit.')
-              and system['bottom'] - span / 2 <= g['y'] <= system['top'] + span / 2]
+              and system['bottom'] - span / 2 <= g.get('inkY', g['y'])
+              <= system['top'] + span / 2]
     if not digits:
         return None
 
@@ -372,8 +374,13 @@ def transcribe(path, entry):
             for code in glyph['codes']:
                 fp = codes.get(code)
                 symbol = vocab.resolve(fp) if (fp and vocab) else None
-                width = fp['width'] * glyph['size'] / upem if fp else 0.0
-                out.append((symbol, width))
+                if fp:
+                    scale = glyph['size'] / upem
+                    width = fp['width'] * scale
+                    middle = glyph['y'] + (fp['ymin'] + fp['height'] / 2) * scale
+                else:
+                    width, middle = 0.0, glyph['y']
+                out.append((symbol, width, middle))
             return out
 
         notehead_width = _notehead_width(page, fonts, vocabularies)
@@ -389,8 +396,9 @@ def transcribe(path, entry):
             system = systems[bar['system']]
             named = []
             for glyph in glyphs_in(page['glyphs'], bar, system):
-                for symbol, width in name(glyph):
-                    named.append(({**glyph, 'ink': width}, symbol))
+                for symbol, width, middle in name(glyph):
+                    named.append(({**glyph, 'ink': width, 'inkY': middle},
+                                  symbol))
 
             printed = read_meter(named, system)
             if printed:

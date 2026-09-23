@@ -134,6 +134,13 @@ def fingerprint(glyphset, name):
         'aspect': round(w / h, 2) if h else 0.0,
         'width': round(w, 1),
         'height': round(h, 1),
+        # Where the ink sits relative to the origin. The grid above is
+        # deliberately translation-invariant -- that is what lets the same
+        # symbol match wherever it was drawn -- but some fonts stack a time
+        # signature by shipping two glyphs of identical shape at different
+        # heights, on one baseline. Shape alone cannot tell those apart.
+        'ymin': round(min(ys), 1),
+        'xmin': round(min(xs), 1),
     }
 
 
@@ -163,6 +170,30 @@ def base_encoding(name):
         glyph = UV2AGL.get(ord(char))
         if glyph:
             out[code] = glyph
+    return out
+
+
+def _advances(tt, order):
+    """Each glyph's advance width, in font units.
+
+    A text-showing operator draws a *run*, and the reader has to walk it the
+    way a renderer does -- one glyph, then forward by its width. Recording
+    the run's origin for every glyph in it puts them all at the same point,
+    and a time signature written as the one run "44" then has its numerator
+    and denominator at identical coordinates, so nothing can tell which is
+    on top. Two percent of the glyphs in this catalogue arrive in runs, and
+    they include most of its time signatures.
+    """
+    try:
+        hmtx = tt['hmtx']
+    except Exception:
+        return {}
+    out = {}
+    for name in order:
+        try:
+            out[name] = hmtx[name][0]
+        except Exception:
+            continue
     return out
 
 
@@ -209,12 +240,13 @@ def units_per_em(buf):
 
 
 def _glyphset(buf):
-    """(glyph set, glyph order, code -> name) from an embedded font program."""
+    """(glyph set, glyph order, code -> name, name -> advance) from a font."""
     try:
         tt = TTFont(BytesIO(buf), fontNumber=0, lazy=True)
         order, builtin = tt.getGlyphOrder(), _builtin(tt)
+        advance = _advances(tt, order)
         try:
-            return tt.getGlyphSet(), order, builtin
+            return tt.getGlyphSet(), order, builtin, advance
         except Exception:
             # Subsetters sometimes truncate the advance-width table, which
             # fontTools refuses to build a glyph set from. The outlines are
@@ -229,7 +261,7 @@ def _glyphset(buf):
                 def draw(self, pen):
                     glyf[self._name].draw(pen, glyf)
 
-            return {n: _Outline(n) for n in order}, order, builtin
+            return {n: _Outline(n) for n in order}, order, builtin, advance
     except Exception:
         pass
     cff = CFFFontSet()
@@ -251,7 +283,71 @@ def _glyphset(buf):
         def draw(self, pen):
             self._cs.draw(pen)
 
-    return {n: _Glyph(charstrings[n]) for n in order}, order, builtin
+    advance = {}
+    for name in order:
+        try:
+            advance[name] = charstrings[name].width
+        except Exception:
+            continue
+    return {n: _Glyph(charstrings[n]) for n in order}, order, builtin, advance
+
+
+def _pdf_widths(doc, xref):
+    """Advance widths as the PDF states them, in thousandths of the text size.
+
+    The PDF is the authority here -- it is what a renderer lays the page out
+    with -- and it is also the only source that survives a subsetter having
+    truncated the font's own metrics table, which happens in this catalogue.
+    """
+    kind, value = doc.xref_get_key(xref, 'Widths')
+    if kind == 'array':
+        first = doc.xref_get_key(xref, 'FirstChar')
+        start = int(first[1]) if first[0] == 'int' else 0
+        out = {}
+        for i, token in enumerate(value.strip('[]').split()):
+            try:
+                out[start + i] = float(token)
+            except ValueError:
+                pass
+        return out
+
+    kind, value = doc.xref_get_key(xref, 'DescendantFonts')
+    if kind != 'array':
+        return {}
+    try:
+        descendant = int(value.strip('[] ').split()[0])
+    except (ValueError, IndexError):
+        return {}
+    kind, value = doc.xref_get_key(descendant, 'W')
+    if kind != 'array':
+        return {}
+    # /W is either "code [w w w]" for a run starting at code, or
+    # "first last w" for a range that shares one width.
+    tokens = value.replace('[', ' [ ').replace(']', ' ] ').split()
+    out, pending, run, code = {}, [], None, None
+    for token in tokens:
+        if token == '[':
+            run, code = [], int(pending[-1]) if pending else 0
+        elif token == ']':
+            for i, w in enumerate(run or []):
+                out[code + i] = w
+            run, pending = None, []
+        elif run is not None:
+            try:
+                run.append(float(token))
+            except ValueError:
+                pass
+        else:
+            pending.append(token)
+            if len(pending) == 3:
+                try:
+                    lo, hi, w = int(pending[0]), int(pending[1]), float(pending[2])
+                    for c in range(lo, min(hi, lo + 65535) + 1):
+                        out[c] = w
+                except ValueError:
+                    pass
+                pending = []
+    return out
 
 
 def _encoding(doc, xref):
@@ -312,10 +408,11 @@ def _describe(doc, xref, basefont, encoding):
         'bytes': 2 if (encoding or '').startswith('Identity') else 1,
         'upem': units_per_em(buf) if buf else 1000,
         'codes': {},
+        'advances': {},
     }
     if buf:
         try:
-            glyphs, order, builtin = _glyphset(buf)
+            glyphs, order, builtin, advance = _glyphset(buf)
             if record['bytes'] == 2:
                 # Identity-H addresses glyphs by index, so the code the
                 # content stream writes *is* the glyph id.
@@ -340,8 +437,15 @@ def _describe(doc, xref, basefont, encoding):
                 fp = fingerprint(glyphs, gname)
                 if fp:
                     record['codes']['%04x' % code] = fp
+                if gname in advance:
+                    record['advances']['%04x' % code] = (
+                        advance[gname] * 1000.0 / (record['upem'] or 1000))
         except Exception as exc:
             record['error'] = str(exc)[:80]
+    # The PDF has the last word: it is what the page was laid out with, and
+    # it survives a font whose own metrics table was truncated.
+    for code, width in _pdf_widths(doc, xref).items():
+        record['advances']['%04x' % code] = width
     return record
 
 
