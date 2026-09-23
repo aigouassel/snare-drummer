@@ -55,6 +55,47 @@ class Vocabulary:
         return best['symbol'] if best else None
 
 
+# A shape only a music font has. Digits, letters and punctuation are shared
+# with every text font on the page, so they cannot identify a family.
+MUSICAL = {'notehead', 'rest', 'flag', 'clef', 'tremolo', 'roll'}
+
+MIN_MATCHES = 4
+MIN_SHARE = 0.4
+
+
+def attribute(codes, families):
+    """The family a font belongs to, judged by its shapes rather than its name.
+
+    The name is the one thing embedding destroys. A producer that re-embeds a
+    font commonly renames it -- `ODNMDG+TTE10193A0t00` is a real example from
+    this catalogue -- and a family read off that name comes back as nothing,
+    so every glyph the font draws is dropped and the score reports no music.
+    Six documents in an eighty-score sample were unreadable for that reason
+    alone.
+
+    This project already holds that identity is the outline rather than the
+    name, and the same argument settles the family: a font whose shapes are
+    Maestro's *is* Maestro, whatever it is called.
+
+    The trap is digits. Any text font has a 4 and an 8 that resemble an
+    engraving font's, so matching on those alone would enrol Times-Roman as
+    a music family. A match therefore has to include a shape only a music
+    font carries.
+    """
+    best, best_score = None, 0.0
+    for family, vocabulary in families.items():
+        named = [vocabulary.resolve(fp) for fp in codes]
+        found = [s for s in named if s]
+        if len(found) < MIN_MATCHES:
+            continue
+        if not any(role(s) in MUSICAL for s in found):
+            continue
+        share = len(found) / len(named)
+        if share >= MIN_SHARE and share > best_score:
+            best, best_score = family, share
+    return best
+
+
 def role(symbol):
     """The part a symbol plays, which is what the reconstruction branches on."""
     if symbol is None:

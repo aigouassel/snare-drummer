@@ -31,11 +31,14 @@ from fractions import Fraction
 
 import ink
 import layout
-from vocabulary import INERT, RHYTHMIC, Vocabulary, role
+from fonts import MUSIC_FAMILIES
+from vocabulary import RHYTHMIC, Vocabulary, attribute, role
 
 # Durations an engraver actually writes, as a fraction of a quarter-note beat.
 # Reconstruction snaps to these: a value that lands between two of them is not
 # a note length anybody wrote, it is a measurement error.
+KNOWN_FAMILIES = MUSIC_FAMILIES
+
 GRID = [Fraction(1, 8), Fraction(1, 6), Fraction(1, 4), Fraction(1, 3),
         Fraction(3, 8), Fraction(1, 2), Fraction(2, 3), Fraction(3, 4),
         Fraction(1), Fraction(3, 2), Fraction(2), Fraction(3), Fraction(4)]
@@ -65,7 +68,7 @@ def glyphs_in(glyphs, bar, system):
 
 
 def read_meter(named, system):
-    """A time signature: digits stacked above and below the middle staff line.
+    """A time signature: digits stacked one above the other, read as two numbers.
 
     Read only where it is printed -- at the head of a system, or wherever the
     metre changes -- so a piece that prints none anywhere gets none, and its
@@ -77,11 +80,19 @@ def read_meter(named, system):
     signature is indistinguishable from a piece that never printed one. So
     digits are grouped by proximity and read left to right, which is how they
     are printed.
+
+    Which digits are the numerator is decided *relatively*, from the two
+    heights the cluster itself occupies, and not by comparing each digit to
+    the middle of the staff. A glyph's y is where its origin was placed, and
+    engravers place the numerator's origin on the middle line itself -- so an
+    absolute test puts the numerator on the wrong side of the divide by a
+    tenth of a point and finds no signature at all. Whole pieces came out
+    metreless that way.
     """
-    middle = (system['bottom'] + system['top']) / 2
+    span = system['top'] - system['bottom']
     digits = [(g, int(s.split('.')[1])) for g, s in named
               if s and s.startswith('digit.')
-              and system['bottom'] - 1 <= g['y'] <= system['top'] + 1]
+              and system['bottom'] - span / 2 <= g['y'] <= system['top'] + span / 2]
     if not digits:
         return None
 
@@ -98,8 +109,14 @@ def read_meter(named, system):
     clusters.append(current)
 
     for cluster in clusters:
-        upper = sorted([p for p in cluster if p[0]['y'] > middle], key=lambda p: p[0]['x'])
-        lower = sorted([p for p in cluster if p[0]['y'] <= middle], key=lambda p: p[0]['x'])
+        heights = [p[0]['y'] for p in cluster]
+        # Two levels, a real distance apart. A row of digits all at one
+        # height is a tuplet ratio or a bar number, not a signature.
+        if max(heights) - min(heights) < system['spacing'] * 0.8:
+            continue
+        divide = (max(heights) + min(heights)) / 2
+        upper = sorted([p for p in cluster if p[0]['y'] > divide], key=lambda p: p[0]['x'])
+        lower = sorted([p for p in cluster if p[0]['y'] <= divide], key=lambda p: p[0]['x'])
         if not upper or not lower:
             continue
         beats = int(''.join(str(d) for _g, d in upper))
@@ -183,13 +200,33 @@ def transcribe(path, entry):
     families = set()
     systems_total = 0
 
+    known = {f: Vocabulary(f) for f in KNOWN_FAMILIES}
+    attributed = {}
+
     for page in data['pages']:
         systems, found = layout.bars(page['segments'])
         systems_total += len(systems)
         fonts = page['fonts']
+
+        # A font whose name says nothing may still be a music font. Ask its
+        # shapes, once per font, and write the answer back onto the glyphs so
+        # everything downstream sees one kind of family.
+        for ref, font in fonts.items():
+            if font.get('family') or not font.get('codes'):
+                continue
+            key = font.get('xref')
+            if key not in attributed:
+                attributed[key] = attribute(list(font['codes'].values()), known)
+            if attributed[key]:
+                font['family'] = attributed[key]
+                font['attributedByShape'] = True
+        for glyph in page['glyphs']:
+            if not glyph['family']:
+                glyph['family'] = fonts.get(glyph['font'] or '', {}).get('family')
+
         page_families = {g['family'] for g in page['glyphs'] if g['family']}
         families |= page_families
-        vocabularies = {f: Vocabulary(f) for f in page_families}
+        vocabularies = {f: known[f] for f in page_families if f in known}
 
         def name(glyph):
             font = fonts.get(glyph['font'] or '', {})
@@ -239,6 +276,8 @@ def transcribe(path, entry):
         'bars': bars,
         'extraction': {
             'families': sorted(families),
+            'familiesByShape': sorted(
+                {f for f in attributed.values() if f}),
             'unhandledOperators': data['unhandled'],
             'pages': len(data['pages']),
             'systems': systems_total,
