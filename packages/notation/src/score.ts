@@ -25,11 +25,16 @@ const STAVE_HEIGHT = 120
 const TOP_MARGIN = 28
 
 // How far the music reaches either side of the staff line, in pixels, measured
-// off a rendered page: accents and beams sit above, stems and flags below.
-const ABOVE_LINE = 28
-const BELOW_LINE = 60
-// Where a one-line stave draws its line, relative to the y it is built at.
-const LINE_OFFSET = 40
+// off a rendered page: accents and beams sit above, stems and flags below. The
+// page came out at 20.5 above and 34.5 below, and these leave a staff space of
+// margin on each. Measured, not derived -- an earlier pair guessed from the
+// stave's own numbers and put the outline above the music it was marking.
+const ABOVE_LINE = 30
+const BELOW_LINE = 45
+// The one line of the five that is drawn, and where it falls relative to the y
+// the stave is built at.
+const STAFF_LINE = 2
+const LINE_OFFSET = 60
 
 export type ScoreOptions = Partial<Options> & {
   /** Bar currently under the playhead, outlined as it plays. */
@@ -65,7 +70,15 @@ const noteOf = (event: Event): { note: StaveNote; tuplet?: { notes: number; inSp
 const drawBar = (context: ReturnType<Renderer['getContext']>, placed: PlacedBar,
                  y: number, showMeter: boolean, options: ScoreOptions) => {
   const { bar, x, width } = placed
-  const stave = new Stave(x, y, width, { numLines: 1 })
+  // Five lines with four of them hidden, rather than a one-line stave.
+  // VexFlow draws a lone line where the *top* line would go, while a note
+  // keyed to the middle line stays where the middle line would be — so the
+  // music hangs two spaces below its own staff. Hiding lines keeps the grid
+  // intact, which is also what the measured offsets below are relative to.
+  const stave = new Stave(x, y, width)
+  stave.setConfigForLines(
+    [0, 1, 2, 3, 4].map((i) => ({ visible: i === STAFF_LINE })),
+  )
   if (showMeter) stave.addTimeSignature(meterText(bar.meter))
   stave.setContext(context).draw()
 
@@ -130,12 +143,11 @@ const markBar = (context: ReturnType<Renderer['getContext']>, bar: Bar,
                  stave: Stave, width: number, options: ScoreOptions) => {
   const x = stave.getX()
   // Anchored to the line the stave actually draws, with offsets measured off
-  // the rendered SVG rather than guessed. A one-line stave puts its line
-  // about 40px below the y it was constructed at, and its music runs from
-  // roughly a third of a stave above the line to two thirds below — so an
-  // outline taken from the stave's y, or from its bounding box, floats above
-  // the notes it is supposed to be marking. Both were tried.
-  const line = stave.getYForLine(0)
+  // the rendered SVG rather than guessed. An outline taken from the stave's
+  // y, or from its bounding box, floats above the notes it is supposed to be
+  // marking; both were tried. Asking for line 0 does the same, now that the
+  // drawn line is the middle of five rather than the only one.
+  const line = stave.getYForLine(STAFF_LINE)
   const top = line - ABOVE_LINE
   const height = ABOVE_LINE + BELOW_LINE
 

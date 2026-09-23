@@ -3,7 +3,7 @@ import { judge } from '@snare-drummer/core/confidence'
 import { type Circuit, type Piece } from '@snare-drummer/core/piece'
 import { type Event } from '@snare-drummer/core/stroke'
 
-import doubleBeat from './pieces/double-beat-1.json' with { type: 'json' }
+import { RAW_PIECES } from './pieces/index'
 
 /**
  * Scores read off their PDFs by the pipeline, as pieces the app can play.
@@ -95,14 +95,16 @@ const toPiece = (raw: RawPiece): Piece => ({
 /**
  * `as unknown as` and not a plain assertion: TypeScript reads a JSON array as
  * `number[]`, which cannot narrow to the fixed-length tuples a metre and a
- * duration are. The shape is guaranteed by the pipeline that writes the file
+ * duration are. The shape is guaranteed by the pipeline that writes the files
  * and asserted by this package's tests, which is where that guarantee belongs
  * -- a structural check at the boundary, rather than a type the compiler has
  * no way to verify against a file on disk.
  */
-const RAW: readonly RawPiece[] = [doubleBeat as unknown as RawPiece]
+const RAW: readonly RawPiece[] = RAW_PIECES as readonly RawPiece[]
 
 export const PIECES: readonly Piece[] = RAW.map(toPiece)
+  .slice()
+  .sort((a, b) => a.id.localeCompare(b.id))
 
 export const pieceById = (id: string): Piece | undefined =>
   PIECES.find((p) => p.id === id)
