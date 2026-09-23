@@ -1,0 +1,19 @@
+{
+  "name": "@snare-drummer/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./fraction": "./src/fraction.ts",
+    "./duration": "./src/duration.ts",
+    "./stroke": "./src/stroke.ts",
+    "./bar": "./src/bar.ts",
+    "./piece": "./src/piece.ts",
+    "./confidence": "./src/confidence.ts",
+    "./timeline": "./src/timeline.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  }
+}
