@@ -25,6 +25,13 @@ Not the reading, either — and that was the surprise. These scores are
 file, no raster scans, and 39 whose symbols carry an identity and exact
 coordinates. Optical music recognition never enters into it. This is a parser.
 
+A page is less obliging than it sounds, mind. 38% of the catalogue runs to two
+pages or more, 3% is engraved landscape and rotated into portrait, some
+engravers stroke their staff lines and others fill them as hairline
+rectangles, and a text-showing operator draws a whole *run* that has to be
+walked one glyph at a time. None of that raises an error. Each of them simply
+reports less music than the page holds.
+
 The hard part is **checking nearly nine hundred scores that nobody will proof
 read**. A parser that mis-reads a flam does not crash; it produces a plausible
 score that is wrong, and plays a wrong note for ever. So the project's real
@@ -39,6 +46,7 @@ Every bar is judged, by machine, on signals a machine can take alone:
 | The durations read fill the bar's metre **exactly** | strong — never a false alarm, but two errors can cancel |
 | A symbol on the staff that nothing could name | a direct confession of ignorance |
 | A bar with nothing in it | printed music writes a whole-bar rest, never nothing |
+| Durations *measured* off the page rather than read from the beams | a weaker coincidence than the same sum reached from the notation |
 | How wide the bar is on the page | **deliberately not used** — see below |
 
 A bar that passes is playable. A bar that does not is shown with its reasons
@@ -67,10 +75,26 @@ TrueType, the other bare CFF — matching symbols agreed to within 0–11 bits o
 of 256, with the nearest unrelated symbol at 30.
 
 So naming happens **once per engraving family**, off a contact sheet, and
-resolves everywhere after. Five families cover the catalogue: Opus (Sibelius,
-42%), Maestro (Finale, 25%), MScore (MuseScore), Engraver (Finale) and Bravura
-(SMuFL). A shape with no label stays unnamed, is counted, and makes its bar
-suspect — never matched to the nearest thing and waved through.
+resolves everywhere after. Three families carry the catalogue — Opus
+(Sibelius), Maestro (Finale) and MScore (MuseScore) — with four more in the
+tail: Bravura and Engraver turn out to be text companions supplying accents,
+digits and tremolo slashes while the notes come from elsewhere, and Gootville
+and Reprise were not recognised as music fonts at all. 99% of the musical
+glyphs in an 80-score sample now carry a name. A shape with no label stays
+unnamed, is counted, and makes its bar suspect — never matched to the nearest
+thing and waved through.
+
+The sheet counts a symbol by how often it was **drawn**, not by how many fonts
+contain it. A font's repertoire is a poor guide to a family's: of nine Maestro
+shapes picked out for checking, six were never placed on a page at all, and
+the family fell from 57 shapes to 24 that matter.
+
+Which glyph a code addresses is its own problem, and four things had to be read
+to get it right: the font's own cmap, the base encoding the PDF names, its
+/Differences array, and — for a composite font — its /CIDToGIDMap, because
+Identity-H means the code is the *CID* and the CID is the glyph index only when
+the font says so. Reading a code as an index found a fingerprint for 2% of
+single-byte codes, the wrong one by coincidence, and none for the other 98%.
 
 ## Layout
 
@@ -104,15 +128,13 @@ that drift.
 ## The pipeline
 
 ```bash
-cd packages/transcription
-python3 pipeline/fetch.py --search "blue devils 2019"   # find a score
-python3 pipeline/fetch.py 2019-circus-1                 # fetch it into work/
+cd packages/transcription/pipeline
+.venv/bin/python fetch.py --search "blue devils 2019"   # find a score
+.venv/bin/python batch.py --sample 80                   # read a spread of them
+.venv/bin/python batch.py 2019-circus-1 2019-circus-2   # or named ones
 
-pipeline/.venv/bin/python pipeline/label.py 'work/*.pdf' \
-    --family Opus --out work/opus-sheet.png --json work/opus-listing.json
-
-pipeline/.venv/bin/python pipeline/transcribe.py \
-    work/<id>.pdf work/<id>.meta.json src/pieces/<id>.json
+.venv/bin/python label.py '../work/corpus/*.pdf' \
+    --family Opus --out ../work/opus-sheet.png --json ../work/opus-listing.json
 ```
 
 Four layers, each trusting only what the one below actually read:
@@ -120,13 +142,26 @@ Four layers, each trusting only what the one below actually read:
 1. `ink.py` replays the page's drawing instructions. Any operator it does not
    understand is **counted**, never skipped.
 2. `layout.py` finds the staves and barlines — the only structure on the page
-   that is stated rather than inferred.
+   that is stated rather than inferred. Most of this repertoire is written on
+   a **one-line staff**, which has no five-line pattern to recognise and looks
+   exactly like an underline; what identifies it is what crosses it, since
+   barlines straddle a staff evenly and are all drawn to one height where a
+   stem hangs to one side.
 3. `vocabulary.py` names symbols by shape.
-4. `transcribe.py` places them in bars and works out how long each note lasts.
+4. `rhythm.py` reads how long each note lasts, and `transcribe.py` places
+   them in bars.
 
-Step 4 is the weakest and is written to say so: duration is inferred from
-horizontal spacing, which engraving only makes *roughly* proportional. It is
-survivable only because the arithmetic check follows it.
+Duration comes from the notation: the stem rising from the notehead, the
+filled beams crossing it, the flag at its tip, the dot beside it, and the
+tuplet number printed over the run. Three things this repertoire insists on —
+a stem is drawn at the notehead's *edge* and not its middle, a flam is a grace
+note engraved at cue size and takes no time of its own, and triplets are
+everywhere.
+
+A note whose stem cannot be read returns nothing rather than a guess, and the
+bar falls back to measuring the spacing as a whole — mixing a stated length
+with a measured one inside one bar gives a sum that means nothing. Such a bar
+is reported rather than trusted.
 
 ## PDFs are not committed
 
@@ -154,9 +189,11 @@ yarn dev         # the player
 - [x] Catalogue: 327 works / 884 sequences, filterable, with provenance
 - [x] Domain model, and the confidence rule, with tests
 - [x] Extraction: content stream, staves, barlines, shape fingerprints
-- [x] Vocabulary for Opus — 59 of 76 symbols named
-- [x] First piece read end to end: 10 of 11 bars verified by arithmetic
-- [ ] Vocabularies for Maestro, MScore, Engraver, Bravura
+- [x] Vocabularies for all seven engraving families — 99% of drawn glyphs named
 - [x] Notation rendering, one line per bar, doubts outlined on the music
 - [x] Playback: lookahead scheduler, snare voice, metronome, bar ranges
-- [ ] Reading rhythm from beams and flags rather than from spacing
+- [x] Rhythm read from beams, flags, dots and tuplet numbers, not from spacing
+- [x] 56 sequences read end to end: 2,504 bars, 1,213 verified by arithmetic
+- [ ] The remaining 828 sequences — the piece data is eagerly imported, so the
+      whole catalogue wants loading per piece rather than in the bundle
+- [ ] Tuplets whose bracket spans fewer notes than their number suggests
