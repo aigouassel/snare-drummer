@@ -399,7 +399,17 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@snare-drummer/transcription@workspace:packages/transcription":
+"@snare-drummer/notation@workspace:packages/notation":
+  version: 0.0.0-use.local
+  resolution: "@snare-drummer/notation@workspace:packages/notation"
+  dependencies:
+    "@snare-drummer/core": "workspace:^"
+    "@snare-drummer/transcription": "workspace:^"
+    vexflow: "npm:^5.0.0"
+  languageName: unknown
+  linkType: soft
+
+"@snare-drummer/transcription@workspace:^, @snare-drummer/transcription@workspace:packages/transcription":
   version: 0.0.0-use.local
   resolution: "@snare-drummer/transcription@workspace:packages/transcription"
   dependencies:
@@ -1114,6 +1124,13 @@ __metadata:
   version: 8.11.0
   resolution: "undici@npm:8.11.0"
   checksum: 10c0/a6a0d8da384d88dc9780fdb03f099d17fc06d1085854214c4e8ab5c69c4731778c5207fa62b54170327afa21e0d412665bd4e40683122bcbcbf9075801c75cb3
+  languageName: node
+  linkType: hard
+
+"vexflow@npm:^5.0.0":
+  version: 5.0.0
+  resolution: "vexflow@npm:5.0.0"
+  checksum: 10c0/8737a4414bf90f960d4ef91d24ec43c9fabbac6cc95df67c593af9c51da8311bc907c562c7c4836ed0b1c8060b19838649b4540886b60a9de8b36d1d15aad8c1
   languageName: node
   linkType: hard
 

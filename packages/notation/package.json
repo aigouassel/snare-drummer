@@ -1,0 +1,22 @@
+{
+  "name": "@snare-drummer/notation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./vexDuration": "./src/vexDuration.ts",
+    "./systems": "./src/systems.ts",
+    "./score": "./src/score.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@snare-drummer/core": "workspace:^",
+    "vexflow": "^5.0.0"
+  },
+  "devDependencies": {
+    "@snare-drummer/transcription": "workspace:^"
+  }
+}

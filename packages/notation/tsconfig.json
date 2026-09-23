@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // The one package allowed DOM, because VexFlow's own types reference SVG
+    // and canvas elements. Everything that decides *where the music goes*
+    // lives in systems.ts and vexDuration.ts, which touch neither.
+    "lib": ["ES2022", "DOM"]
+  },
+  "include": ["src"]
+}
