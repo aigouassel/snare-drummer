@@ -175,46 +175,56 @@ def decorate(events, named):
 
 def transcribe(path, entry):
     data = ink.read(path)
-    systems, found = layout.bars(data['segments'])
-    families = {g['family'] for g in data['glyphs'] if g['family']}
-    vocabularies = {f: Vocabulary(f) for f in families}
 
-    fonts = data['fonts']
-
-    def name(glyph):
-        font = fonts.get(glyph['font'] or '', {})
-        codes = font.get('codes', {})
-        vocab = vocabularies.get(glyph['family'])
-        out = []
-        for code in glyph['codes']:
-            fp = codes.get(code)
-            out.append(vocab.resolve(fp) if (fp and vocab) else None)
-        return out
-
+    # The metre carries across pages. A signature printed once on page 1
+    # governs page 2 as well, because that is what a reader does with it.
     meter = None
     bars = []
-    for bar in found:
-        system = systems[bar['system']]
-        named = []
-        for glyph in glyphs_in(data['glyphs'], bar, system):
-            for symbol in name(glyph):
-                named.append((glyph, symbol))
+    families = set()
+    systems_total = 0
 
-        printed = read_meter(named, system)
-        if printed:
-            meter = printed
+    for page in data['pages']:
+        systems, found = layout.bars(page['segments'])
+        systems_total += len(systems)
+        fonts = page['fonts']
+        page_families = {g['family'] for g in page['glyphs'] if g['family']}
+        families |= page_families
+        vocabularies = {f: Vocabulary(f) for f in page_families}
 
-        events, unnamed = reconstruct(named, bar, meter)
-        events = decorate(events, named)
+        def name(glyph):
+            font = fonts.get(glyph['font'] or '', {})
+            codes = font.get('codes', {})
+            vocab = vocabularies.get(glyph['family'])
+            out = []
+            for code in glyph['codes']:
+                fp = codes.get(code)
+                out.append(vocab.resolve(fp) if (fp and vocab) else None)
+            return out
 
-        bars.append({
-            'n': bar['n'],
-            'meter': meter,
-            'events': events,
-            'unnamedSymbols': unnamed,
-            'at': {'page': 1, 'system': bar['system'],
-                   'x0': bar['x0'], 'x1': bar['x1']},
-        })
+        for bar in found:
+            system = systems[bar['system']]
+            named = []
+            for glyph in glyphs_in(page['glyphs'], bar, system):
+                for symbol in name(glyph):
+                    named.append((glyph, symbol))
+
+            printed = read_meter(named, system)
+            if printed:
+                meter = printed
+
+            events, unnamed = reconstruct(named, bar, meter)
+            events = decorate(events, named)
+
+            bars.append({
+                # Numbered across the whole piece, not per page: a bar number
+                # that restarts at each page would not address anything.
+                'n': len(bars) + 1,
+                'meter': meter,
+                'events': events,
+                'unnamedSymbols': unnamed,
+                'at': {'page': page['page'], 'system': bar['system'],
+                       'x0': bar['x0'], 'x1': bar['x1']},
+            })
 
     return {
         'id': entry['id'],
@@ -230,7 +240,8 @@ def transcribe(path, entry):
         'extraction': {
             'families': sorted(families),
             'unhandledOperators': data['unhandled'],
-            'systems': len(systems),
+            'pages': len(data['pages']),
+            'systems': systems_total,
         },
     }
 

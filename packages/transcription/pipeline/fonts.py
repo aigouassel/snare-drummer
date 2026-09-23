@@ -158,8 +158,8 @@ def _glyphset(buf):
     return {n: _Glyph(charstrings[n]) for n in order}, order
 
 
-def font_table(path):
-    """Per font resource: its family, its code width, and a fingerprint per code.
+def _describe(doc, xref, basefont, encoding):
+    """One embedded font: its family, its code width, and a fingerprint per code.
 
     The code width matters as much as the fingerprints. A Type0 font in
     Identity-H encoding is addressed with *two* bytes per glyph, and reading
@@ -168,32 +168,45 @@ def font_table(path):
     mistake cost three rounds of analysis before it was caught, which is why
     the width is carried here rather than assumed downstream.
     """
-    doc = pymupdf.open(path)
+    _name, fmt, _ftype, buf = doc.extract_font(xref)
+    record = {
+        'basefont': basefont,
+        'family': family_of(basefont),
+        'format': fmt,
+        'bytes': 2 if (encoding or '').startswith('Identity') else 1,
+        'codes': {},
+    }
+    if buf:
+        try:
+            glyphs, order = _glyphset(buf)
+            for gid, gname in enumerate(order):
+                fp = fingerprint(glyphs, gname)
+                if fp:
+                    record['codes']['%04x' % gid] = fp
+        except Exception as exc:
+            record['error'] = str(exc)[:80]
+    return record
+
+
+def font_table(doc, page, cache):
+    """The fonts one page can address, keyed by the name its stream uses.
+
+    Per page, and that is not fussiness. /F1 is a name local to a page's
+    resource dictionary: nothing stops page 2 from binding it to a different
+    font than page 1 did, and PDF producers that emit one resource dictionary
+    per page routinely do. A table built once for the whole document and keyed
+    by /F1 would draw page 2's music with page 1's alphabet -- silently, and
+    with entirely plausible-looking results.
+
+    The expensive part -- fingerprinting every glyph -- is keyed by xref
+    instead, so a font shared by twenty pages is read once.
+    """
     table = {}
-    for page in doc:
-        for entry in page.get_fonts(full=True):
-            xref, _ext, _type, basefont, refname, encoding = entry[:6]
-            if refname in table:
-                continue
-            _name, fmt, _ftype, buf = doc.extract_font(xref)
-            record = {
-                'basefont': basefont,
-                'family': family_of(basefont),
-                'format': fmt,
-                'bytes': 2 if (encoding or '').startswith('Identity') else 1,
-                'codes': {},
-            }
-            if buf:
-                try:
-                    glyphs, order = _glyphset(buf)
-                    for gid, gname in enumerate(order):
-                        fp = fingerprint(glyphs, gname)
-                        if fp:
-                            record['codes']['%04x' % gid] = fp
-                except Exception as exc:
-                    record['error'] = str(exc)[:80]
-            table[refname] = record
-    doc.close()
+    for entry in page.get_fonts(full=True):
+        xref, _ext, _type, basefont, refname, encoding = entry[:6]
+        if xref not in cache:
+            cache[xref] = _describe(doc, xref, basefont, encoding)
+        table[refname] = cache[xref]
     return table
 
 

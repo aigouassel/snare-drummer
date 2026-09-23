@@ -14,20 +14,24 @@ not understand is *counted*, never skipped quietly. A parser that drops what it
 cannot read does not fail; it produces a plausible page with things missing,
 which is the one failure mode this project cannot detect later.
 
-qpdf does the decompression, and PyMuPDF reads the fonts (see fonts.py); the
-content stream itself is interpreted here, because what is needed from it --
-the raw glyph code, before any Unicode mapping -- is precisely what the
+That is also why this reads **every page**. An earlier version took the
+longest stream in the file and called it the content, which is true of a
+one-page score and silently wrong for the rest -- and 38% of this catalogue
+runs to two pages or more. Nothing downstream could have noticed: a score
+whose second page was never read looks exactly like a score that is half as
+long.
+
+PyMuPDF supplies each page's decoded content stream and its fonts (see
+fonts.py); the stream itself is interpreted here, because what is needed from
+it -- the raw glyph code, before any Unicode mapping -- is precisely what the
 higher-level readers throw away.
 """
-import os
 import re
-import subprocess
 from collections import defaultdict
 
-from fonts import family_of, font_table
+import pymupdf
 
-OBJ = re.compile(rb'(\d+) 0 obj\s*(.*?)\bendobj', re.S)
-STREAM = re.compile(rb'stream\r?\n(.*?)\r?\nendstream', re.S)
+from fonts import font_table
 
 TOKEN = re.compile(rb"""
       (?P<hex><[0-9A-Fa-f\s]*>)
@@ -65,18 +69,6 @@ def apply(m, x, y):
     return (a * x + c * y + e, b * x + d * y + f)
 
 
-def expand(path):
-    """qpdf's QDF mode: object streams disabled, stream contents decoded."""
-    out = path + '.qdf'
-    if not os.path.exists(out) or os.path.getmtime(out) < os.path.getmtime(path):
-        result = subprocess.run(
-            ['qpdf', '--qdf', '--object-streams=disable', '--decode-level=all',
-             path, out], capture_output=True)
-        if not os.path.exists(out):
-            raise RuntimeError(f'qpdf failed on {path}: {result.stderr.decode()[:200]}')
-    return open(out, 'rb').read()
-
-
 def _codes(strings, width):
     """Raw glyph codes out of the strings a text operator was given."""
     out = []
@@ -98,22 +90,18 @@ def _codes(strings, width):
     return out
 
 
-def read(path):
-    """Everything drawn on the page: glyphs with codes, and stroked segments."""
-    raw = expand(path)
-    fonts = font_table(path)
+def replay(content, fonts, unhandled):
+    """Interpret one content stream: the glyphs it draws, and the ink it lays.
 
-    streams = STREAM.findall(raw)
-    if not streams:
-        return {'glyphs': [], 'segments': [], 'fonts': fonts, 'unhandled': {}}
-    content = max(streams, key=len)
-
+    Filled paths are kept apart from stroked ones. A beam is a filled
+    quadrilateral and a staff line is a stroked segment; telling them apart
+    here costs one flag and saves the reader above from guessing.
+    """
     ctm, stack = IDENTITY, []
     tm = tlm = IDENTITY
     font_ref, size = None, 0.0
     px = py = sx = sy = 0.0
     glyphs, segments, pending, operands = [], [], [], []
-    unhandled = defaultdict(int)
 
     def number(i):
         try:
@@ -189,19 +177,20 @@ def read(path):
                         (x + w, y + h, x, y + h), (x, y + h, x, y)]
             px, py = sx, sy = x, y
         elif op in ('c', 'v', 'y'):
-            # Beams, slurs and hairpins are curves. Only the endpoint matters
-            # for the current point; the shape is not read here.
+            # Slurs and hairpins are curves. Only the endpoint matters for the
+            # current point; the shape itself is not read here.
             px, py = number(-2), number(-1)
         elif op in ('S', 's', 'f', 'F', 'f*', 'B', 'B*', 'b', 'b*'):
             closing = op in ('s', 'b', 'b*')
             if closing:
                 pending.append((px, py, sx, sy))
+            filled = op.lower().startswith(('f', 'b'))
             for x0, y0, x1, y1 in pending:
                 a = apply(ctm, x0, y0)
                 b = apply(ctm, x1, y1)
                 segments.append({'x0': round(a[0], 3), 'y0': round(a[1], 3),
                                  'x1': round(b[0], 3), 'y1': round(b[1], 3),
-                                 'fill': op.lower().startswith(('f', 'b'))})
+                                 'fill': filled})
             pending = []
         elif op == 'n':
             pending = []
@@ -210,8 +199,26 @@ def read(path):
 
         operands = []
 
-    return {'glyphs': glyphs, 'segments': segments, 'fonts': fonts,
-            'unhandled': dict(unhandled)}
+    return glyphs, segments
+
+
+def read(path):
+    """Every page of a score, in reading order, with what was drawn on each."""
+    doc = pymupdf.open(path)
+    unhandled = defaultdict(int)
+    cache = {}
+    pages = []
+    for number, page in enumerate(doc, start=1):
+        fonts = font_table(doc, page, cache)
+        glyphs, segments = replay(page.read_contents(), fonts, unhandled)
+        pages.append({
+            'page': number,
+            'glyphs': glyphs,
+            'segments': segments,
+            'fonts': fonts,
+        })
+    doc.close()
+    return {'pages': pages, 'unhandled': dict(unhandled)}
 
 
 def musical(glyphs):
@@ -224,8 +231,9 @@ if __name__ == '__main__':
     data = read(sys.argv[1])
     if len(sys.argv) > 2:
         json.dump(data, open(sys.argv[2], 'w'), indent=1)
-    notes = musical(data['glyphs'])
-    print(f"{len(data['glyphs'])} glyphes ({len(notes)} musicaux), "
-          f"{len(data['segments'])} segments")
-    print(f"familles: {sorted({g['family'] for g in notes})}")
+    for page in data['pages']:
+        notes = musical(page['glyphs'])
+        print(f"page {page['page']}: {len(page['glyphs'])} glyphes "
+              f"({len(notes)} musicaux), {len(page['segments'])} segments, "
+              f"familles {sorted({g['family'] for g in notes}) or 'aucune'}")
     print(f"operateurs non geres: {data['unhandled'] or 'aucun'}")
