@@ -27,6 +27,7 @@ import logging
 from io import BytesIO
 
 import pymupdf
+from fontTools.agl import UV2AGL
 from fontTools.cffLib import CFFFontSet
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
@@ -135,11 +136,79 @@ def fingerprint(glyphset, name):
     }
 
 
+# The three base encodings a PDF names for a simple font. Each is a
+# byte-oriented character set, so the glyph a code addresses is found by
+# decoding the byte and asking the Adobe glyph list what that character is
+# called.
+BASE_ENCODINGS = {
+    'WinAnsiEncoding': 'cp1252',
+    'MacRomanEncoding': 'mac_roman',
+    'StandardEncoding': 'latin-1',
+    'PDFDocEncoding': 'latin-1',
+}
+
+
+def base_encoding(name):
+    """A named base encoding as code -> glyph name."""
+    codec = BASE_ENCODINGS.get(name)
+    if not codec:
+        return {}
+    out = {}
+    for code in range(32, 256):
+        try:
+            char = bytes([code]).decode(codec)
+        except UnicodeDecodeError:
+            continue
+        glyph = UV2AGL.get(ord(char))
+        if glyph:
+            out[code] = glyph
+    return out
+
+
+def _builtin(tt):
+    """The font program's own code -> glyph name map, if it carries one.
+
+    An engraving font is *symbolic*: its characters are noteheads, not
+    letters, so it is published with a (3,0) symbol cmap whose codes live in
+    the private-use block at 0xF000. The low byte of such a code is the
+    character the content stream writes.
+    """
+    try:
+        cmap = tt['cmap']
+    except Exception:
+        return {}
+    symbol = cmap.getcmap(3, 0)
+    if symbol:
+        return {code & 0xFF: name for code, name in symbol.cmap.items()}
+    for platform, encoding in ((1, 0), (3, 1), (0, 3)):
+        table = cmap.getcmap(platform, encoding)
+        if table:
+            return {code: name for code, name in table.cmap.items() if code < 256}
+    return {}
+
+
 def _glyphset(buf):
-    """(glyph set, glyph order) from an embedded font program, either flavour."""
+    """(glyph set, glyph order, code -> name) from an embedded font program."""
     try:
         tt = TTFont(BytesIO(buf), fontNumber=0, lazy=True)
-        return tt.getGlyphSet(), tt.getGlyphOrder()
+        order, builtin = tt.getGlyphOrder(), _builtin(tt)
+        try:
+            return tt.getGlyphSet(), order, builtin
+        except Exception:
+            # Subsetters sometimes truncate the advance-width table, which
+            # fontTools refuses to build a glyph set from. The outlines are
+            # intact and they are all this pipeline reads, so they are taken
+            # from the glyph table directly rather than losing the font.
+            glyf = tt['glyf']
+
+            class _Outline:
+                def __init__(self, name):
+                    self._name = name
+
+                def draw(self, pen):
+                    glyf[self._name].draw(pen, glyf)
+
+            return {n: _Outline(n) for n in order}, order, builtin
     except Exception:
         pass
     cff = CFFFontSet()
@@ -148,6 +217,12 @@ def _glyphset(buf):
     charstrings = font.CharStrings
     order = font.getGlyphOrder()
 
+    encoding = getattr(font, 'Encoding', None)
+    builtin = {}
+    if isinstance(encoding, list):
+        builtin = {code: name for code, name in enumerate(encoding)
+                   if name and name != '.notdef'}
+
     class _Glyph:
         def __init__(self, cs):
             self._cs = cs
@@ -155,7 +230,44 @@ def _glyphset(buf):
         def draw(self, pen):
             self._cs.draw(pen)
 
-    return {n: _Glyph(charstrings[n]) for n in order}, order
+    return {n: _Glyph(charstrings[n]) for n in order}, order, builtin
+
+
+def _encoding(doc, xref):
+    """What the PDF says about a simple font's character codes.
+
+    Returns the named base encoding, if any, and the /Differences array that
+    overrides it. A producer that subsets a font commonly renumbers its
+    characters and says so here rather than in the font program, so the
+    differences have the last word.
+    """
+    kind, value = doc.xref_get_key(xref, 'Encoding')
+    if kind == 'name':
+        return value.lstrip('/'), {}
+    if kind == 'xref':
+        where, prefix = int(value.split()[0]), ''
+    elif kind == 'dict':
+        where, prefix = xref, 'Encoding/'
+    else:
+        return None, {}
+
+    kind, value = doc.xref_get_key(where, prefix + 'BaseEncoding')
+    base = value.lstrip('/') if kind == 'name' else None
+
+    kind, value = doc.xref_get_key(where, prefix + 'Differences')
+    if kind != 'array':
+        return base, {}
+    differences, code = {}, 0
+    for token in value.strip('[]').split():
+        if token.startswith('/'):
+            differences[code] = token[1:]
+            code += 1
+        else:
+            try:
+                code = int(token)
+            except ValueError:
+                break
+    return base, differences
 
 
 def _describe(doc, xref, basefont, encoding):
@@ -170,6 +282,9 @@ def _describe(doc, xref, basefont, encoding):
     """
     _name, fmt, _ftype, buf = doc.extract_font(xref)
     record = {
+        # Kept so the labeller can fetch the outline back out of the document
+        # without a second pass over every font on the page.
+        'xref': xref,
         'basefont': basefont,
         'family': family_of(basefont),
         'format': fmt,
@@ -178,11 +293,31 @@ def _describe(doc, xref, basefont, encoding):
     }
     if buf:
         try:
-            glyphs, order = _glyphset(buf)
-            for gid, gname in enumerate(order):
+            glyphs, order, builtin = _glyphset(buf)
+            if record['bytes'] == 2:
+                # Identity-H addresses glyphs by index, so the code the
+                # content stream writes *is* the glyph id.
+                addressed = dict(enumerate(order))
+            else:
+                # A simple font addresses them by character code, and that is
+                # a different number entirely. Reading one as the other finds
+                # a fingerprint for 2% of the codes drawn -- the wrong
+                # fingerprint, by coincidence of index -- and none for the
+                # rest, which is how half this catalogue came to be invisible.
+                # Least to most specific: a named base encoding is a
+                # generic character set, the font's own cmap knows better
+                # what it holds, and /Differences is the producer stating
+                # outright what it renumbered.
+                base, differences = _encoding(doc, xref)
+                addressed = base_encoding(base)
+                addressed.update(builtin)
+                addressed.update(differences)
+            for code, gname in addressed.items():
+                if gname not in glyphs:
+                    continue
                 fp = fingerprint(glyphs, gname)
                 if fp:
-                    record['codes']['%04x' % gid] = fp
+                    record['codes']['%04x' % code] = fp
         except Exception as exc:
             record['error'] = str(exc)[:80]
     return record

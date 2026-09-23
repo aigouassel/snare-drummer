@@ -13,16 +13,26 @@ vocabulary table in vocabulary.py, and that table then resolves every score in
 the family -- which is the whole leverage of the shape-first approach: a few
 dozen symbols to name, against a catalogue of 884 scores.
 
+The count under each tile is how often the symbol was actually **drawn**, not
+how many fonts contain it. Subsetters are not consistent about dropping unused
+glyphs, and a font's repertoire turns out to be a poor guide to a family's:
+of nine Maestro shapes picked out of the sheet for checking, six were never
+placed on a page at all. Ordering by what the engraver used puts the work
+where the repertoire is, and a symbol drawn a thousand times is worth more
+care than one drawn twice.
+
     ./label.py ../work/*.pdf --family Opus --out ../work/opus-sheet.png
 """
 import argparse
 import glob
 import os
 
-import pymupdf
 from fontTools.pens.recordingPen import RecordingPen
 
-from fonts import _flatten, _glyphset, fingerprint, family_of
+import pymupdf
+
+import ink
+from fonts import _encoding, _flatten, _glyphset, base_encoding
 
 TILE = 90          # points per tile on the sheet
 COLUMNS = 10
@@ -30,29 +40,26 @@ MARGIN = 16
 
 
 def collect(paths, family):
-    """Distinct fingerprints in a family, with the outline of each.
+    """Distinct fingerprints in a family, with the outline and usage of each.
 
     Keyed by fingerprint, so a symbol seen in six scores is drawn once -- and
-    so the count tells you which symbols carry the repertoire and which are
-    a long tail not worth naming yet.
+    counted every time it appears, so the tally tells you which symbols carry
+    the repertoire and which are a long tail not worth naming yet.
     """
     seen = {}
     for path in paths:
+        try:
+            data = ink.read(path)
+        except Exception:
+            continue
         doc = pymupdf.open(path)
-        for page in doc:
-            for entry in page.get_fonts(full=True):
-                xref, _e, _t, basefont, _ref, _enc = entry[:6]
-                if family_of(basefont) != family:
+        for page in data['pages']:
+            for glyph in page['glyphs']:
+                if glyph['family'] != family:
                     continue
-                _n, _fmt, _ft, buf = doc.extract_font(xref)
-                if not buf:
-                    continue
-                try:
-                    glyphs, order = _glyphset(buf)
-                except Exception:
-                    continue
-                for name in order:
-                    fp = fingerprint(glyphs, name)
+                font = page['fonts'].get(glyph['font'] or '', {})
+                for code in glyph['codes']:
+                    fp = font.get('codes', {}).get(code)
                     if not fp:
                         continue
                     record = seen.setdefault(fp['bits'], {
@@ -60,13 +67,63 @@ def collect(paths, family):
                         'fonts': set(),
                     })
                     record['count'] += 1
-                    record['fonts'].add((basefont or '').split('+')[-1])
+                    record['fonts'].add((font.get('basefont') or '').split('+')[-1])
                     if record['outline'] is None:
-                        pen = RecordingPen()
-                        glyphs[name].draw(pen)
-                        record['outline'] = _flatten(pen.value)
+                        record['outline'] = _outline(doc, font, code)
         doc.close()
-    return seen
+    return {bits: r for bits, r in seen.items() if r['outline']}
+
+
+def _outline(doc, font, code):
+    """The points of a drawn glyph, fetched back out of its embedded program.
+
+    Which glyph a code addresses depends on the encoding, and getting that
+    wrong here would draw a contact sheet of the wrong symbols -- a sheet
+    that looks entirely plausible and names the whole family incorrectly. So
+    it goes through the same resolution the fingerprints did.
+    """
+    try:
+        _n, _fmt, _ft, buf = doc.extract_font(font['xref'])
+        glyphs, order, builtin = _glyphset(buf)
+    except Exception:
+        return None
+    if font['bytes'] == 2:
+        addressed = dict(enumerate(order))
+    else:
+        base, differences = _encoding(doc, font['xref'])
+        addressed = base_encoding(base)
+        addressed.update(builtin)
+        addressed.update(differences)
+    name = addressed.get(int(code, 16))
+    if name not in glyphs:
+        return None
+    pen = RecordingPen()
+    try:
+        glyphs[name].draw(pen)
+    except Exception:
+        return None
+    return _contours(pen.value) or None
+
+
+def _contours(commands):
+    """The glyph's outlines, kept apart.
+
+    Flattening a glyph into one run of points is right for fingerprinting --
+    the grid does not care where one contour ends -- and wrong for drawing.
+    Two dots rendered as a single polyline become two blobs joined by a spoke,
+    and a repeat sign came out looking like a flower, which is not a thing to
+    try to recognise on a contact sheet.
+    """
+    out = []
+    run = []
+    for op, args in commands:
+        if op == 'moveTo' and run:
+            out.append(run)
+            run = []
+        run.append((op, args))
+    if run:
+        out.append(run)
+    return [pts for pts in (_flatten(c) for c in out) if len(pts) >= 3]
 
 
 def contact_sheet(records, out, title):
@@ -86,7 +143,8 @@ def contact_sheet(records, out, title):
         ox = MARGIN + col * TILE
         oy = MARGIN * 2 + row * TILE
 
-        pts = record['outline']
+        contours = record['outline']
+        pts = [p for c in contours for p in c]
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
         w = (max(xs) - min(xs)) or 1
@@ -98,7 +156,8 @@ def contact_sheet(records, out, title):
         cy = oy + TILE - 26 + min(ys) * scale
 
         shape = page.new_shape()
-        shape.draw_polyline([(cx + x * scale, cy - y * scale) for x, y in pts])
+        for contour in contours:
+            shape.draw_polyline([(cx + x * scale, cy - y * scale) for x, y in contour])
         shape.finish(fill=(0, 0, 0), color=(0, 0, 0), width=0.3, even_odd=True,
                      closePath=True)
         shape.commit()
