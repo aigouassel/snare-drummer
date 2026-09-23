@@ -350,6 +350,38 @@ def _pdf_widths(doc, xref):
     return out
 
 
+def _cid_to_gid(doc, xref):
+    """The map from character code to glyph index, for a composite font.
+
+    Identity-H means the code *is* the CID, and it is tempting to read that
+    as the code being the glyph index too. It is not: a CIDFontType2 may
+    carry a /CIDToGIDMap stream, two bytes per CID, and then the codes on
+    the page bear no relation to the glyphs in the font. One score here
+    draws codes in the 0xF000 block against a font of fourteen glyphs, so
+    every symbol on it resolved to nothing at all.
+
+    Returns None when the mapping is the identity, which is the common case
+    and wants no table.
+    """
+    kind, value = doc.xref_get_key(xref, 'DescendantFonts')
+    if kind != 'array':
+        return None
+    try:
+        descendant = int(value.strip('[] ').split()[0])
+    except (ValueError, IndexError):
+        return None
+    kind, value = doc.xref_get_key(descendant, 'CIDToGIDMap')
+    if kind != 'xref':
+        return None
+    try:
+        data = doc.xref_stream(int(value.split()[0]))
+    except Exception:
+        return None
+    return {i: int.from_bytes(data[2 * i:2 * i + 2], 'big')
+            for i in range(len(data) // 2)
+            if data[2 * i:2 * i + 2] != b'\x00\x00'}
+
+
 def _encoding(doc, xref):
     """What the PDF says about a simple font's character codes.
 
@@ -414,9 +446,15 @@ def _describe(doc, xref, basefont, encoding):
         try:
             glyphs, order, builtin, advance = _glyphset(buf)
             if record['bytes'] == 2:
-                # Identity-H addresses glyphs by index, so the code the
-                # content stream writes *is* the glyph id.
-                addressed = dict(enumerate(order))
+                # Under Identity-H the code is the CID; the CID is the glyph
+                # index only when the font says so, which is the common case
+                # but not the only one.
+                cids = _cid_to_gid(doc, xref)
+                if cids is None:
+                    addressed = dict(enumerate(order))
+                else:
+                    addressed = {code: order[gid] for code, gid in cids.items()
+                                 if gid < len(order)}
             else:
                 # A simple font addresses them by character code, and that is
                 # a different number entirely. Reading one as the other finds
