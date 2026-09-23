@@ -24,6 +24,13 @@ const LINE = 'b/4'          // the one line a snare part is written on
 const STAVE_HEIGHT = 120
 const TOP_MARGIN = 28
 
+// How far the music reaches either side of the staff line, in pixels, measured
+// off a rendered page: accents and beams sit above, stems and flags below.
+const ABOVE_LINE = 28
+const BELOW_LINE = 60
+// Where a one-line stave draws its line, relative to the y it is built at.
+const LINE_OFFSET = 40
+
 export type ScoreOptions = Partial<Options> & {
   /** Bar currently under the playhead, outlined as it plays. */
   playingBar?: number
@@ -94,12 +101,16 @@ const drawBar = (context: ReturnType<Renderer['getContext']>, placed: PlacedBar,
   const voice = new Voice({ numBeats: bar.meter[0], beatValue: bar.meter[1] })
   voice.setStrict(false)
   voice.addTickables(notes)
-  new Formatter().joinVoices([voice]).format([voice], Math.max(width - 30, 40))
+  // Format across the room actually left for notes. A time signature takes
+  // real width, and formatting across the stave's full span draws the first
+  // notes straight on top of it.
+  const room = stave.getX() + width - stave.getNoteStartX() - 12
+  new Formatter().joinVoices([voice]).format([voice], Math.max(room, 40))
   voice.draw(context, stave)
   for (const beam of beams) beam.setContext(context).draw()
   for (const tuplet of tuplets) tuplet.setContext(context).draw()
 
-  markBar(context, bar, x, y, width, options)
+  markBar(context, bar, stave, width, options)
 }
 
 const makeTuplet = (pending: { notes: StaveNote[]; ratio: { notes: number; inSpaceOf: number } }) =>
@@ -116,26 +127,32 @@ const makeTuplet = (pending: { notes: StaveNote[]; ratio: { notes: number; inSpa
  * see, while playing, which bar the app is unsure about.
  */
 const markBar = (context: ReturnType<Renderer['getContext']>, bar: Bar,
-                 x: number, y: number, width: number, options: ScoreOptions) => {
+                 stave: Stave, width: number, options: ScoreOptions) => {
+  const x = stave.getX()
+  // Anchored to the line the stave actually draws, with offsets measured off
+  // the rendered SVG rather than guessed. A one-line stave puts its line
+  // about 40px below the y it was constructed at, and its music runs from
+  // roughly a third of a stave above the line to two thirds below — so an
+  // outline taken from the stave's y, or from its bounding box, floats above
+  // the notes it is supposed to be marking. Both were tried.
+  const line = stave.getYForLine(0)
+  const top = line - ABOVE_LINE
+  const height = ABOVE_LINE + BELOW_LINE
+
   context.save()
   context.setFont('system-ui', 10)
   context.setFillStyle('#8a8a8a')
-  context.fillText(String(bar.n), x + 2, y - 6)
+  context.fillText(String(bar.n), x + 3, top - 4)
 
-  if (!bar.verdict.trusted) {
-    context.setStrokeStyle('#c2410c')
-    context.setLineWidth(1.5)
+  const outline = (colour: string, lineWidth: number) => {
+    context.setStrokeStyle(colour)
+    context.setLineWidth(lineWidth)
     context.beginPath()
-    context.rect(x + 1, y - 2, width - 2, 56)
+    context.rect(x + 1, top, width - 2, height)
     context.stroke()
   }
-  if (options.playingBar === bar.n) {
-    context.setStrokeStyle('#2563eb')
-    context.setLineWidth(2)
-    context.beginPath()
-    context.rect(x + 1, y - 2, width - 2, 56)
-    context.stroke()
-  }
+  if (!bar.verdict.trusted) outline('#c2410c', 1.5)
+  if (options.playingBar === bar.n) outline('#2563eb', 2)
   context.restore()
 }
 
@@ -161,15 +178,22 @@ export const renderScore = (
   renderer.resize(width, height)
   const context = renderer.getContext()
 
+  let previous: string | null = null
   const boxes: Rendered['boxes'] = systems.flatMap((system, row) => {
     const y = TOP_MARGIN + row * STAVE_HEIGHT
-    let previous: string | null = null
     return system.bars.map((placed) => {
+
       const meter = meterText(placed.bar.meter)
-      const showMeter = row === 0 || meter !== previous
+      const showMeter = previous === null || meter !== previous
       previous = meter
       drawBar(context, placed, y, showMeter, options)
-      return { n: placed.bar.n, x: placed.x, y: y - 8, width: placed.width, height: 70 }
+      // The clickable box follows the same measurement as the outline, so
+      // pointing at a bar and seeing it marked agree.
+      const line = y + LINE_OFFSET
+      return {
+        n: placed.bar.n, x: placed.x, y: line - ABOVE_LINE,
+        width: placed.width, height: ABOVE_LINE + BELOW_LINE,
+      }
     })
   })
 
