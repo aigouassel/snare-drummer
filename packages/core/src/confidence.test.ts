@@ -87,3 +87,27 @@ describe('explain', () => {
     expect(explain({ kind: 'meterUnknown' })).toContain('métrique')
   })
 })
+
+describe('durations measured rather than read', () => {
+  it('reports a bar whose lengths came from spacing, even when it closes', () => {
+    const verdict = judge({
+      meter: [4, 4],
+      events: strokes(QUARTER, 4),
+      readFrom: 'spacing',
+    })
+    expect(verdict.trusted).toBe(false)
+    expect(verdict.trusted === false && verdict.concerns).toContainEqual({
+      kind: 'spacingOnly',
+    })
+  })
+
+  it('trusts the same bar when its lengths were read from the notation', () => {
+    expect(
+      judge({
+        meter: [4, 4],
+        events: strokes(QUARTER, 4),
+        readFrom: 'notation',
+      }).trusted,
+    ).toBe(true)
+  })
+})

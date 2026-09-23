@@ -28,6 +28,14 @@ import { type Event } from './stroke'
  *     blank; it writes a whole-bar rest. So nothing read means nothing
  *     understood.
  *
+ *   * **A measured length is not a stated one.** Durations normally come from
+ *     the notation — the beams and flags an engraver drew are a statement of
+ *     what he meant. When they cannot be read the extractor falls back to
+ *     measuring how far apart the notes were set on the page, which is only
+ *     roughly proportional to their length. Such a bar can still add up to its
+ *     metre, and that is a weaker coincidence than the same sum reached from
+ *     the notation, so it is reported rather than trusted.
+ *
  * Deliberately *not* a signal: how wide the bar is on the page. Engraving does
  * space a bar roughly in proportion to what it contains, so the temptation is
  * real — but density varies legitimately from bar to bar, and an early version
@@ -40,6 +48,8 @@ export const judge = (input: {
   events: readonly Event[]
   /** Symbols found inside this bar that the extractor could not name. */
   unnamedSymbols?: number
+  /** Whether the durations were read from the notation or measured off it. */
+  readFrom?: 'notation' | 'spacing'
 }): Verdict => {
   const concerns: Concern[] = []
 
@@ -50,6 +60,10 @@ export const judge = (input: {
   const unnamed = input.unnamedSymbols ?? 0
   if (unnamed > 0) {
     concerns.push({ kind: 'unnamedSymbols', count: unnamed })
+  }
+
+  if (input.readFrom === 'spacing') {
+    concerns.push({ kind: 'spacingOnly' })
   }
 
   if (input.meter === null) {
@@ -80,5 +94,7 @@ export const explain = (concern: Concern): string => {
       return 'mesure vide : rien n’a pu être lu'
     case 'meterUnknown':
       return 'aucune métrique connue, donc rien à vérifier'
+    case 'spacingOnly':
+      return 'durées mesurées à l’espacement, faute d’avoir pu lire les ligatures'
   }
 }

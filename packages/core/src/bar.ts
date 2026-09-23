@@ -46,6 +46,8 @@ export type Concern =
   | { kind: 'empty' }
   /** No time signature was in force, so there was nothing to check against. */
   | { kind: 'meterUnknown' }
+  /** The durations were measured off the page, not read from the notation. */
+  | { kind: 'spacingOnly' }
 
 /**
  * Playable as read, or shown with its reasons.

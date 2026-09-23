@@ -47,7 +47,7 @@ class Vocabulary:
             return None
         best, best_distance = None, MAX_DISTANCE + 1
         for entry in self.known:
-            if abs(entry['aspect'] - fingerprint['aspect']) > MAX_ASPECT_DRIFT:
+            if not _aspects_agree(entry['aspect'], fingerprint['aspect']):
                 continue
             d = hamming(entry['bits'], fingerprint['bits'])
             if d < best_distance:
@@ -94,6 +94,18 @@ def attribute(codes, families):
         if share >= MIN_SHARE and share > best_score:
             best, best_score = family, share
     return best
+
+
+def _aspects_agree(a, b):
+    """Whether two aspect ratios are the same ratio, measured twice.
+
+    The allowance is proportional. Eight hundredths is the right distance
+    near a ratio of one, where most symbols live, and is meaningless at a
+    ratio of seven and a half: a ledger line measured at 7.70 against 7.61
+    differs by one percent and was being rejected as a different symbol,
+    which left two hundred of them unnamed on one score.
+    """
+    return abs(a - b) <= MAX_ASPECT_DRIFT * max(1.0, (a + b) / 2)
 
 
 def role(symbol):

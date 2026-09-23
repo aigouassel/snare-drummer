@@ -32,6 +32,7 @@ type RawBar = {
   meter: [number, number] | null
   events: readonly RawEvent[]
   unnamedSymbols: number
+  readFrom?: 'notation' | 'spacing' | 'none'
   at?: { page: number; system: number; x0: number; x1: number }
 }
 
@@ -68,7 +69,14 @@ const toBar = (raw: RawBar): Bar => {
     // records that it was never read, so the fallback cannot pass for a fact.
     meter: meter ?? FALLBACK_METER,
     events,
-    verdict: judge({ meter, events, unnamedSymbols: raw.unnamedSymbols }),
+    verdict: judge({
+      meter,
+      events,
+      unnamedSymbols: raw.unnamedSymbols,
+      // 'none' means nothing was read at all, which the empty-bar signal
+      // already covers; only a measured reading is its own concern.
+      ...(raw.readFrom === 'spacing' ? { readFrom: 'spacing' as const } : {}),
+    }),
     ...(raw.at ? { at: raw.at } : {}),
   }
 }
