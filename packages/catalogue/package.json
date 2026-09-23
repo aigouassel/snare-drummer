@@ -1,0 +1,17 @@
+{
+  "name": "@snare-drummer/catalogue",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/catalogue.ts"
+  },
+  "scripts": {
+    "scrape": "python3 scrape.py",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@snare-drummer/core": "workspace:^"
+  }
+}
