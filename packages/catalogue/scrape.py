@@ -151,8 +151,44 @@ def group(entries):
         })
 
     # Newest season first within a corps, which is how these are looked for.
-    return sorted((works[k] for k in order),
-                  key=lambda w: (w['circuit'], w['corps'], -(w.get('year') or 0)))
+    ordered = sorted((works[k] for k in order),
+                     key=lambda w: (w['circuit'], w['corps'], -(w.get('year') or 0)))
+    return mark_current(ordered)
+
+
+def mark_current(works):
+    """Flag each corps' most recent season as the one in the repertoire.
+
+    A corps rewrites its book every year, and nineteen seasons of Blue Devils
+    are nineteen different shows rather than nineteen versions of one. What is
+    worth practising is the latest, so the app works from that and the rest
+    stays listed behind it.
+
+    Recorded here rather than derived on each side, because two
+    implementations of one rule -- the app's and the pipeline's -- would drift,
+    and the drift would be invisible: both would produce a plausible library.
+    This is the same layer that decided what a work is, so it is the layer that
+    can say which one is current.
+
+    A corps with no dated season keeps its undated entry, since there is
+    nothing to prefer it to. A corps that has dated seasons loses its undated
+    one, which cannot be shown to be the most recent.
+    """
+    latest = {}
+    for work in works:
+        year = work.get('year')
+        if year is None:
+            continue
+        if work['corps'] not in latest or year > latest[work['corps']]:
+            latest[work['corps']] = year
+
+    for work in works:
+        year = work.get('year')
+        current = (year == latest[work['corps']] if work['corps'] in latest
+                   else year is None)
+        if current:
+            work['current'] = True
+    return works
 
 
 def main():

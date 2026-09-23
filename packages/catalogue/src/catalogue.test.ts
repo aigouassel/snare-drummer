@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  PROVENANCE, SEQUENCE_COUNT, WORKS, corpsList, filter, findSequence, sourceOf,
-  workById, workTitle, years,
+  LISTED_COUNT, LISTED_WORKS, PROVENANCE, SEQUENCE_COUNT, WORKS, corpsList,
+  filter, findSequence, sourceOf, workById, workTitle, years,
 } from './catalogue'
 
 /**
@@ -12,13 +12,14 @@ import {
  */
 describe('catalogue', () => {
   it('holds the whole listing, grouped into shows', () => {
-    expect(SEQUENCE_COUNT).toBeGreaterThan(800)
-    expect(WORKS.length).toBeGreaterThan(300)
-    expect(WORKS.length).toBeLessThan(SEQUENCE_COUNT)
+    expect(LISTED_COUNT.sequences).toBeGreaterThan(800)
+    expect(LISTED_COUNT.works).toBeGreaterThan(300)
+    expect(LISTED_COUNT.works).toBeLessThan(LISTED_COUNT.sequences)
+    expect(LISTED_WORKS.length).toBe(LISTED_COUNT.works)
   })
 
   it('gives every work a corps, a circuit and at least one sequence', () => {
-    for (const work of WORKS) {
+    for (const work of LISTED_WORKS) {
       expect(work.id).toMatch(/^[a-z0-9-]+$/)
       expect(work.corps.length).toBeGreaterThan(0)
       expect(['DCI', 'WGI', 'DCA', 'other']).toContain(work.circuit)
@@ -27,7 +28,7 @@ describe('catalogue', () => {
   })
 
   it('gives every sequence a title and a PDF URL', () => {
-    for (const work of WORKS) {
+    for (const work of LISTED_WORKS) {
       for (const sequence of work.sequences) {
         expect(sequence.title.length).toBeGreaterThan(0)
         expect(sequence.url).toMatch(/^https:\/\/lothype\.com\/.*\.pdf$/)
@@ -36,8 +37,8 @@ describe('catalogue', () => {
   })
 
   it('keeps work ids and sequence ids unique across the catalogue', () => {
-    expect(new Set(WORKS.map((w) => w.id)).size).toBe(WORKS.length)
-    const sequences = WORKS.flatMap((w) => w.sequences.map((s) => s.id))
+    expect(new Set(LISTED_WORKS.map((w) => w.id)).size).toBe(LISTED_WORKS.length)
+    const sequences = LISTED_WORKS.flatMap((w) => w.sequences.map((s) => s.id))
     expect(new Set(sequences).size).toBe(sequences.length)
   })
 
@@ -47,15 +48,17 @@ describe('catalogue', () => {
    * was 884 unrelated rows.
    */
   it('groups a season that was written in several passages', () => {
-    const many = WORKS.filter((w) => w.sequences.length > 1)
+    const many = LISTED_WORKS.filter((w) => w.sequences.length > 1)
     expect(many.length).toBeGreaterThan(100)
-    const biggest = WORKS.reduce((a, b) => (a.sequences.length >= b.sequences.length ? a : b))
+    const biggest = LISTED_WORKS.reduce(
+      (a, b) => (a.sequences.length >= b.sequences.length ? a : b),
+    )
     expect(biggest.sequences.length).toBeGreaterThan(5)
   })
 
   it('never puts two seasons of one corps in the same work', () => {
     const seen = new Set<string>()
-    for (const work of WORKS) {
+    for (const work of LISTED_WORKS) {
       const key = `${work.corps}|${work.year ?? ''}`
       expect(seen.has(key)).toBe(false)
       seen.add(key)
@@ -115,5 +118,57 @@ describe('catalogue', () => {
 
   it('lists more than sixty ensembles', () => {
     expect(corpsList().length).toBeGreaterThan(60)
+  })
+})
+
+/**
+ * The repertoire is a reading of the listing, not a subset of it chosen by
+ * hand, so what is asserted is the rule: one season per corps, and that
+ * season the latest one the page holds.
+ */
+describe('the repertoire', () => {
+  it('keeps exactly one season of each corps', () => {
+    const perCorps = new Map<string, number>()
+    for (const work of WORKS) {
+      perCorps.set(work.corps, (perCorps.get(work.corps) ?? 0) + 1)
+    }
+    for (const [corps, count] of perCorps) {
+      expect(count, `${corps} appears ${count} times`).toBe(1)
+    }
+    expect(perCorps.size).toBe(corpsList().length)
+  })
+
+  it('loses no corps from the listing', () => {
+    expect(new Set(WORKS.map((w) => w.corps)))
+      .toEqual(new Set(LISTED_WORKS.map((w) => w.corps)))
+  })
+
+  it('keeps the latest season a corps has, and no earlier one', () => {
+    for (const work of WORKS) {
+      const seasons = LISTED_WORKS.filter((w) => w.corps === work.corps)
+      const dated = seasons.filter((w) => w.year !== undefined)
+      if (dated.length === 0) {
+        // Nothing to prefer it to: an undated entry stands for its corps.
+        expect(work.year).toBeUndefined()
+        continue
+      }
+      // A corps that has dated seasons loses its undated entry, which cannot
+      // be shown to be the most recent.
+      expect(work.year).toBe(Math.max(...dated.map((w) => w.year as number)))
+    }
+  })
+
+  it('is a real reduction, and stays a small multiple of its corps', () => {
+    expect(WORKS.length).toBeLessThan(LISTED_COUNT.works / 3)
+    expect(SEQUENCE_COUNT).toBeLessThan(LISTED_COUNT.sequences / 3)
+    expect(SEQUENCE_COUNT).toBeGreaterThan(WORKS.length)
+  })
+
+  it('reaches every repertoire sequence through findSequence', () => {
+    for (const work of WORKS) {
+      for (const sequence of work.sequences) {
+        expect(findSequence(sequence.id)?.work.id).toBe(work.id)
+      }
+    }
   })
 })

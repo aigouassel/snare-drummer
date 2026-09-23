@@ -14,6 +14,18 @@ import data from './catalogue.json' with { type: 'json' }
  * has been read would misrepresent 327 shows as one, and an untranscribed
  * sequence is still useful: it opens its PDF.
  *
+ * What the app works from is narrower: **each corps at its most recent
+ * season**. A corps rewrites its book every year, so nineteen seasons of Blue
+ * Devils are nineteen different shows rather than nineteen versions of one,
+ * and what is worth practising is the latest. That reduction is 327 works to
+ * 66, and 884 sequences to 129. Everything else stays listed behind it, and
+ * `LISTED_WORKS` still holds it all.
+ *
+ * Which season is current is read from the file rather than worked out here,
+ * because the pipeline needs the same answer and two implementations of one
+ * rule would drift invisibly -- both would produce a plausible library. The
+ * scraper decides what a work is, so it is what says which one is current.
+ *
  * Regenerate with `yarn workspace @snare-drummer/catalogue scrape`.
  */
 
@@ -33,6 +45,8 @@ export type Work = {
   /** Absent where the listing gives no year; such entries are not dated here
    *  rather than being folded into an arbitrary season. */
   year?: number
+  /** This corps' most recent season: the one the app plays from. */
+  current?: true
   sequences: readonly Sequence[]
 }
 
@@ -44,9 +58,19 @@ type CatalogueFile = {
 
 const file = data as unknown as CatalogueFile
 
-export const WORKS: readonly Work[] = file.works
+/** Everything the page lists, every season of every corps. */
+export const LISTED_WORKS: readonly Work[] = file.works
+
+/** The repertoire: each corps at its most recent season. */
+export const WORKS: readonly Work[] = LISTED_WORKS.filter((w) => w.current)
 
 export const SEQUENCE_COUNT: number = WORKS.reduce((n, w) => n + w.sequences.length, 0)
+
+/** How much of the listing is held back, so the app can say so. */
+export const LISTED_COUNT = {
+  works: LISTED_WORKS.length,
+  sequences: LISTED_WORKS.reduce((n, w) => n + w.sequences.length, 0),
+} as const
 
 /** The page the catalogue was read from, and when. */
 export const PROVENANCE = { source: file.source, read: file.read } as const

@@ -7,6 +7,7 @@
    "corps": "Caballeros",
    "circuit": "DCA",
    "year": 2015,
+   "current": true,
    "sequences": [
     {
      "id": "2015-feature-10",
@@ -20,6 +21,7 @@
    "corps": "Academy",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-closer-early-season",
@@ -131,6 +133,7 @@
    "corps": "Anaheim Kingsmen",
    "circuit": "DCI",
    "year": 1971,
+   "current": true,
    "sequences": [
     {
      "id": "1971-drum-break",
@@ -144,6 +147,7 @@
    "corps": "Blue Devils",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-circus-1",
@@ -740,6 +744,7 @@
    "corps": "Blue Devils B",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-opening-snare-break",
@@ -815,6 +820,7 @@
    "corps": "Blue Devils C",
    "circuit": "DCI",
    "year": 2016,
+   "current": true,
    "sequences": [
     {
      "id": "2016-movement-4-2",
@@ -828,6 +834,7 @@
    "corps": "Blue Knights",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-movement-2-1",
@@ -1111,6 +1118,7 @@
    "corps": "Blue Stars",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-carpenter",
@@ -1301,6 +1309,7 @@
    "corps": "Bluecoats",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-closer",
@@ -1783,6 +1792,7 @@
    "corps": "Boston Crusaders",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-drum-break-as-of-7-26-19",
@@ -1899,6 +1909,7 @@
    "corps": "Cadets",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-demonic-thesis",
@@ -2289,6 +2300,7 @@
    "corps": "Carolina Crown",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-closer-1",
@@ -2587,6 +2599,7 @@
    "corps": "Colts",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-opener-2",
@@ -2636,6 +2649,7 @@
    "corps": "Crossmen",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-opener-3",
@@ -2740,6 +2754,7 @@
    "corps": "Glassmen",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-closer-1",
@@ -2900,6 +2915,7 @@
    "corps": "Jersey Surf",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-closer-2",
@@ -2972,6 +2988,7 @@
    "corps": "Madison Scouts",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-racing-heart",
@@ -3099,6 +3116,7 @@
    "corps": "Mandarins",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-snare-break",
@@ -3169,6 +3187,7 @@
    "corps": "Music City",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-movement-2-6",
@@ -3218,6 +3237,7 @@
    "corps": "Oregon Crusaders",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-movement-2-break",
@@ -3244,6 +3264,7 @@
    "corps": "Pacific Crest",
    "circuit": "DCI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-drum-feature",
@@ -3571,6 +3592,7 @@
    "corps": "SCVC",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-opener-8",
@@ -3607,6 +3629,7 @@
    "corps": "Santa Clara Vanguard (SCV)",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-ballad",
@@ -4002,6 +4025,7 @@
    "corps": "Spirit of Atlanta",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-opener-7",
@@ -4082,6 +4106,7 @@
    "corps": "Star of Indiana",
    "circuit": "DCI",
    "year": 1993,
+   "current": true,
    "sequences": [
     {
      "id": "1993-closer",
@@ -4118,6 +4143,7 @@
    "corps": "Teal Sound",
    "circuit": "DCI",
    "year": 2011,
+   "current": true,
    "sequences": [
     {
      "id": "2011-movement-1-1",
@@ -4146,6 +4172,7 @@
    "corps": "The Cavaliers",
    "circuit": "DCI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-opener-4",
@@ -4350,6 +4377,7 @@
    "corps": "Troopers",
    "circuit": "DCI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-snare-feature-1",
@@ -4422,6 +4450,7 @@
    "corps": "Velvet Knights",
    "circuit": "DCI",
    "year": 2009,
+   "current": true,
    "sequences": [
     {
      "id": "2009-drum-feature-5",
@@ -4435,6 +4464,7 @@
    "corps": "Arcadia",
    "circuit": "WGI",
    "year": 2015,
+   "current": true,
    "sequences": [
     {
      "id": "2015-feature-5",
@@ -4448,6 +4478,7 @@
    "corps": "Atlanta Quest",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-closer-snare-break",
@@ -4543,6 +4574,7 @@
    "corps": "Ayala HS",
    "circuit": "WGI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-opener-fall-season",
@@ -4663,6 +4695,7 @@
    "corps": "Broken City",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-movement-2-10",
@@ -4802,6 +4835,7 @@
    "corps": "Cadets Winter Percussion",
    "circuit": "WGI",
    "year": 2016,
+   "current": true,
    "sequences": [
     {
      "id": "2016-feature-7",
@@ -4841,6 +4875,7 @@
    "corps": "Cavaliers Indoor Percussion",
    "circuit": "WGI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-opener-13",
@@ -4854,6 +4889,7 @@
    "corps": "Center Grove HS",
    "circuit": "WGI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-movement-3-5",
@@ -4867,6 +4903,7 @@
    "corps": "Chino Hills HS",
    "circuit": "WGI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-snare-break-5",
@@ -4983,6 +5020,7 @@
    "corps": "Dark Sky Percussion",
    "circuit": "WGI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-opening-feature",
@@ -5009,6 +5047,7 @@
    "corps": "Dartmouth HS",
    "circuit": "WGI",
    "year": 2014,
+   "current": true,
    "sequences": [
     {
      "id": "2014-opener-feature",
@@ -5053,6 +5092,7 @@
    "corps": "Eastside Fury",
    "circuit": "WGI",
    "year": 2010,
+   "current": true,
    "sequences": [
     {
      "id": "2010-feature-5",
@@ -5105,6 +5145,7 @@
    "corps": "Freelancers",
    "circuit": "WGI",
    "year": 2010,
+   "current": true,
    "sequences": [
     {
      "id": "2010-keelan-s-solo",
@@ -5123,6 +5164,7 @@
    "corps": "Gateway",
    "circuit": "WGI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-feature",
@@ -5193,6 +5235,7 @@
    "corps": "Genesis Indoor",
    "circuit": "WGI",
    "year": 2016,
+   "current": true,
    "sequences": [
     {
      "id": "2016-movement-3-5",
@@ -5206,6 +5249,7 @@
    "corps": "George Mason University (GMU)",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-closer-5",
@@ -5288,6 +5332,7 @@
    "corps": "Great Lakes Percussion",
    "circuit": "WGI",
    "year": 2004,
+   "current": true,
    "sequences": [
     {
      "id": "2004-battery-break",
@@ -5306,6 +5351,7 @@
    "corps": "Infinity",
    "circuit": "WGI",
    "year": 2016,
+   "current": true,
    "sequences": [
     {
      "id": "2016-closer-7",
@@ -5385,6 +5431,7 @@
    "corps": "Infinity 2",
    "circuit": "WGI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-snare-break-5",
@@ -5424,6 +5471,7 @@
    "corps": "Inov8",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-opener-13",
@@ -5437,6 +5485,7 @@
    "corps": "Matrix",
    "circuit": "WGI",
    "year": 2016,
+   "current": true,
    "sequences": [
     {
      "id": "2016-snare-break-4",
@@ -5501,6 +5550,7 @@
    "corps": "POW Percussion",
    "circuit": "WGI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-snare-feature-1",
@@ -5527,6 +5577,7 @@
    "corps": "Pulse",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-snare-solo",
@@ -5787,6 +5838,7 @@
    "corps": "RCC",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-snare-break-early-season-3",
@@ -6234,6 +6286,7 @@
    "corps": "Redline",
    "circuit": "WGI",
    "year": 2011,
+   "current": true,
    "sequences": [
     {
      "id": "2011-opener-22",
@@ -6283,6 +6336,7 @@
    "corps": "Rhythm X",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-movement-7",
@@ -6602,6 +6656,7 @@
    "corps": "Rise",
    "circuit": "WGI",
    "year": 2016,
+   "current": true,
    "sequences": [
     {
      "id": "2016-intro-1",
@@ -6614,6 +6669,7 @@
    "id": "roots-percussion-undated",
    "corps": "Roots Percussion",
    "circuit": "WGI",
+   "current": true,
    "sequences": [
     {
      "id": "roots-2017-snare-feature",
@@ -6627,6 +6683,7 @@
    "corps": "Stryke",
    "circuit": "WGI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-eights-and-legatos",
@@ -6740,6 +6797,7 @@
    "corps": "Stryke 2",
    "circuit": "WGI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-8s",
@@ -6776,6 +6834,7 @@
    "corps": "United Percussion",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-ghost-break",
@@ -6807,6 +6866,7 @@
    "corps": "Unity",
    "circuit": "WGI",
    "year": 2017,
+   "current": true,
    "sequences": [
     {
      "id": "2017-excerpt-finals",
@@ -6825,6 +6885,7 @@
    "corps": "Vessel",
    "circuit": "WGI",
    "year": 2019,
+   "current": true,
    "sequences": [
     {
      "id": "2019-snare-feature",
@@ -6850,6 +6911,7 @@
    "corps": "Vigilantes",
    "circuit": "WGI",
    "year": 2018,
+   "current": true,
    "sequences": [
     {
      "id": "2018-feature1",
@@ -6880,6 +6942,7 @@
    "id": "byos-undated",
    "corps": "BYOS",
    "circuit": "other",
+   "current": true,
    "sequences": [
     {
      "id": "faded",
@@ -6922,6 +6985,7 @@
    "id": "keelan-tobia-undated",
    "corps": "Keelan Tobia",
    "circuit": "other",
+   "current": true,
    "sequences": [
     {
      "id": "get-the-feeling-solo",
@@ -6950,6 +7014,7 @@
    "corps": "Other",
    "circuit": "other",
    "year": 2009,
+   "current": true,
    "sequences": [
     {
      "id": "2009-skol-vikings-audition-piece-1",
@@ -6999,6 +7064,7 @@
    "id": "ralph-nader-undated",
    "corps": "Ralph Nader",
    "circuit": "other",
+   "current": true,
    "sequences": [
     {
      "id": "come-and-get-it",
