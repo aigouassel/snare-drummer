@@ -1,0 +1,14 @@
+# The pipeline reads PDFs, and two of those jobs are solved problems.
+#
+# PyMuPDF opens the document and hands over the embedded font programs;
+# fontTools decodes them, in either of the two outline formats these scores
+# arrive in. Neither is reimplemented here: a CFF charset is a binary format
+# from 1996, and there is nothing to learn from parsing it again.
+#
+# The content stream IS interpreted here (ink.py), because what this pipeline
+# needs from it -- the raw glyph code, before any Unicode mapping -- is exactly
+# what a higher-level reader discards.
+#
+# qpdf does the decompression and is expected on PATH (brew install qpdf).
+pymupdf>=1.24
+fonttools>=4.50
