@@ -10,11 +10,17 @@ from what was read and the contents are placed into it afterwards. It is also
 what makes a doubtful bar local: the bar exists independently of whether its
 contents made sense.
 
-Two distinctions carry the whole module, and both are geometric:
+Three distinctions carry the whole module, and all of them are geometric:
 
-  * a **staff** is five evenly spaced horizontal lines of the same extent.
+  * a **staff** is five evenly spaced horizontal lines *of the same extent*.
     Requiring exactly five, evenly spaced, is what stops a tie, a hairpin or
-    an underlined title from being taken for a staff.
+    an underlined title from being taken for a staff; requiring them to begin
+    and end together is what keeps two staves printed side by side apart.
+
+  * a **one-line staff** is how most of this repertoire is actually written,
+    and it has no pattern to recognise -- a lone rule looks like an underline.
+    What identifies it is what crosses it: barlines straddle it evenly and are
+    all drawn to one height, where a stem hangs to one side.
 
   * a **barline** is a vertical segment spanning the staff's full height. A
     stem is also a vertical segment, and is roughly two thirds as tall and
@@ -28,6 +34,9 @@ music on exactly that reasoning. Bar width varies legitimately with density;
 it is not evidence of anything.
 """
 TOLERANCE = 0.6        # coordinates closer than this are the same line
+HAIRLINE = 1.0         # a rule drawn as a thin rectangle is this thick, at most
+EXTENT = 3.0           # the five lines of one staff start and end together
+SYMMETRY = 0.15        # a barline straddles its staff evenly; a stem does not
 
 
 def horizontals(segments, min_length):
@@ -59,31 +68,151 @@ def cluster(values, tolerance):
     return [sum(g) / len(g) for g in groups]
 
 
-def find_systems(segments, page_width):
-    lines = {}
-    for x0, x1, y in horizontals(segments, min_length=page_width * 0.25):
-        lines.setdefault(round(y, 1), []).append((x0, x1))
+def rules(segments, min_length):
+    """Horizontal rules on the page, with the two edges of a thin one merged.
 
-    ys = sorted(lines)
-    systems, i = [], 0
-    while i + 4 < len(ys):
-        window = ys[i:i + 5]
-        gaps = [window[k + 1] - window[k] for k in range(4)]
-        if max(gaps) - min(gaps) < TOLERANCE and 2 < gaps[0] < 40:
-            spans = [span for y in window for span in lines[y]]
-            systems.append({
-                'lines': window,
-                'bottom': window[0],
-                'top': window[-1],
-                'spacing': sum(gaps) / 4,
-                'x0': min(s[0] for s in spans),
-                'x1': max(s[1] for s in spans),
-            })
-            i += 5
+    A staff line reaches this module in one of two ways. Most engravers stroke
+    it, and it arrives as a single segment at a single y. Others fill a very
+    thin rectangle, and it arrives as two segments a fraction of a point
+    apart -- so a five-line staff presents as ten lines, the five-line test
+    below never fires, and the page reports no staves at all. Merging the two
+    edges of a hairline here is what makes the two cases indistinguishable
+    further up.
+
+    Rules merge only when they overlap horizontally as well. Two staves
+    printed side by side sit at the same y and must stay two rules, or their
+    extents run together and neither is recognisable.
+    """
+    out = []
+    for x0, x1, y in horizontals(segments, min_length):
+        for rule in out:
+            if (abs(rule['y'] - y) <= HAIRLINE
+                    and x0 <= rule['x1'] + 1 and x1 >= rule['x0'] - 1):
+                rule['x0'] = min(rule['x0'], x0)
+                rule['x1'] = max(rule['x1'], x1)
+                rule['y'] = (rule['y'] + y) / 2
+                break
         else:
-            i += 1
+            out.append({'y': y, 'x0': x0, 'x1': x1})
+    return out
 
-    systems.sort(key=lambda s: -s['top'])      # reading order, down the page
+
+def _crossings(rule, columns):
+    """The verticals that cross a rule the way a barline crosses a staff.
+
+    On a one-line percussion staff -- which is how most of this repertoire is
+    written -- there is no five-line pattern to recognise, and a lone rule
+    looks exactly like an underline or a hairpin. What distinguishes it is
+    what crosses it: a barline straddles the line evenly and every barline on
+    a staff is drawn to the same height, whereas a stem hangs to one side.
+    Measured on real pages, barlines came out 12.27 above and 12.27 below to
+    the hundredth of a point, and the stems beside them 2.32 above and 16.59
+    below.
+    """
+    even = []
+    for x, y0, y1 in columns:
+        if not (rule['x0'] - 2 <= x <= rule['x1'] + 2):
+            continue
+        if not (y0 < rule['y'] < y1):
+            continue
+        above, below = y1 - rule['y'], rule['y'] - y0
+        height = y1 - y0
+        if abs(above - below) <= SYMMETRY * height:
+            even.append(height)
+    return even
+
+
+def _single_line(rule, columns):
+    """A one-line staff, or None.
+
+    The staff's spacing has to be inferred, since there is no second line to
+    measure it against. The barline supplies it: on a one-line staff it is
+    drawn one space above the line and one below, which two independent
+    measurements confirm -- the noteheads on those pages come out at 1.05 and
+    1.13 spaces tall against that scale, and a notehead is one space by
+    definition.
+    """
+    even = _crossings(rule, columns)
+    if len(even) < 2:
+        return None
+    height = sorted(even)[len(even) // 2]
+    # Every barline of one staff is the same height. A spread means these are
+    # not barlines.
+    if max(even) - min(even) > 0.05 * height:
+        return None
+    spacing = height / 2
+    if not (2 < spacing < 40) or (rule['x1'] - rule['x0']) < spacing * 10:
+        return None
+    return {
+        'lines': [rule['y']],
+        'bottom': rule['y'] - spacing,
+        'top': rule['y'] + spacing,
+        'spacing': spacing,
+        'x0': rule['x0'],
+        'x1': rule['x1'],
+    }
+
+
+def find_systems(segments, page_width):
+    """Every five-line staff on the page, in reading order.
+
+    A staff is five rules that are evenly spaced *and co-extensive*: they
+    begin and end together, because they are drawn as one object. Co-extent
+    is the stronger of the two tests and it replaces an earlier rule that a
+    staff line had to run a quarter of the page width. That proxy holds for a
+    portrait page with one staff per system and fails on everything else --
+    on a landscape page carrying two columns of music, the real staff lines
+    measure a fifth of the width and were all discarded, silently.
+    """
+    candidates = [r for r in rules(segments, min_length=max(page_width * 0.05, 20))]
+
+    # Lines belonging to one staff share their extent; lines of a staff
+    # printed alongside do not.
+    groups = []
+    for rule in sorted(candidates, key=lambda r: (r['x0'], r['x1'])):
+        for group in groups:
+            if (abs(group[0]['x0'] - rule['x0']) <= EXTENT
+                    and abs(group[0]['x1'] - rule['x1']) <= EXTENT):
+                group.append(rule)
+                break
+        else:
+            groups.append([rule])
+
+    systems = []
+    for group in groups:
+        ys = sorted(r['y'] for r in group)
+        i = 0
+        while i + 4 < len(ys):
+            window = ys[i:i + 5]
+            gaps = [window[k + 1] - window[k] for k in range(4)]
+            spacing = sum(gaps) / 4
+            span = group[0]['x1'] - group[0]['x0']
+            if (max(gaps) - min(gaps) < TOLERANCE and 2 < gaps[0] < 40
+                    and span >= spacing * 6):
+                systems.append({
+                    'lines': window,
+                    'bottom': window[0],
+                    'top': window[-1],
+                    'spacing': spacing,
+                    'x0': min(r['x0'] for r in group),
+                    'x1': max(r['x1'] for r in group),
+                })
+                i += 5
+            else:
+                i += 1
+
+    spoken_for = {round(y, 1) for s in systems for y in s['lines']}
+    columns = verticals(segments)
+    for rule in candidates:
+        if round(rule['y'], 1) in spoken_for:
+            continue
+        found = _single_line(rule, columns)
+        if found:
+            systems.append(found)
+
+    # Reading order: down the page, then left to right across a page that
+    # sets its music in columns.
+    systems.sort(key=lambda s: (-round(s['top'], 0), s['x0']))
     return systems
 
 

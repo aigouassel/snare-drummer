@@ -90,14 +90,39 @@ def _codes(strings, width):
     return out
 
 
-def replay(content, fonts, unhandled):
+def orientation(page):
+    """The matrix that puts a page's content the way up it is read.
+
+    /Rotate is a viewing instruction: the content stream is written in one
+    frame and the reader is told to turn the paper. Three percent of this
+    catalogue is engraved landscape and rotated into portrait, and ignoring
+    the instruction does not produce an error -- it produces a page whose
+    staff lines are vertical, which layout.py then reports as having no
+    staves at all. So the rotation is folded into the initial transform and
+    everything downstream works in reading orientation.
+    """
+    turn = page.rotation % 360
+    if turn == 0:
+        return IDENTITY
+    # page.rect is the rotated box, so the unrotated one is its transpose
+    # for a quarter turn.
+    w, h = (page.rect.height, page.rect.width) if turn in (90, 270) \
+        else (page.rect.width, page.rect.height)
+    if turn == 90:
+        return (0.0, -1.0, 1.0, 0.0, 0.0, float(w))
+    if turn == 180:
+        return (-1.0, 0.0, 0.0, -1.0, float(w), float(h))
+    return (0.0, 1.0, -1.0, 0.0, float(h), 0.0)
+
+
+def replay(content, fonts, unhandled, base=IDENTITY):
     """Interpret one content stream: the glyphs it draws, and the ink it lays.
 
     Filled paths are kept apart from stroked ones. A beam is a filled
     quadrilateral and a staff line is a stroked segment; telling them apart
     here costs one flag and saves the reader above from guessing.
     """
-    ctm, stack = IDENTITY, []
+    ctm, stack = base, []
     tm = tlm = IDENTITY
     font_ref, size = None, 0.0
     px = py = sx = sy = 0.0
@@ -128,7 +153,7 @@ def replay(content, fonts, unhandled):
         if op == 'q':
             stack.append(ctm)
         elif op == 'Q':
-            ctm = stack.pop() if stack else IDENTITY
+            ctm = stack.pop() if stack else base
         elif op == 'cm':
             ctm = mul(tuple(number(i) for i in range(-6, 0)), ctm)
 
@@ -210,7 +235,8 @@ def read(path):
     pages = []
     for number, page in enumerate(doc, start=1):
         fonts = font_table(doc, page, cache)
-        glyphs, segments = replay(page.read_contents(), fonts, unhandled)
+        glyphs, segments = replay(page.read_contents(), fonts, unhandled,
+                                  base=orientation(page))
         pages.append({
             'page': number,
             'glyphs': glyphs,
