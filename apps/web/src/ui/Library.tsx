@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import {
-  type Work, SEQUENCE_COUNT, WORKS, corpsList, filter, workTitle, years,
+  type Work, LISTED_COUNT, SEQUENCE_COUNT, WORKS, corpsList, filter, workTitle,
+  years,
 } from '@snare-drummer/catalogue'
 import { type Circuit } from '@snare-drummer/core/piece'
 import { TRANSCRIBED, TRANSCRIBED_WORKS } from '@snare-drummer/transcription'
@@ -44,6 +45,12 @@ export const Library = ({ selected, onSelect }: {
         <div className="count">
           {works.length} / {WORKS.length} morceaux · {SEQUENCE_COUNT} séquences ·{' '}
           {TRANSCRIBED.size} retranscrite{TRANSCRIBED.size > 1 ? 's' : ''}
+        </div>
+        {/* The library is each corps at its most recent season. Saying so
+            keeps the count from looking like the whole site. */}
+        <div className="note">
+          la saison la plus récente de chaque ensemble, sur {LISTED_COUNT.works}{' '}
+          listées
         </div>
       </header>
 

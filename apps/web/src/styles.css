@@ -113,3 +113,9 @@ body {
   width: 6px; height: 6px; border-radius: 50%; background: #10b981;
 }
 .sequence[aria-current='true'] .dot { background: #a7f3d0; }
+
+.library header .note {
+  margin-top: 2px;
+  font-size: 11px;
+  color: #9a9a9a;
+}

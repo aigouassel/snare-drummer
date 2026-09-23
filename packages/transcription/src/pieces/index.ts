@@ -7,62 +7,95 @@
  * and a list somebody can read is worth more than one line of cleverness.
  */
 
-import piece0 from './1999-opener-1.json' with { type: 'json' }
-import piece1 from './2004-opener-segment-1.json' with { type: 'json' }
-import piece2 from './2006-drum-break.json' with { type: 'json' }
-import piece3 from './2009-closer-1.json' with { type: 'json' }
-import piece4 from './2009-opener-segment-fall-season.json' with { type: 'json' }
-import piece5 from './2009-segment-1.json' with { type: 'json' }
-import piece6 from './2010-drum-feature-1.json' with { type: 'json' }
-import piece7 from './2010-drum-feature-5.json' with { type: 'json' }
-import piece8 from './2010-opener1.json' with { type: 'json' }
-import piece9 from './2010-segment-1.json' with { type: 'json' }
-import piece10 from './2011-bloo-rolls.json' with { type: 'json' }
-import piece11 from './2011-closer-finals.json' with { type: 'json' }
-import piece12 from './2011-movement-2-7.json' with { type: 'json' }
-import piece13 from './2011-opener-23.json' with { type: 'json' }
-import piece14 from './2011-opener-7.json' with { type: 'json' }
-import piece15 from './2012-fall-drum-feature.json' with { type: 'json' }
-import piece16 from './2012-movement-2.json' with { type: 'json' }
-import piece17 from './2012-opener-1.json' with { type: 'json' }
-import piece18 from './2012-opener-15.json' with { type: 'json' }
-import piece19 from './2012-opener-finals-1.json' with { type: 'json' }
-import piece20 from './2012-part-3-1.json' with { type: 'json' }
-import piece21 from './2012-peppy-and-george-1.json' with { type: 'json' }
-import piece22 from './2012-segment-1.json' with { type: 'json' }
-import piece23 from './2013-feature-2.json' with { type: 'json' }
-import piece24 from './2013-movement-2-12.json' with { type: 'json' }
-import piece25 from './2013-opener.json' with { type: 'json' }
-import piece26 from './2014-feature.json' with { type: 'json' }
-import piece27 from './2014-movement-2-segment.json' with { type: 'json' }
-import piece28 from './2014-opener1-1.json' with { type: 'json' }
-import piece29 from './2014-sterling1-1.json' with { type: 'json' }
-import piece30 from './2015-bkat-snare-solo.json' with { type: 'json' }
-import piece31 from './2015-feature-5.json' with { type: 'json' }
-import piece32 from './2016-feature-1.json' with { type: 'json' }
-import piece33 from './2016-journey.json' with { type: 'json' }
-import piece34 from './2016-lick.json' with { type: 'json' }
-import piece35 from './2016-movements-1-and-2.json' with { type: 'json' }
-import piece36 from './2016-snare-break-2.json' with { type: 'json' }
-import piece37 from './2016-snare-feature-latest.json' with { type: 'json' }
-import piece38 from './2017-closer1.json' with { type: 'json' }
-import piece39 from './2017-drum-break.json' with { type: 'json' }
-import piece40 from './2017-duets.json' with { type: 'json' }
-import piece41 from './2017-movement-21.json' with { type: 'json' }
-import piece42 from './2017-movement-3-early-season-1.json' with { type: 'json' }
-import piece43 from './2017-opener-15.json' with { type: 'json' }
-import piece44 from './2017-opener.json' with { type: 'json' }
-import piece45 from './2018-ballad.json' with { type: 'json' }
-import piece46 from './2018-carpenter.json' with { type: 'json' }
-import piece47 from './2018-closer-2.json' with { type: 'json' }
-import piece48 from './2018-eights-and-legatos.json' with { type: 'json' }
-import piece49 from './2018-movement-2-6.json' with { type: 'json' }
-import piece50 from './2018-opener-11.json' with { type: 'json' }
-import piece51 from './2018-opener-fall-season.json' with { type: 'json' }
-import piece52 from './2018-opener-snare-break.json' with { type: 'json' }
-import piece53 from './2018-snare-break-3.json' with { type: 'json' }
-import piece54 from './2018-snare-lick.json' with { type: 'json' }
-import piece55 from './double-beat-1.json' with { type: 'json' }
+import piece0 from './1993-closer.json' with { type: 'json' }
+import piece1 from './1993-opener.json' with { type: 'json' }
+import piece2 from './2009-skol-vikings-audition-piece-1.json' with { type: 'json' }
+import piece3 from './2010-feature-5.json' with { type: 'json' }
+import piece4 from './2010-segment-6.json' with { type: 'json' }
+import piece5 from './2011-movement-1-1.json' with { type: 'json' }
+import piece6 from './2011-movement-2-3.json' with { type: 'json' }
+import piece7 from './2011-movement-4.json' with { type: 'json' }
+import piece8 from './2011-opener-22.json' with { type: 'json' }
+import piece9 from './2014-opener-feature.json' with { type: 'json' }
+import piece10 from './2015-feature-10.json' with { type: 'json' }
+import piece11 from './2015-feature-5.json' with { type: 'json' }
+import piece12 from './2016-intro-1.json' with { type: 'json' }
+import piece13 from './2016-movement-3-5.json' with { type: 'json' }
+import piece14 from './2016-movement-4-2.json' with { type: 'json' }
+import piece15 from './2017-excerpt-finals.json' with { type: 'json' }
+import piece16 from './2017-excerpt-mid-season.json' with { type: 'json' }
+import piece17 from './2017-feature.json' with { type: 'json' }
+import piece18 from './2017-opener-13.json' with { type: 'json' }
+import piece19 from './2017-opener-2.json' with { type: 'json' }
+import piece20 from './2017-opener-3.json' with { type: 'json' }
+import piece21 from './2017-opening-feature.json' with { type: 'json' }
+import piece22 from './2017-snare-break-2.json' with { type: 'json' }
+import piece23 from './2017-snare-break-5.json' with { type: 'json' }
+import piece24 from './2017-snare-feature-1.json' with { type: 'json' }
+import piece25 from './2018-8s.json' with { type: 'json' }
+import piece26 from './2018-8th-note-rolls.json' with { type: 'json' }
+import piece27 from './2018-carpenter.json' with { type: 'json' }
+import piece28 from './2018-closer-1.json' with { type: 'json' }
+import piece29 from './2018-closer-2.json' with { type: 'json' }
+import piece30 from './2018-drum-feature.json' with { type: 'json' }
+import piece31 from './2018-eights-and-legatos.json' with { type: 'json' }
+import piece32 from './2018-movement-2-4.json' with { type: 'json' }
+import piece33 from './2018-movement-2-5.json' with { type: 'json' }
+import piece34 from './2018-movement-2-6.json' with { type: 'json' }
+import piece35 from './2018-movement-2-7.json' with { type: 'json' }
+import piece36 from './2018-opener-3.json' with { type: 'json' }
+import piece37 from './2018-opener-4.json' with { type: 'json' }
+import piece38 from './2018-opener-5.json' with { type: 'json' }
+import piece39 from './2018-opener-fall-season.json' with { type: 'json' }
+import piece40 from './2018-opening-snare-feature.json' with { type: 'json' }
+import piece41 from './2018-racing-heart.json' with { type: 'json' }
+import piece42 from './2018-snare-break-5.json' with { type: 'json' }
+import piece43 from './2018-snare-break-early-season-1.json' with { type: 'json' }
+import piece44 from './2018-snare-feature-3.json' with { type: 'json' }
+import piece45 from './2018-triplet-rolls.json' with { type: 'json' }
+import piece46 from './2019-ballad.json' with { type: 'json' }
+import piece47 from './2019-circus-1.json' with { type: 'json' }
+import piece48 from './2019-closer-1.json' with { type: 'json' }
+import piece49 from './2019-closer-5.json' with { type: 'json' }
+import piece50 from './2019-closer-as-of-7-31-19.json' with { type: 'json' }
+import piece51 from './2019-closer.json' with { type: 'json' }
+import piece52 from './2019-drum-break-as-of-7-26-19.json' with { type: 'json' }
+import piece53 from './2019-drum-break-as-of-8-1-19.json' with { type: 'json' }
+import piece54 from './2019-drum-break.json' with { type: 'json' }
+import piece55 from './2019-full-show.json' with { type: 'json' }
+import piece56 from './2019-movement-2-1.json' with { type: 'json' }
+import piece57 from './2019-movement-2-10.json' with { type: 'json' }
+import piece58 from './2019-movement-2-11.json' with { type: 'json' }
+import piece59 from './2019-movement-2-2.json' with { type: 'json' }
+import piece60 from './2019-movement-2-3.json' with { type: 'json' }
+import piece61 from './2019-movement-2-4.json' with { type: 'json' }
+import piece62 from './2019-movement-3-1.json' with { type: 'json' }
+import piece63 from './2019-movement-3-3.json' with { type: 'json' }
+import piece64 from './2019-movement-4-1.json' with { type: 'json' }
+import piece65 from './2019-movement-5.json' with { type: 'json' }
+import piece66 from './2019-movement-7.json' with { type: 'json' }
+import piece67 from './2019-opener-1.json' with { type: 'json' }
+import piece68 from './2019-opener-2.json' with { type: 'json' }
+import piece69 from './2019-opener-3.json' with { type: 'json' }
+import piece70 from './2019-opener-4.json' with { type: 'json' }
+import piece71 from './2019-opener-5.json' with { type: 'json' }
+import piece72 from './2019-opener-7.json' with { type: 'json' }
+import piece73 from './2019-opener-early-season-1.json' with { type: 'json' }
+import piece74 from './2019-snare-break-early-season-1.json' with { type: 'json' }
+import piece75 from './2019-snare-break-early-season-3.json' with { type: 'json' }
+import piece76 from './2019-snare-break.json' with { type: 'json' }
+import piece77 from './2019-snare-feature.json' with { type: 'json' }
+import piece78 from './2019-snare-solo.json' with { type: 'json' }
+import piece79 from './come-and-get-it.json' with { type: 'json' }
+import piece80 from './fragile.json' with { type: 'json' }
+import piece81 from './get-the-feeling-solo.json' with { type: 'json' }
+import piece82 from './get-your-freak-on.json' with { type: 'json' }
+import piece83 from './know-you-like-it.json' with { type: 'json' }
+import piece84 from './let-the-groove-get-in.json' with { type: 'json' }
+import piece85 from './lets-go.json' with { type: 'json' }
+import piece86 from './roots-2017-snare-feature.json' with { type: 'json' }
+import piece87 from './solo.json' with { type: 'json' }
+import piece88 from './start-it-up.json' with { type: 'json' }
 
 export const RAW_PIECES: readonly unknown[] = [
   piece0,
@@ -121,4 +154,37 @@ export const RAW_PIECES: readonly unknown[] = [
   piece53,
   piece54,
   piece55,
+  piece56,
+  piece57,
+  piece58,
+  piece59,
+  piece60,
+  piece61,
+  piece62,
+  piece63,
+  piece64,
+  piece65,
+  piece66,
+  piece67,
+  piece68,
+  piece69,
+  piece70,
+  piece71,
+  piece72,
+  piece73,
+  piece74,
+  piece75,
+  piece76,
+  piece77,
+  piece78,
+  piece79,
+  piece80,
+  piece81,
+  piece82,
+  piece83,
+  piece84,
+  piece85,
+  piece86,
+  piece87,
+  piece88,
 ]

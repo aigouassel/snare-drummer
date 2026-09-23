@@ -10,11 +10,21 @@ was read from, and the app prints it.
 
 **A PDF is not a piece of music.** A corps performs one show per season and
 writes it in passages — Opener, Drum Feature, Lick, Movement 2 Part 1, 2 and
-3 — and the site publishes one PDF per passage. So the library is 327 *works*
+3 — and the site publishes one PDF per passage. So the listing is 327 *works*
 (one corps, one season), each holding its *sequences*. The page states that
 grouping only in the link text, as the year each title begins with; there is
 no section markup on it at all. The passages of one season are worked
 together, and flat they were 884 unrelated rows.
+
+**The repertoire is narrower than the listing.** A corps rewrites its book
+every year, so nineteen seasons of Blue Devils are nineteen different shows
+rather than nineteen versions of one, and what is worth practising is the
+latest. The app works from **each corps at its most recent season** — 66 works
+and 129 sequences — and everything else stays listed behind it. Within a kept
+season nothing is dropped: `(Early Season)` and `(Finals)` of one passage are
+both real, and `Movement 2 Part 1/2/3` are consecutive passages rather than
+variants, so a rule that stripped trailing numbers would delete two thirds of
+a movement.
 
 ## What makes it hard
 
@@ -102,7 +112,7 @@ single-byte codes, the wrong one by coincidence, and none for the other 98%.
 packages/
   core/           Fraction, Duration, Stroke, Bar, Piece, timeline — and the
                   confidence rule. Depends on nothing.
-  catalogue/      327 works and their 884 sequences, and the scraper.
+  catalogue/      the 327 listed works, the 66 in the repertoire, the scraper.
   transcription/  The transcribed sequences, and the pipeline that produces
                   them: pipeline/ is Python, src/ is the data it writes.
   notation/       VexFlow adapter. Layout is arithmetic and tested; drawing
@@ -193,7 +203,8 @@ yarn dev         # the player
 - [x] Notation rendering, one line per bar, doubts outlined on the music
 - [x] Playback: lookahead scheduler, snare voice, metronome, bar ranges
 - [x] Rhythm read from beams, flags, dots and tuplet numbers, not from spacing
-- [x] 56 sequences read end to end: 2,504 bars, 1,213 verified by arithmetic
-- [ ] The remaining 828 sequences — the piece data is eagerly imported, so the
-      whole catalogue wants loading per piece rather than in the bundle
+- [x] The repertoire read end to end: 89 of its 129 sequences, 5,286 bars,
+      1,955 of them playable as read
+- [ ] The 40 sequences held back — two print no time signature anywhere, the
+      rest read nothing that could be trusted
 - [ ] Tuplets whose bracket spans fewer notes than their number suggests
