@@ -27,10 +27,12 @@ never presented as if it did.
 import json
 import os
 import sys
+from collections import defaultdict
 from fractions import Fraction
 
 import ink
 import layout
+import rhythm
 from fonts import MUSIC_FAMILIES
 from vocabulary import RHYTHMIC, Vocabulary, attribute, role
 
@@ -38,6 +40,17 @@ from vocabulary import RHYTHMIC, Vocabulary, attribute, role
 # Reconstruction snaps to these: a value that lands between two of them is not
 # a note length anybody wrote, it is a measurement error.
 KNOWN_FAMILIES = MUSIC_FAMILIES
+
+# What a notehead says about where the stick lands, when it says anything.
+ZONES = {
+    'notehead.cross': 'crossStick',
+    'notehead.triangleRight': 'crossStick',
+    'notehead.diamond': 'rim',
+    'notehead.diamondBlack': 'rim',
+    'notehead.circleX': 'rimshot',
+    'notehead.circleDot': 'rimshot',
+    'notehead.circleSlash': 'rimshot',
+}
 
 GRID = [Fraction(1, 8), Fraction(1, 6), Fraction(1, 4), Fraction(1, 3),
         Fraction(3, 8), Fraction(1, 2), Fraction(2, 3), Fraction(3, 4),
@@ -126,39 +139,155 @@ def read_meter(named, system):
     return None
 
 
-def reconstruct(named, bar, meter):
-    """Place the bar's notes and rests in time, by their spacing on the page."""
-    onsets = [(g, s) for g, s in named if role(s) in RHYTHMIC]
+def reconstruct(named, bar, meter, context):
+    """Place the bar's notes and rests in time.
+
+    Two readings, and the first one is the notation itself: beams, flags and
+    dots say what an engraver wrote. When any note in the bar cannot be read
+    that way the whole bar falls back to spacing, because mixing a stated
+    length with a measured one inside one bar produces a sum that means
+    nothing. Which reading was used is recorded on the bar.
+    """
+    marks = [(g, s) for g, s in named if role(s) in RHYTHMIC]
     unnamed = sum(1 for _g, s in named if role(s) == 'unnamed')
 
+    # A grace note is written, played and gone; it takes no time of its own,
+    # so it is carried onto the note it decorates rather than counted.
+    onsets, graces, pending = [], [], 0
+    for g, symbol in marks:
+        if role(symbol) == 'notehead' and rhythm.is_grace(g.get('ink', 0.0),
+                                                          context['notehead']):
+            pending += 1
+            continue
+        onsets.append((g, symbol))
+        graces.append(pending)
+        pending = 0
+
     if not onsets or meter is None:
-        return [], unnamed
+        return [], unnamed, 'none'
 
     total = Fraction(meter[0] * 4, meter[1])
 
-    # Gaps between consecutive onsets, the last one running to the barline.
+    lengths = [rhythm.written(symbol, g['x'], g['y'], g.get('ink', 0.0), context)
+               for g, symbol in onsets]
+    source = 'notation'
+    if all(length is not None for length in lengths):
+        for start, stop, ratio in rhythm.tuplet_groups(
+                context['tuplets'], onsets, context['spacing']):
+            for i in range(start, stop):
+                lengths[i] *= ratio
+    if any(length is None for length in lengths):
+        source = 'spacing'
+        lengths = _by_spacing(onsets, bar, total)
+        if lengths is None:
+            return [], unnamed, 'none'
+
+    events = []
+    for (g, symbol), duration, grace in zip(onsets, lengths, graces):
+        event = {'duration': [duration.numerator, duration.denominator]}
+        if role(symbol) == 'rest':
+            event['rest'] = True
+        else:
+            if symbol in ZONES:
+                event['zone'] = ZONES[symbol]
+            if grace:
+                event['graces'] = grace
+        events.append(event)
+
+    return events, unnamed, source
+
+
+def _notehead_width(page, fonts, vocabularies):
+    """How wide a full-size notehead is on this page, in points.
+
+    The *commonest* width, not the largest. A page carries both sizes and a
+    handful of outsized noteheads besides -- a cue, a heading, an oversized
+    example -- and taking the largest lets one of those redefine full size
+    and turn every real note on the page into a grace note. The commonest is
+    the one the music is written in.
+    """
+    seen = defaultdict(int)
+    for glyph in page['glyphs']:
+        font = fonts.get(glyph['font'] or '', {})
+        vocab = vocabularies.get(glyph['family'])
+        if not vocab:
+            continue
+        upem = font.get('upem') or 1000
+        for code in glyph['codes']:
+            fp = font.get('codes', {}).get(code)
+            if fp and role(vocab.resolve(fp)) == 'notehead':
+                seen[round(fp['width'] * glyph['size'] / upem, 2)] += 1
+    if not seen:
+        return 0.0
+    return max(seen.items(), key=lambda kv: (kv[1], kv[0]))[0]
+
+
+def tuplet_numbers(named, system):
+    """Tuplet counts printed in a bar, with what they stand in the time of.
+
+    Read outside the staff only. A time signature is printed *on* the staff
+    and a tuplet number above or below it, which is the whole difference
+    between the two and needs no other test.
+
+    A printed ratio -- 4:3, 7:6, which this repertoire does use -- states both
+    numbers, so it is read as written rather than assumed.
+    """
+    marks = sorted(
+        [(g, s) for g, s in named
+         if s and (s.startswith('digit.') or s == 'text.colon')
+         and not (system['bottom'] - 1 <= g['y'] <= system['top'] + 1)],
+        key=lambda p: p[0]['x'])
+    if not marks:
+        return []
+
+    clusters, current = [], [marks[0]]
+    for item in marks[1:]:
+        if item[0]['x'] - current[-1][0]['x'] <= system['spacing'] * 2.0:
+            current.append(item)
+        else:
+            clusters.append(current)
+            current = [item]
+    clusters.append(current)
+
+    out = []
+    for cluster in clusters:
+        x = sum(g['x'] for g, _ in cluster) / len(cluster)
+        if any(s == 'text.colon' for _g, s in cluster):
+            left, right, seen = [], [], False
+            for _g, s in cluster:
+                if s == 'text.colon':
+                    seen = True
+                elif seen:
+                    right.append(s.split('.')[1])
+                else:
+                    left.append(s.split('.')[1])
+            if not left or not right:
+                continue
+            count, inthe = int(''.join(left)), int(''.join(right))
+        else:
+            count = int(''.join(s.split('.')[1] for _g, s in cluster))
+            if count not in rhythm.IN_THE:
+                continue
+            inthe = rhythm.IN_THE[count]
+        if 2 <= count <= 32 and 1 <= inthe <= 32:
+            out.append((x, count, inthe))
+    return out
+
+
+def _by_spacing(onsets, bar, total):
+    """Durations from how far apart the notes were set on the page.
+
+    Engraving spaces a bar roughly in proportion to what it holds, so this
+    recovers something when the notation cannot be read -- but only roughly,
+    and a bar read this way is worth less than one read from its beams.
+    """
     positions = [g['x'] for g, _ in onsets]
     gaps = [positions[i + 1] - positions[i] for i in range(len(positions) - 1)]
     gaps.append(bar['x1'] - positions[-1])
     span = sum(gaps)
     if span <= 0:
-        return [], unnamed
-
-    events = []
-    for (g, symbol), gap in zip(onsets, gaps):
-        measured = float(total) * gap / span
-        duration, _drift = snap(measured)
-        event = {'duration': [duration.numerator, duration.denominator]}
-        if role(symbol) == 'rest':
-            event['rest'] = True
-        else:
-            if symbol == 'notehead.cross':
-                event['zone'] = 'crossStick'
-            elif symbol == 'notehead.diamond':
-                event['zone'] = 'rim'
-        events.append(event)
-
-    return events, unnamed
+        return None
+    return [snap(float(total) * gap / span)[0] for gap in gaps]
 
 
 def decorate(events, named):
@@ -229,27 +358,56 @@ def transcribe(path, entry):
         vocabularies = {f: known[f] for f in page_families if f in known}
 
         def name(glyph):
+            """Each code the glyph draws, as (symbol, ink width in points).
+
+            The width is what locates a stem: an up-stem is drawn at the
+            notehead's right edge, one notehead away from the origin the PDF
+            records, and a down-stem at its left.
+            """
             font = fonts.get(glyph['font'] or '', {})
             codes = font.get('codes', {})
+            upem = font.get('upem') or 1000
             vocab = vocabularies.get(glyph['family'])
             out = []
             for code in glyph['codes']:
                 fp = codes.get(code)
-                out.append(vocab.resolve(fp) if (fp and vocab) else None)
+                symbol = vocab.resolve(fp) if (fp and vocab) else None
+                width = fp['width'] * glyph['size'] / upem if fp else 0.0
+                out.append((symbol, width))
             return out
+
+        notehead_width = _notehead_width(page, fonts, vocabularies)
+
+        geometry = {}
+        for index, system in enumerate(systems):
+            geometry[index] = {
+                'beams': rhythm.beams(page['segments'], system['spacing']),
+                'stems': rhythm.stems(page['segments'], system['spacing']),
+            }
 
         for bar in found:
             system = systems[bar['system']]
             named = []
             for glyph in glyphs_in(page['glyphs'], bar, system):
-                for symbol in name(glyph):
-                    named.append((glyph, symbol))
+                for symbol, width in name(glyph):
+                    named.append(({**glyph, 'ink': width}, symbol))
 
             printed = read_meter(named, system)
             if printed:
                 meter = printed
 
-            events, unnamed = reconstruct(named, bar, meter)
+            context = {
+                'spacing': system['spacing'],
+                'middle': (system['bottom'] + system['top']) / 2,
+                'beams': geometry[bar['system']]['beams'],
+                'stems': geometry[bar['system']]['stems'],
+                'flags': [(g['x'], rhythm.HALVES[s]) for g, s in named
+                          if s in rhythm.HALVES],
+                'dots': [(g['x'], g['y']) for g, s in named if s == 'dot'],
+                'notehead': notehead_width,
+                'tuplets': tuplet_numbers(named, system),
+            }
+            events, unnamed, source = reconstruct(named, bar, meter, context)
             events = decorate(events, named)
 
             bars.append({
@@ -259,6 +417,7 @@ def transcribe(path, entry):
                 'meter': meter,
                 'events': events,
                 'unnamedSymbols': unnamed,
+                'readFrom': source,
                 'at': {'page': page['page'], 'system': bar['system'],
                        'x0': bar['x0'], 'x1': bar['x1']},
             })

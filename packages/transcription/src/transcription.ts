@@ -24,6 +24,7 @@ type RawEvent = {
   accent?: string
   zone?: string
   roll?: string
+  graces?: number
 }
 
 type RawBar = {
@@ -55,6 +56,7 @@ const toEvent = (raw: RawEvent): Event =>
         ...(raw.accent ? { accent: raw.accent as never } : {}),
         ...(raw.zone ? { zone: raw.zone as never } : {}),
         ...(raw.roll ? { roll: raw.roll as never } : {}),
+        ...(raw.graces ? { graces: raw.graces } : {}),
       }
 
 const toBar = (raw: RawBar): Bar => {

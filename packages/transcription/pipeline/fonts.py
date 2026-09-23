@@ -188,6 +188,26 @@ def _builtin(tt):
     return {}
 
 
+def units_per_em(buf):
+    """The font's design grid, which a glyph's dimensions are expressed in.
+
+    It is 1000 for a PostScript outline and usually 2048 for a TrueType one,
+    and assuming either turns every measured size into a number that is
+    plausible and wrong by a factor of two.
+    """
+    try:
+        return TTFont(BytesIO(buf), fontNumber=0, lazy=True)['head'].unitsPerEm
+    except Exception:
+        pass
+    try:
+        cff = CFFFontSet()
+        cff.decompile(BytesIO(buf), None)
+        matrix = cff[cff.fontNames[0]].FontMatrix
+        return round(1 / matrix[0]) if matrix and matrix[0] else 1000
+    except Exception:
+        return 1000
+
+
 def _glyphset(buf):
     """(glyph set, glyph order, code -> name) from an embedded font program."""
     try:
@@ -290,6 +310,7 @@ def _describe(doc, xref, basefont, encoding):
         'family': family_of(basefont),
         'format': fmt,
         'bytes': 2 if (encoding or '').startswith('Identity') else 1,
+        'upem': units_per_em(buf) if buf else 1000,
         'codes': {},
     }
     if buf:

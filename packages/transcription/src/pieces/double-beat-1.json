@@ -95,6 +95,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 0,
@@ -187,6 +188,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 0,
@@ -279,6 +281,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 0,
@@ -371,6 +374,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 0,
@@ -463,6 +467,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 1,
@@ -555,6 +560,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 1,
@@ -685,6 +691,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 1,
@@ -815,6 +822,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 2,
@@ -945,6 +953,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 2,
@@ -1075,6 +1084,7 @@
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 3,
@@ -1097,48 +1107,49 @@
     },
     {
      "duration": [
-      3,
-      4
-     ],
-     "rest": true
-    },
-    {
-     "duration": [
-      3,
+      1,
       2
      ],
      "rest": true
     },
     {
      "duration": [
-      3,
-      2
+      1,
+      1
      ],
      "rest": true
     },
     {
      "duration": [
-      3,
-      2
+      1,
+      1
      ],
      "rest": true
     },
     {
      "duration": [
-      3,
-      2
+      1,
+      1
      ],
      "rest": true
     },
     {
      "duration": [
-      3,
-      2
+      1,
+      1
+     ],
+     "rest": true
+    },
+    {
+     "duration": [
+      1,
+      1
      ],
      "rest": true
     }
    ],
    "unnamedSymbols": 0,
+   "readFrom": "notation",
    "at": {
     "page": 1,
     "system": 3,
