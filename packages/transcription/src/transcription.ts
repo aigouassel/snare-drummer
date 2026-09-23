@@ -37,6 +37,7 @@ type RawBar = {
 type RawPiece = {
   id: string
   title: string
+  workId: string
   corps: string
   circuit: string
   year?: number
@@ -73,6 +74,7 @@ const toBar = (raw: RawBar): Bar => {
 const toPiece = (raw: RawPiece): Piece => ({
   id: raw.id,
   title: raw.title,
+  workId: raw.workId,
   corps: raw.corps,
   circuit: raw.circuit as Circuit,
   ...(raw.year === undefined ? {} : { year: raw.year }),
@@ -95,5 +97,12 @@ export const PIECES: readonly Piece[] = RAW.map(toPiece)
 export const pieceById = (id: string): Piece | undefined =>
   PIECES.find((p) => p.id === id)
 
-/** Catalogue ids that have been read, so the library can mark them. */
+/** Sequence ids that have been read, so the library can mark them. */
 export const TRANSCRIBED: ReadonlySet<string> = new Set(PIECES.map((p) => p.id))
+
+/** Works holding at least one transcribed sequence. */
+export const TRANSCRIBED_WORKS: ReadonlySet<string> = new Set(PIECES.map((p) => p.workId))
+
+/** The transcribed sequences of one work, in catalogue order. */
+export const piecesOfWork = (workId: string): readonly Piece[] =>
+  PIECES.filter((p) => p.workId === workId)

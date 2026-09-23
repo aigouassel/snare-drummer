@@ -3,7 +3,7 @@ import { barBeats, playedBeats } from '@snare-drummer/core/bar'
 import { equals } from '@snare-drummer/core/fraction'
 import { trust } from '@snare-drummer/core/piece'
 import { place } from '@snare-drummer/core/timeline'
-import { PIECES, TRANSCRIBED, pieceById } from './transcription'
+import { PIECES, TRANSCRIBED, TRANSCRIBED_WORKS, pieceById, piecesOfWork } from './transcription'
 
 /**
  * These do not assert that the transcriptions are *right* — nothing in a test
@@ -77,6 +77,20 @@ describe('transcriptions', () => {
         expect(bar.at.system).toBeGreaterThanOrEqual(0)
       }
     }
+  })
+
+  /**
+   * A PDF is one passage of a show, not a piece of music on its own. Losing
+   * the link back to the work would present the passages of one season as
+   * unrelated, which is not how any of them are practised.
+   */
+  it('ties every transcribed sequence back to the work it belongs to', () => {
+    for (const piece of PIECES) {
+      expect(piece.workId).toMatch(/^[a-z0-9-]+$/)
+      expect(TRANSCRIBED_WORKS.has(piece.workId)).toBe(true)
+      expect(piecesOfWork(piece.workId)).toContain(piece)
+    }
+    expect(piecesOfWork('no-such-work')).toEqual([])
   })
 
   it('looks a piece up by id', () => {

@@ -219,6 +219,7 @@ def transcribe(path, entry):
     return {
         'id': entry['id'],
         'title': entry['title'],
+        'workId': entry['workId'],
         'corps': entry['corps'],
         'circuit': entry['circuit'],
         **({'year': entry['year']} if entry.get('year') else {}),

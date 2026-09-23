@@ -122,6 +122,39 @@ def parse(page):
     return entries
 
 
+def group(entries):
+    """Entries -> works, a work being one corps in one season.
+
+    Undated entries are kept as a work of their own per corps rather than
+    being folded into an arbitrary year. The catalogue does not say when they
+    are from, and inventing a season would make the grouping a guess instead
+    of a reading.
+    """
+    works, order = {}, []
+    for entry in entries:
+        key = (entry['corps'], entry.get('year'))
+        if key not in works:
+            slug = re.sub(r'[^a-z0-9]+', '-', entry['corps'].lower()).strip('-')
+            year = entry.get('year')
+            works[key] = {
+                'id': f"{slug}-{year}" if year else f"{slug}-undated",
+                'corps': entry['corps'],
+                'circuit': entry['circuit'],
+                **({'year': year} if year else {}),
+                'sequences': [],
+            }
+            order.append(key)
+        works[key]['sequences'].append({
+            'id': entry['id'],
+            'title': entry['title'],
+            'url': entry['url'],
+        })
+
+    # Newest season first within a corps, which is how these are looked for.
+    return sorted((works[k] for k in order),
+                  key=lambda w: (w['circuit'], w['corps'], -(w.get('year') or 0)))
+
+
 def main():
     src = sys.argv[1] if len(sys.argv) > 1 else None
     if src and os.path.exists(src):
@@ -134,22 +167,25 @@ def main():
     if len(entries) < 500:
         raise SystemExit(f'only {len(entries)} entries parsed; the page layout has changed')
 
+    works = group(entries)
     data = {
         'source': PAGE,
         'read': date.today().isoformat(),
-        'entries': entries,
+        'works': works,
     }
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     with open(OUT, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=1, ensure_ascii=False)
         f.write('\n')
 
+    several = sum(1 for w in works if len(w['sequences']) > 1)
     circuits = {}
-    for e in entries:
-        circuits[e['circuit']] = circuits.get(e['circuit'], 0) + 1
-    print(f"{len(entries)} entries -> {OUT}")
+    for w in works:
+        circuits[w['circuit']] = circuits.get(w['circuit'], 0) + 1
+    print(f"{len(works)} works / {len(entries)} sequences -> {OUT}")
     print('  ' + '  '.join(f'{k}:{v}' for k, v in sorted(circuits.items())))
-    print(f"  {len({e['corps'] for e in entries})} distinct corps")
+    print(f"  {len({w['corps'] for w in works})} distinct corps")
+    print(f"  {several} works hold more than one sequence")
 
 
 if __name__ == '__main__':

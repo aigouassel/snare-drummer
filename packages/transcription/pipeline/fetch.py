@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 """
-Fetch a score by its catalogue id into work/, with the metadata beside it.
+Fetch a sequence by its catalogue id into work/, with the metadata beside it.
 
-The metadata file is the point. It carries the entry straight from the
-catalogue -- title, corps, circuit, year, and the URL -- so the transcription
-records where it came from without anybody retyping it, and so the PDF itself
-stays disposable: everything needed to find it again is in the piece.
+The catalogue is grouped: a work is one corps in one season, and its
+sequences are the PDFs that season's show was written in. What is fetched is
+always a sequence, and the metadata written beside it carries both -- the
+sequence's own title and the work it belongs to -- so the transcription can
+be put back beside its siblings without anybody retyping anything.
+
+That metadata is also why the PDF stays disposable: everything needed to find
+it again is recorded in the piece.
 
     python3 fetch.py 2019-circus-1
     python3 fetch.py --search "blue devils 2019"
@@ -33,7 +37,12 @@ def main():
     args = ap.parse_args()
 
     data = catalogue()
-    entries = data['entries']
+    # Flatten once: every sequence, carrying the work it came from.
+    entries = [
+        {**sequence, 'workId': work['id'], 'corps': work['corps'],
+         'circuit': work['circuit'], **({'year': work['year']} if work.get('year') else {})}
+        for work in data['works'] for sequence in work['sequences']
+    ]
 
     if args.search:
         needle = args.search.lower()
@@ -41,7 +50,7 @@ def main():
                 if needle in f"{e['title']} {e['corps']} {e.get('year', '')}".lower()]
         for e in hits[:40]:
             print(f"  {e['id']:<44} {e.get('year', '????')}  {e['corps']} — {e['title']}")
-        print(f"{len(hits)} entrees")
+        print(f"{len(hits)} sequences")
         return
 
     if not args.id:
@@ -49,7 +58,7 @@ def main():
 
     entry = next((e for e in entries if e['id'] == args.id), None)
     if entry is None:
-        raise SystemExit(f"aucune entree '{args.id}' (essayer --search)")
+        raise SystemExit(f"aucune sequence '{args.id}' (essayer --search)")
 
     os.makedirs(WORK, exist_ok=True)
     pdf = os.path.join(WORK, f"{entry['id']}.pdf")
@@ -67,7 +76,8 @@ def main():
         json.dump(meta, f, indent=1, ensure_ascii=False)
 
     print(f"{len(body):,} octets -> {pdf}")
-    print(f"  {entry['corps']} — {entry['title']} ({entry.get('year', '????')})")
+    print(f"  {entry['corps']} {entry.get('year', '')} · sequence « {entry['title']} »")
+    print(f"  morceau: {entry['workId']}")
     print(f"  source: {entry['url']}")
 
 

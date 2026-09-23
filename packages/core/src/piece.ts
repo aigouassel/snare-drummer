@@ -21,13 +21,32 @@ export type Source = {
 /** Which circuit the score belongs to, as the catalogue files it. */
 export type Circuit = 'DCI' | 'WGI' | 'DCA' | 'other'
 
+/**
+ * A transcribed sequence: one PDF of one show, read into playable bars.
+ *
+ * The name is about what it is, not how much of it there is. A corps writes
+ * a season's show in passages — Opener, Drum Feature, Movement 2 Part 1 — and
+ * each is published as its own PDF. So a piece is a *sequence* of a work, and
+ * `workId` is what puts it back beside the others it was written with. That
+ * matters for practice: the passages of one show are worked together, and a
+ * model that lost the link would present them as unrelated.
+ *
+ * The corps, circuit and year are repeated here rather than looked up. It is
+ * denormalised on purpose — it keeps this package independent of the
+ * catalogue, and a transcription that cannot say what it is a transcription
+ * *of* is worth less than the duplication costs.
+ */
 export type Piece = {
+  /** The sequence's id, from the catalogue. */
   id: string
+  /** The sequence's own name: "Opener", "Movement 2 Part 1". */
   title: string
+  /** The work this sequence belongs to: one corps, one season. */
+  workId: string
   /** The corps or ensemble, as the catalogue names it. */
   corps: string
   circuit: Circuit
-  /** Absent where the catalogue's title does not begin with one. */
+  /** Absent where the catalogue gives no year. */
   year?: number
   /**
    * The tempo the score prints, where it prints one.
