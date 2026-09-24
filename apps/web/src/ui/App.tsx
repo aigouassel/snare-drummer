@@ -15,10 +15,12 @@ export const App = () => {
   useEffect(() => {
     engine.stop()
     // Open on a sequence that can actually be played, where the show has one.
-    // Landing on an untranscribed passage of a work marked "jouable" reads as
-    // a bug rather than as the honest state of the library.
+    // Only playable passages are listed, so opening a work opens its first
+    // one. The fallback is kept for the case where the library and the
+    // transcriptions disagree, which would otherwise show a chosen sequence
+    // that is not in the list.
     const playable = work?.sequences.find((s) => TRANSCRIBED.has(s.id))
-    setSequenceId(playable?.id ?? work?.sequences[0]?.id ?? null)
+    setSequenceId(playable?.id ?? null)
   }, [work])
 
   return (

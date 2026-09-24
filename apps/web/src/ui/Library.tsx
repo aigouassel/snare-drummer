@@ -14,10 +14,27 @@ import { TRANSCRIBED, TRANSCRIBED_WORKS } from '@snare-drummer/transcription'
  * 884 unrelated rows, which is not how any of it is practised — the passages
  * of one season belong together and are worked together.
  *
- * Untranscribed works are listed too. One that cannot be played yet can still
- * be opened as a PDF, and showing it keeps the size of the remaining work
- * visible instead of hidden.
+ * Only what can be played is listed. Showing the rest was a deliberate choice
+ * once — an unread sequence still opens its PDF, and leaving it visible kept
+ * the size of the remaining work in sight — and it is worth saying why that
+ * changed rather than letting it look like an oversight. This is a practice
+ * app: every row you cannot play is a row you have to learn to skip. The
+ * remaining work is now written down where it belongs, in HELD-BACK.md,
+ * which the pipeline generates and which cannot go stale.
+ *
+ * The count still says how many were set aside, because a library that
+ * quietly shrank would misrepresent the catalogue.
  */
+/** Works holding at least one sequence that can be played. */
+const PLAYABLE_WORKS = WORKS.filter((w) => TRANSCRIBED_WORKS.has(w.id)).length
+
+/** Sequences of the repertoire the pipeline could not read. See HELD-BACK.md. */
+const HELD_BACK = SEQUENCE_COUNT - TRANSCRIBED.size
+
+/** How many of a work's passages can actually be played. */
+const playableCount = (work: Work) =>
+  work.sequences.filter((s) => TRANSCRIBED.has(s.id)).length
+
 export const Library = ({ selected, onSelect }: {
   selected: string | null
   onSelect: (work: Work) => void
@@ -34,7 +51,7 @@ export const Library = ({ selected, onSelect }: {
         ...(circuit ? { circuit } : {}),
         ...(corps ? { corps } : {}),
         ...(year ? { year: Number(year) } : {}),
-      }),
+      }).filter((w) => TRANSCRIBED_WORKS.has(w.id)),
     [text, circuit, corps, year],
   )
 
@@ -43,14 +60,16 @@ export const Library = ({ selected, onSelect }: {
       <header>
         <h1>snare drummer</h1>
         <div className="count">
-          {works.length} / {WORKS.length} morceaux · {SEQUENCE_COUNT} séquences ·{' '}
-          {TRANSCRIBED.size} retranscrite{TRANSCRIBED.size > 1 ? 's' : ''}
+          {works.length} / {PLAYABLE_WORKS} morceaux · {TRANSCRIBED.size}{' '}
+          séquences jouables
         </div>
-        {/* The library is each corps at its most recent season. Saying so
-            keeps the count from looking like the whole site. */}
+        {/* The library is each corps at its most recent season, and only the
+            part of it that can be played. Saying both keeps the count from
+            looking like the whole site, and keeps what was set aside from
+            disappearing without trace. */}
         <div className="note">
           la saison la plus récente de chaque ensemble, sur {LISTED_COUNT.works}{' '}
-          listées
+          listées · {HELD_BACK} séquences illisibles écartées
         </div>
       </header>
 
@@ -89,13 +108,10 @@ export const Library = ({ selected, onSelect }: {
             aria-current={work.id === selected}
             onClick={() => onSelect(work)}
           >
-            <div className="title">
-              {workTitle(work)}
-              {TRANSCRIBED_WORKS.has(work.id) && <span className="badge">jouable</span>}
-            </div>
+            <div className="title">{workTitle(work)}</div>
             <div className="meta">
-              {work.circuit} · {work.sequences.length} séquence
-              {work.sequences.length > 1 ? 's' : ''}
+              {work.circuit} · {playableCount(work)} séquence
+              {playableCount(work) > 1 ? 's' : ''}
             </div>
           </button>
         ))}

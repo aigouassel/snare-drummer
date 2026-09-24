@@ -11,9 +11,10 @@ import { useEngine } from './useEngine'
 /**
  * One show: its passages, and the one currently open.
  *
- * The sequences are listed even when only one of them can be played, because
- * the list is what says how the season was written. Choosing between them is
- * the first thing you do; everything below it belongs to the chosen one.
+ * Only the passages that can be played are listed. The others were shown for
+ * a while, because the list is what says how the season was written — but a
+ * row you cannot play is a row you learn to skip, and the ones set aside are
+ * written down in HELD-BACK.md instead, with the reason each was.
  *
  * The source link is printed whatever state a sequence is in. These are other
  * people's transcriptions of other people's shows, and saying where each came
@@ -25,7 +26,11 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
   sequenceId: string | null
   onSelectSequence: (id: string) => void
 }) => {
-  const sequence = work?.sequences.find((s) => s.id === sequenceId) ?? null
+  const sequences = useMemo(
+    () => (work?.sequences ?? []).filter((s) => TRANSCRIBED.has(s.id)),
+    [work],
+  )
+  const sequence = sequences.find((s) => s.id === sequenceId) ?? null
   const piece = sequence ? pieceById(sequence.id) : undefined
   const state = useEngine()
 
@@ -58,12 +63,12 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
     <main className="piece">
       <h2>{workTitle(work)}</h2>
       <div className="sub">
-        {work.circuit} · {work.sequences.length} séquence
-        {work.sequences.length > 1 ? 's' : ''}
+        {work.circuit} · {sequences.length} séquence
+        {sequences.length > 1 ? 's' : ''}
       </div>
 
       <nav className="sequences">
-        {work.sequences.map((s) => (
+        {sequences.map((s) => (
           <button
             key={s.id}
             className="sequence"
@@ -71,7 +76,6 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
             onClick={() => onSelectSequence(s.id)}
           >
             {s.title}
-            {TRANSCRIBED.has(s.id) && <span className="dot" aria-label="retranscrite" />}
           </button>
         ))}
       </nav>
@@ -83,9 +87,7 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
       )}
 
       {!piece ? (
-        <div className="empty">
-          Séquence pas encore retranscrite. Le PDF reste consultable par le lien ci-dessus.
-        </div>
+        <div className="empty">Choisis une séquence.</div>
       ) : (
         <>
           <Transport
