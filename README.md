@@ -218,6 +218,12 @@ a stem is drawn at the notehead's *edge* and not its middle, a flam is a grace
 note engraved at cue size and takes no time of its own, and triplets are
 everywhere.
 
+Reading it wrong is quiet, and quiet in a particular way worth naming. Half
+the defects found here removed *notes* without changing the sum — an ornament
+takes no time, so a note miscounted as one leaves a bar that still adds up and
+simply has fewer notes in it than the page does. The arithmetic check cannot
+see those at all; only looking at the bar can.
+
 A note whose stem cannot be read returns nothing rather than a guess, and the
 bar falls back to measuring the spacing as a whole — mixing a stated length
 with a measured one inside one bar gives a sum that means nothing. Such a bar
@@ -255,15 +261,12 @@ yarn dev         # the player
 - [x] Rhythm read from beams, flags, dots and tuplet numbers, not from spacing
 - [x] The tempo, the sticking, the dynamics and the ornaments, read from the
       page's own words, drawn on the score and heard in playback
-- [x] The repertoire read end to end: 90 of its 129 sequences, 5,319 bars,
-      1,988 of them playable as read
-- [ ] **Bars whose durations do not add up: 44.5% of the repertoire, and the
-      one thing worth working on next.** The shortfalls form a long tail
-      rather than a single cause — a quarter of them are bars where almost
-      nothing was read, the rest are one note short or one note long — so
-      there is no single fix, and measuring which engraver produces which
-      shortfall is where it starts
-- [ ] Tuplets whose bracket spans fewer notes than their number suggests
-- [ ] The 39 sequences held back. Six of them draw their music as vector
+- [x] The repertoire read end to end: 89 of its 129 sequences, 4,786 bars,
+      2,877 of them playable as read
+- [ ] **Bars whose durations do not add up: 19% of the repertoire.** Down from
+      44.5%, by taking one failing bar at a time, cropping it out of its PDF
+      and comparing it with what had been read. Six causes so far and no two
+      alike; the remainder is a long tail and the method still works
+- [ ] The 40 sequences held back. Six of them draw their music as vector
       outlines with no glyphs at all, which is optical music recognition and
       out of scope for ever; the rest read a page but not a rhythm
