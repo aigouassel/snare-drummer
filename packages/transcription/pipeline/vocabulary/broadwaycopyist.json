@@ -2,7 +2,7 @@
  "family": "BroadwayCopyist",
  "read": "2026-09-24",
  "method": "contact sheet, packages/transcription/work/broadway-sheet.png",
- "note": "Finale's handwritten face, and the first family here whose text variants outnumber its musical shapes: most of the sheet is the alphabet, because the sticking letters under every note are set in it. Naming them matters as much as naming the notes -- an unnamed glyph on the staff makes its bar suspect, so an unlabelled alphabet would flag the whole repertoire.\nThe three shapes that carry rhythm were read off a cropped page (stainless-snare) rather than the sheet, because the sheet cannot show where a mark sits: the thick slash seen 541 times crosses a stem and is a diddle, and the z beside it is a buzz. Named from the sheet alone, either could have passed for a notehead.\nEight shapes are left unnamed. All are seen fewer than twenty times, and an unnamed glyph costs a flagged bar, which is recoverable, where a wrong note is not.",
+ "note": "Finale's handwritten face, and the first family here whose text variants outnumber its musical shapes: most of the sheet is the alphabet, because the sticking letters under every note are set in it. Naming them matters as much as naming the notes -- an unnamed glyph on the staff makes its bar suspect, so an unlabelled alphabet would flag the whole repertoire.\nThe three shapes that carry rhythm were read off a cropped page (stainless-snare) rather than the sheet, because the sheet cannot show where a mark sits: the thick slash seen 541 times crosses a stem and is a diddle, and the z beside it is a buzz. Named from the sheet alone, either could have passed for a notehead.\nEight shapes are left unnamed. All are seen fewer than twenty times, and an unnamed glyph costs a flagged bar, which is recoverable, where a wrong note is not.\nRests differ by a single hook -- one for an eighth, two for a sixteenth -- and a contact sheet shows them at a fixed size with no staff around them, so they were read at a glance and three came out wrong. They are counted now, against the families where the two are already told apart. Getting one wrong is worth a whole bar: a sixteenth rest read as an eighth leaves the bar an eighth too long and nothing else on the page contradicts it.",
  "symbols": [
   {
    "bits": "00003f0061e0c038800c80068002800380018001c0016001200118010e0303fe",
@@ -402,7 +402,7 @@
    "bits": "00cc00fe00420072006e00700033003f0031001d001f0018001c000c000c000c",
    "aspect": 0.45,
    "seen": 12,
-   "symbol": "rest.eighth"
+   "symbol": "rest.sixteenth"
   },
   {
    "bits": "01fc01060372025b034901890005000500050005018503c5026d033b018200fc",

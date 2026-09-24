@@ -61,7 +61,7 @@
    "bits": "00cf00e900fd0041007f0030002f003d0015001d001f0014000c000c000c000c",
    "aspect": 0.5,
    "seen": 2,
-   "symbol": "rest.eighth"
+   "symbol": "rest.sixteenth"
   },
   {
    "bits": "00200030003000300030003000300030003000200038002f002100210031001f",
@@ -111,5 +111,6 @@
    "seen": 1,
    "symbol": "flag.eighth"
   }
- ]
+ ],
+ "note": "Rests differ by a single hook -- one for an eighth, two for a sixteenth -- and a contact sheet shows them at a fixed size with no staff around them, so they were read at a glance and three came out wrong. They are counted now, against the families where the two are already told apart. Getting one wrong is worth a whole bar: a sixteenth rest read as an eighth leaves the bar an eighth too long and nothing else on the page contradicts it."
 }
