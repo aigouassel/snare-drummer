@@ -182,7 +182,14 @@ def dotted(length, count):
     return total
 
 
-def written(symbol, x, y, width, context):
+# Where a rectangle rest's ink sits, in spaces above the middle line, when it
+# is a whole rest rather than a half. Measured across the catalogue on
+# five-line staves: 0.76 for the one that hangs under the fourth line and 0.24
+# for the one that sits on the third, fifty-six of each and nothing between.
+RECTANGLE_SPLIT = 0.5
+
+
+def written(symbol, x, y, ink_y, width, context):
     """The length an engraver wrote for one note or rest, or None.
 
     None is a real answer and the important one: it means this module could
@@ -193,10 +200,22 @@ def written(symbol, x, y, width, context):
     if symbol in RESTS:
         return RESTS[symbol]
     if symbol == 'rest.rectangle':
-        # One glyph serves as both whole and half rest in some families; the
-        # engraver tells them apart by hanging one under the fourth line and
-        # sitting the other on the third.
-        return Fraction(4) if y > context['middle'] else Fraction(2)
+        # One glyph serves as both whole and half rest; the engraver tells
+        # them apart by hanging one under the fourth line and sitting the
+        # other on the third. So the answer is in where the *ink* went, not
+        # where the glyph was placed: both are placed with their origin on the
+        # middle line, and comparing that origin to the middle -- which is
+        # what this did -- cannot separate them at all. Whole-bar rests were
+        # read as half rests throughout.
+        if context.get('lines', 0) < 5:
+            # A one-line staff has no fourth line to hang from, and centres
+            # both on its single line: measured, the two populations sit at
+            # -0.16 and +0.16 spaces, which is noise. There is nothing to
+            # read here, and the caller's whole-bar rule covers the case that
+            # matters -- a rest alone in its bar.
+            return None
+        above = (ink_y - context['middle']) / spacing
+        return Fraction(4) if above > RECTANGLE_SPLIT else Fraction(2)
     if symbol in STEMLESS:
         return STEMLESS[symbol]
 

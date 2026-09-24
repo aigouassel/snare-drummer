@@ -227,8 +227,18 @@ def reconstruct(named, bar, meter, context):
 
     total = Fraction(meter[0] * 4, meter[1])
 
-    lengths = [rhythm.written(symbol, g['x'], g['y'], g.get('ink', 0.0), context)
+    lengths = [rhythm.written(symbol, g['x'], g['y'], g.get('inkY', g['y']),
+                              g.get('ink', 0.0), context)
                for g, symbol in onsets]
+    # A rest alone in its bar is a whole-bar rest and lasts exactly the bar,
+    # whatever the metre says: three beats in 3/4, three and a half in 7/8.
+    # Reading it as four made every such bar in a metre other than 4/4 fail
+    # its own arithmetic, and is also the only thing that can be said about
+    # one on a staff with no fourth line to hang from.
+    if len(onsets) == 1 and role(onsets[0][1]) == 'rest' and \
+            onsets[0][1] in ('rest.rectangle', 'rest.whole'):
+        lengths = [total]
+
     source = 'notation'
     if all(length is not None for length in lengths):
         for start, stop, ratio in rhythm.tuplet_groups(
@@ -616,6 +626,7 @@ def transcribe(path, entry):
                           if s in rhythm.HALVES],
                 'dots': [(g['x'], g['y']) for g, s in named if s == 'dot'],
                 'notehead': notehead_size,
+                'lines': len(system.get('lines') or []),
                 'tuplets': tuplet_numbers(named, system, in_bar, bar['x0']),
             }
             events, unnamed, source, onsets = reconstruct(
