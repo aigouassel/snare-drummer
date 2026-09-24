@@ -858,7 +858,8 @@ def transcribe(path, entry):
         geometry = {}
         for index, system in enumerate(systems):
             geometry[index] = {
-                'beams': rhythm.beams(page['segments'], system['spacing']),
+                'beams': rhythm.beams(page['segments'], system['spacing'],
+                                      systems),
                 'stems': rhythm.stems(page['segments'], system['spacing']),
             }
 

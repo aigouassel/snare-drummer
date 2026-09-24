@@ -48,13 +48,52 @@ DOT_LEVEL = 0.6            # spaces; a dot further off in y is a staccato
 GRACE_RATIO = 0.8
 
 
-def beams(segments, spacing):
+# How far apart two rules may be drawn and still be the two edges of one
+# filled staff line, and how far apart their ends. Both are layout.py's
+# allowances for the same measurement, repeated rather than imported because
+# they say something about a page here and about a page there.
+STAFF_LINE_LEVEL = 1.0
+STAFF_LINE_EXTENT = 3.0
+
+
+def _is_staff_line(x0, x1, y, staves):
+    """Whether an edge is one side of a staff line rather than of a beam.
+
+    The distinction a beam reader rests on -- filled is a beam, stroked is a
+    staff line -- is a fact about typesetters, not about pages. Where a
+    producer has converted the music to outlines every staff line is filled
+    too, so a five-line staff offers ten more horizontal edges that pair
+    cleanly into five beams running the whole width of the system. Every stem
+    then crosses three or four of them, and the bar reads four times too fast
+    while closing on nothing.
+
+    What separates them is not thickness or length but *identity*: layout.py
+    has already found these lines and said where they are, so a beam reader
+    need not guess. An edge is dropped only when it lies at the height of a
+    line of a staff and runs between that staff's own two ends -- a beam
+    spans a few notes, never a system -- which on the typeset scores measured
+    here discards nothing at all.
+    """
+    for staff in staves:
+        if (abs(x0 - staff['x0']) > STAFF_LINE_EXTENT
+                or abs(x1 - staff['x1']) > STAFF_LINE_EXTENT):
+            continue
+        if any(abs(y - line) <= STAFF_LINE_LEVEL
+               for line in staff.get('lines') or ()):
+            return True
+    return False
+
+
+def beams(segments, spacing, staves=()):
     """The beams on a page, each as the span it covers.
 
     A beam is filled, not stroked -- it is a quadrilateral the engraver fills,
     where a staff line is a line it strokes -- and it reaches this module as
     its two long edges. Pairing the edges back into one beam is what keeps a
     single beam from being counted twice.
+
+    `staves` is what layout.py read off the same page, and it is what keeps a
+    drawn page's own staff lines out of the count; see `_is_staff_line`.
     """
     edges = []
     for s in segments:
@@ -63,8 +102,11 @@ def beams(segments, spacing):
         dx, dy = abs(s['x1'] - s['x0']), abs(s['y1'] - s['y0'])
         if dx < BEAM_MIN_LENGTH * spacing or dy > 0.5 * dx:
             continue
-        edges.append((min(s['x0'], s['x1']), max(s['x0'], s['x1']),
-                      (s['y0'] + s['y1']) / 2))
+        x0, x1 = min(s['x0'], s['x1']), max(s['x0'], s['x1'])
+        y = (s['y0'] + s['y1']) / 2
+        if _is_staff_line(x0, x1, y, staves):
+            continue
+        edges.append((x0, x1, y))
 
     found, used = [], set()
     for i, (x0, x1, y) in enumerate(edges):
