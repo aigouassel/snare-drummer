@@ -346,9 +346,13 @@ def drawn_symbols(page, known):
         return []
 
     vocab = known[family]
+    # The page's own family first, then the shapes a page draws that no font
+    # holds -- its typeset text turned to outlines, which is where the time
+    # signature lives on these scores.
+    drawn = Vocabulary('Drawn')
     out = []
     for shape in shapes:
-        symbol = vocab.resolve(shape)
+        symbol = vocab.resolve(shape) or drawn.resolve(shape)
         if symbol is None:
             continue
         out.append({

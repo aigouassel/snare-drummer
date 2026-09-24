@@ -1,0 +1,357 @@
+{
+ "family": "Drawn",
+ "read": "2026-09-24",
+ "method": "contact sheet of painted paths, packages/transcription/work/drawn-sheet.png",
+ "note": "Not an engraving family: the shapes a page *draws* that no font vocabulary names. Some producers convert a score to outlines, and the text goes with it -- the sticking letters, the dynamics, the tuplet numbers and the time signature are then outlines of whatever typeface the engraver used, which is nobody's music font. Kept apart from the families for exactly that reason: a Times 3 is not Maestro's 3, and putting it in Maestro's table would make it one.\\nConsulted only for painted paths, and only after the page's own family. What it mainly unlocks is the time signature, without which not one bar of these scores can be checked against anything.\\nShapes that are a notehead fused with its beam are left unnamed. They are common here -- a path is painted once for both -- and their bounding box is the pair's, so the staff position and the stem edge taken from them would both be wrong.",
+ "symbols": [
+  {
+   "bits": "00000000348040208000800880000002000080010000400100011001040200ac",
+   "aspect": 1.18,
+   "seen": 325
+  },
+  {
+   "bits": "06e00b701210124812701b000df00700035002c00486048d0649024d01bd00f2",
+   "aspect": 0.78,
+   "seen": 268,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "0fa1194311e61b640e2000000000000000000000000000000000002401e70101",
+   "aspect": 0.76,
+   "seen": 116,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0003000400060008000c0008001800100014000c000c0008000a000600070003",
+   "aspect": 0.26,
+   "seen": 82
+  },
+  {
+   "bits": "3c80240e26082f08198800c00060002000300030001000180008000800000005",
+   "aspect": 0.87,
+   "seen": 60,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "002c000c00080000000000000000000000000000000000000000001f000f0007",
+   "aspect": 0.37,
+   "seen": 53,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0000000000000000000000000000000000000000000080000001000000000001",
+   "aspect": 3.73,
+   "seen": 51,
+   "symbol": "bracket"
+  },
+  {
+   "bits": "03f007f8051805000780038000d0013c0140028002800180018000c300ef007f",
+   "aspect": 0.66,
+   "seen": 49,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "0fbc08430be706640024002000000000000000000000000000200024002601c3",
+   "aspect": 0.72,
+   "seen": 48,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "07d309861204120012001a000f0007d0015002c004800d801b0012146436cc63",
+   "aspect": 0.97,
+   "seen": 47,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "00003a006040800080108004800080000001800100012001000004000001004e",
+   "aspect": 1.09,
+   "seen": 47
+  },
+  {
+   "bits": "00610036001400000000000000000000000000000000180008000414063611e3",
+   "aspect": 0.8,
+   "seen": 37,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "01f80106010301f901670132008c00660013000800010022010f0109013301e3",
+   "aspect": 0.56,
+   "seen": 36,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "7dc0dfe094b090109200920c8b004900650037000e0000000000000001470101",
+   "aspect": 1.03,
+   "seen": 35,
+   "symbol": "dynamic.p"
+  },
+  {
+   "bits": "0730012001a000a00000000000000000000000000000300018240814073608a3",
+   "aspect": 0.82,
+   "seen": 34,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "02100110010804880048004800240054000e000514431441044004401c701010",
+   "aspect": 0.79,
+   "seen": 32,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "3f302e20482048204800680034001fc002e00000000000000814081418167473",
+   "aspect": 0.9,
+   "seen": 32,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "000300030002000200020002000200020002000000000180016b0101008100ff",
+   "aspect": 0.51,
+   "seen": 31,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "08f0060003f000000000000001f8067c048c0086048604850245026701bd00fe",
+   "aspect": 0.72,
+   "seen": 30,
+   "symbol": "digit.5"
+  },
+  {
+   "bits": "0006000600040004003600130009000800080008001f0039003500050007000c",
+   "aspect": 0.34,
+   "seen": 24
+  },
+  {
+   "bits": "082004200000001000e0019c017002c00280028002800280018001c300fd007f",
+   "aspect": 0.71,
+   "seen": 22,
+   "symbol": "digit.5"
+  },
+  {
+   "bits": "0000000000000000f7c0ffe0dfa05498565802100a780a28072805fb03ff01ef",
+   "aspect": 1.34,
+   "seen": 19,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "3e005b006c803ac00a500a500020002001200020003000900057000d003f001f",
+   "aspect": 0.88,
+   "seen": 17,
+   "symbol": "dynamic.f"
+  },
+  {
+   "bits": "04a010882a5410086006818122640420c423226483c12004500a2a54108804a0",
+   "aspect": 1.0,
+   "seen": 17
+  },
+  {
+   "bits": "07f00b780a2c0a340a1c0d0007f0038007d00500050005070585068503ef00fe",
+   "aspect": 0.74,
+   "seen": 17,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "006000000000003000100008000602040085000400250040001000000000000c",
+   "aspect": 0.6,
+   "seen": 15
+  },
+  {
+   "bits": "07c007e000f00028001400ea03ba06fd058d0505050505050785028501cf00fe",
+   "aspect": 0.66,
+   "seen": 9,
+   "symbol": "digit.6"
+  },
+  {
+   "bits": "007300160014000000000000000000000000000000006000200010041e362363",
+   "aspect": 0.89,
+   "seen": 8,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "18c004401440022001100090010800040004000324832241000000400e380808",
+   "aspect": 0.83,
+   "seen": 7,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "03f0057804bc0694039a000a01f9027902d002890289024d0345016500bf007e",
+   "aspect": 0.66,
+   "seen": 7,
+   "symbol": "digit.6"
+  },
+  {
+   "bits": "03f80cfc190e1305120512051005000400051005180918191e210bc2040c03f8",
+   "aspect": 0.8,
+   "seen": 7,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "06301f80334126e724242824280400040000000000000000282428246c24c7e7",
+   "aspect": 1.06,
+   "seen": 7,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "000000001e806060f810e70ce182a062a02180198005430520c3107f0c0202fe",
+   "aspect": 1.2,
+   "seen": 6
+  },
+  {
+   "bits": "03fc04fb089908910891089b0664039806780cc4089b08910891089906fb03fc",
+   "aspect": 0.74,
+   "seen": 6,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "07f30b9612041400140016001b0007f00130000000000000000000142012c873",
+   "aspect": 0.97,
+   "seen": 6,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0000000000000000000000000000000000000000000000010021040080008000",
+   "aspect": 3.24,
+   "seen": 6,
+   "symbol": "bracket"
+  },
+  {
+   "bits": "000000000000000000000000000000007c1e8331f8bfc65b8241f933ac8df87e",
+   "aspect": 2.11,
+   "seen": 5
+  },
+  {
+   "bits": "1010102000000000000001e0077805980d0609000d0005070505028501ed00fe",
+   "aspect": 0.79,
+   "seen": 5,
+   "symbol": "digit.5"
+  },
+  {
+   "bits": "0060000000000000002000000108000001000100024802400280028101800001",
+   "aspect": 0.59,
+   "seen": 5,
+   "symbol": "articulation.marcato"
+  },
+  {
+   "bits": "0006000200010043000000000000040000000040000004020300000100010001",
+   "aspect": 0.65,
+   "seen": 5,
+   "symbol": "articulation.accent"
+  },
+  {
+   "bits": "00408060800088508040404000c0082000000104000204410000000905810700",
+   "aspect": 1.03,
+   "seen": 5
+  },
+  {
+   "bits": "0008000300020002000200000000000000000000000000000000000a000a003b",
+   "aspect": 0.33,
+   "seen": 5
+  },
+  {
+   "bits": "03f00cec08c208520cd10791008007f10cf11991111111110912091204f403f8",
+   "aspect": 0.77,
+   "seen": 4,
+   "symbol": "digit.6"
+  },
+  {
+   "bits": "03fc04fe0d0b0909090f098601e000f8001e000b08090809298939f931c31e7e",
+   "aspect": 0.87,
+   "seen": 4,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0000000000000000000000000000fdfef7ffd201f001b3a079fd000001000d80",
+   "aspect": 1.84,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "03fc05fe0b090a090b190d6106c206060c16080f08c5090509050d0d06fb01fc",
+   "aspect": 0.75,
+   "seen": 3,
+   "symbol": "digit.8"
+  },
+  {
+   "bits": "00000000000000000000000000000000000000000000f3c0fec99009f009e5c9",
+   "aspect": 3.34,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0e7f0fc30406020e03f3018100c000a1009000500048004c004400420042007f",
+   "aspect": 0.72,
+   "seen": 3,
+   "symbol": "digit.7"
+  },
+  {
+   "bits": "000000000000f780ffe0fda0d6b077d800000000000008200c2005ff03ff01ef",
+   "aspect": 1.27,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0060001000100000002000040000000001e10115010100f10007002000200030",
+   "aspect": 0.56,
+   "seen": 3,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "000000000000000000000000000000000000000000000080f9affdafcdaf7def",
+   "aspect": 3.76,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "000000000000080008000000f00cf012e81f581b981b8c038c33d82fb877f83f",
+   "aspect": 1.27,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "00c0008000200000000000c024090001200030c3000400800040004000c000c0",
+   "aspect": 0.85,
+   "seen": 3,
+   "symbol": "articulation.plus"
+  },
+  {
+   "bits": "000010386c6cc2729e7fa63f862bca73ca8110fd10c730a128733f5f2121311f",
+   "aspect": 1.11,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "03fe00ef0187010301050319003300c60398026006c105810503038603cc01ff",
+   "aspect": 0.64,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "03fe004f0083018701050319000100c3030c023004c104810482028603fc01ff",
+   "aspect": 0.64,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "07f81bfc121a240a64094809480948094809480948092809281214321fec07d0",
+   "aspect": 0.92,
+   "seen": 3,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "07e00bf00a58124812780b0005f00700037002c00486024d0249032501bf00f2",
+   "aspect": 0.76,
+   "seen": 3,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "03f804e409161112111112111209220922091209121112111112091605e403f8",
+   "aspect": 0.82,
+   "seen": 2,
+   "symbol": "digit.0"
+  },
+  {
+   "bits": "0013000000000000000000000000000000000000000000000000000000000013",
+   "aspect": 0.25,
+   "seen": 2
+  }
+ ]
+}
