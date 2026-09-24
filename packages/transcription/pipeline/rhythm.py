@@ -248,17 +248,25 @@ def tuplet_groups(numbers, onsets, spacing):
     -- a bracket does when there is one, and beamed tuplets, which is most of
     them here, have no bracket at all.
 
+    The runs are disjoint and in order, which is not a refinement but the
+    whole difference between right and wrong. Chosen independently, two
+    numbers in one bar can claim the same note: a bar of four triplets came
+    out as runs 0-3, 3-6, 5-8 and 9-12, so one note had the ratio applied
+    twice and another never got it at all. Each number therefore searches
+    only from where the previous group ended.
+
     A number that cannot be matched to a run of the right length is dropped
     rather than applied to a guess, and the bar then fails to close, which is
     the outcome this project prefers to a plausible one.
     """
     groups = []
     centres = [g['x'] for g, _ in onsets]
-    for x, count, inthe in numbers:
-        if count < 2 or count > len(centres):
+    floor = 0
+    for x, count, inthe in sorted(numbers):
+        if count < 2 or floor + count > len(centres):
             continue
         best, best_gap = None, None
-        for start in range(len(centres) - count + 1):
+        for start in range(floor, len(centres) - count + 1):
             run = centres[start:start + count]
             gap = abs((run[0] + run[-1]) / 2 - x)
             if best_gap is None or gap < best_gap:
@@ -266,4 +274,5 @@ def tuplet_groups(numbers, onsets, spacing):
         if best is None or best_gap > spacing * 12:
             continue
         groups.append((best, best + count, Fraction(inthe, count)))
+        floor = best + count
     return groups

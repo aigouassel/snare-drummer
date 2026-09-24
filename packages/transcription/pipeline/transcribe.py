@@ -342,8 +342,18 @@ def tuplet_numbers(named, system, words=(), x0=None):
     if not marks:
         reach = TUPLET_REACH * system['spacing']
         for word in words:
-            characters = word['text'].strip()
-            if not (characters.isdigit() or characters.replace(':', '').isdigit()):
+            # The digits inside the word, not the whole word. A bracketed
+            # tuplet reaches here as its number wedged between the two ends
+            # of the bracket -- "\ue1903\ue190" -- because those are drawn
+            # from the music font at the same baseline and merge into one
+            # word. Requiring the word to be digits throughout dropped every
+            # bracketed tuplet in the catalogue.
+            #
+            # What is stripped is punctuation and private-use marks only: if
+            # a letter survives, the word is a word and not a count.
+            characters = ''.join(c for c in word['text'] if c.isalnum() or c == ':')
+            if not characters or not all(c.isdigit() or c == ':'
+                                         for c in characters):
                 continue
             if system['bottom'] - 1 <= word['y'] <= system['top'] + 1:
                 continue
