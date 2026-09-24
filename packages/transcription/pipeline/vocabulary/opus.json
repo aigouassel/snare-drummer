@@ -445,7 +445,7 @@
    "bits": "000000000000000000000000000080000f8018e01030101018080c1803b000c1",
    "aspect": 1.89,
    "seen": 18,
-   "symbol": "tremolo.wavy"
+   "symbol": "notehead.slashed"
   },
   {
    "bits": "003000300060006000600060006000700038001e000f00040006000200010001",
@@ -820,5 +820,5 @@
    "symbol": "digit.7"
   }
  ],
- "note": "Rests differ by a single hook -- one for an eighth, two for a sixteenth -- and a contact sheet shows them at a fixed size with no staff around them, so they were read at a glance and three came out wrong. They are counted now, against the families where the two are already told apart. Getting one wrong is worth a whole bar: a sixteenth rest read as an eighth leaves the bar an eighth too long and nothing else on the page contradicts it."
+ "note": "Rests differ by a single hook -- one for an eighth, two for a sixteenth -- and a contact sheet shows them at a fixed size with no staff around them, so they were read at a glance and three came out wrong. They are counted now, against the families where the two are already told apart. Getting one wrong is worth a whole bar: a sixteenth rest read as an eighth leaves the bar an eighth too long and nothing else on the page contradicts it.\nA filled notehead with a stroke through it and a wavy tremolo are both wide, dark and roughly twice as long as they are tall, and on a contact sheet at one size they are easy to confuse. One of them was labelled a tremolo, and the label decides the role: a tremolo is inert, so the note was not counted as an attack at all and vanished from its bar. Cropped from a real page the two are not alike -- the slashed head sits on the staff with a stem, the tremolo floats above the note it belongs to."
 }

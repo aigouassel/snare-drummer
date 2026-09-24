@@ -240,7 +240,7 @@ def reconstruct(named, bar, meter, context):
     total = Fraction(meter[0] * 4, meter[1])
 
     lengths = [rhythm.written(symbol, g['x'], g['y'], g.get('inkY', g['y']),
-                              g.get('ink', 0.0), context)
+                              _head_widths(g, symbol, context), context)
                for g, symbol in onsets]
     # A rest alone in its bar is a whole-bar rest and lasts exactly the bar,
     # whatever the metre says: three beats in 3/4, three and a half in 7/8.
@@ -278,6 +278,24 @@ def reconstruct(named, bar, meter, context):
     return events, unnamed, source, onsets
 
 
+def _head_widths(glyph, symbol, context):
+    """Every width this glyph's notehead might have, for finding its stem.
+
+    Its own ink, which is right for a plain head and for a circled one, and
+    a plain head's width scaled to this glyph's size, which is right for a
+    slashed one whose stroke sticks out past the stem. Offering both costs
+    nothing -- the search around each is narrow -- and picking one was wrong
+    either way: the glyph's ink loses every slashed note, the modal width
+    loses every circled one.
+    """
+    ink = glyph.get('ink', 0.0)
+    if role(symbol) != 'notehead' or not context.get('headWidth') \
+            or not context.get('notehead'):
+        return (ink,)
+    plain = context['headWidth'] * glyph.get('size', 0.0) / context['notehead']
+    return (ink, plain)
+
+
 def _notehead_size(page, fonts, vocabularies):
     """The type size a full-size notehead is drawn at on this page, in points.
 
@@ -302,6 +320,37 @@ def _notehead_size(page, fonts, vocabularies):
             fp = font.get('codes', {}).get(code)
             if fp and role(vocab.resolve(fp)) == 'notehead':
                 seen[round(glyph['size'], 2)] += 1
+    if not seen:
+        return 0.0
+    return max(seen.items(), key=lambda kv: (kv[1], kv[0]))[0]
+
+
+def _notehead_ink(page, fonts, vocabularies, size):
+    """How wide a notehead's own oval is at full size, in points.
+
+    Wanted because a stem is drawn at the notehead's edge, and the glyph's own
+    ink is not the notehead's edge whenever the glyph carries something else:
+    a slashed notehead is half again as wide as a plain one, the extra being
+    the stroke that sticks out either side. Measured from the glyph, the edge
+    lands past the stem and no stem is found at all -- so those notes returned
+    no duration and dropped their whole bar to a reading from spacing.
+
+    Every head in a score is the same width, so the commonest one is the
+    answer, taken among the glyphs drawn at full size.
+    """
+    seen = defaultdict(int)
+    for glyph in page['glyphs']:
+        if abs(glyph['size'] - size) > 0.01:
+            continue
+        font = fonts.get(glyph['font'] or '', {})
+        vocab = vocabularies.get(glyph['family'])
+        if not vocab:
+            continue
+        upem = font.get('upem') or 1000
+        for code in glyph['codes']:
+            fp = font.get('codes', {}).get(code)
+            if fp and role(vocab.resolve(fp)) == 'notehead':
+                seen[round(fp['width'] * glyph['size'] / upem, 2)] += 1
     if not seen:
         return 0.0
     return max(seen.items(), key=lambda kv: (kv[1], kv[0]))[0]
@@ -650,6 +699,7 @@ def transcribe(path, entry):
             return out
 
         notehead_size = _notehead_size(page, fonts, vocabularies)
+        notehead_ink = _notehead_ink(page, fonts, vocabularies, notehead_size)
         page_words = text.words(page)
 
         geometry = {}
@@ -705,6 +755,7 @@ def transcribe(path, entry):
                           if s in rhythm.HALVES],
                 'dots': [(g['x'], g['y']) for g, s in named if s == 'dot'],
                 'notehead': notehead_size,
+                'headWidth': notehead_ink,
                 'lines': len(system.get('lines') or []),
                 'tuplets': tuplet_numbers(named, system, in_bar, bar['x0']),
             }

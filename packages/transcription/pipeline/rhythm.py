@@ -98,21 +98,29 @@ def stems(segments, spacing):
     return out
 
 
-def stem_of(x, width, y, candidates, spacing):
-    """The stem belonging to a notehead whose ink starts at x and runs `width`.
+def stem_of(x, widths, y, candidates, spacing):
+    """The stem belonging to a notehead whose ink starts at x.
 
     A stem is drawn at one edge of the notehead and not through its middle:
     up at the right edge, down at the left. Searching near the origin alone
     misses every up-stem by a full notehead -- measured at 1.34 spaces on the
     reference piece -- and widening the search until it hits instead picks up
     the neighbouring note's stem, since consecutive notes are only two and a
-    half spaces apart. Both edges, narrowly, is the only version that is
-    right for the right reason.
+    half spaces apart. Both edges, narrowly, is the only version that is right
+    for the right reason.
+
+    Which edge, though, depends on what the glyph carries. A plain head's own
+    ink ends at the stem. A circled head's circle is wider and the stem is at
+    *its* edge. A slashed head is wider still and the stem is not at its edge
+    at all, because the stroke sticks out past it -- measured on one score the
+    glyph runs 1.89 times its height against 1.31 for a plain head. So the
+    caller offers every width the head might have and each is tried.
     """
     reach = NEAR_STEM * spacing
+    edges = [x] + [x + w for w in widths]
     best, best_gap = None, reach
     for stem in candidates:
-        gap = min(abs(stem['x'] - x), abs(stem['x'] - (x + width)))
+        gap = min(abs(stem['x'] - edge) for edge in edges)
         if gap > best_gap:
             continue
         if not (stem['y0'] - 0.6 * spacing <= y <= stem['y1'] + 0.6 * spacing):
@@ -189,7 +197,7 @@ def dotted(length, count):
 RECTANGLE_SPLIT = 0.5
 
 
-def written(symbol, x, y, ink_y, width, context):
+def written(symbol, x, y, ink_y, widths, context):
     """The length an engraver wrote for one note or rest, or None.
 
     None is a real answer and the important one: it means this module could
@@ -219,7 +227,7 @@ def written(symbol, x, y, ink_y, width, context):
     if symbol in STEMLESS:
         return STEMLESS[symbol]
 
-    stem = stem_of(x, width, y, context['stems'], spacing)
+    stem = stem_of(x, widths, y, context['stems'], spacing)
     if stem is None:
         return None
 
