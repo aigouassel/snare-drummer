@@ -17,6 +17,16 @@ import { type Duration } from './duration'
  */
 export type Hand = 'right' | 'left'
 
+/**
+ * Every dynamic the page can print, loudest last.
+ *
+ * Ordered so that playback can place one relative to the others without
+ * hard-coding a scale, and so a test can assert the order is total.
+ */
+export const DYNAMICS = [
+  'pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff', 'ffff',
+] as const
+
 /** Relative weight, as the page marks it — not a MIDI velocity. */
 export type Accent =
   | 'accent'     // >
@@ -42,6 +52,25 @@ export type Zone =
  */
 export type Roll = 'buzz' | 'double'
 
+/**
+ * A printed dynamic, as a level rather than a loudness.
+ *
+ * Carried on the note the mark is printed over, and in force from there until
+ * the next one. A bar would be the tempting place to put it and the wrong
+ * one: a score changes dynamic mid-bar all the time, and a bar-level field
+ * would have to choose between misreporting the start of the bar and the end
+ * of it.
+ *
+ * What each level is worth in sound is decided at playback, not here. The
+ * page states an order, not a number of decibels, and the gap between mf and
+ * f is a matter of interpretation that a transcription has no business
+ * fixing.
+ */
+export type Dynamic =
+  | 'pppp' | 'ppp' | 'pp' | 'p' | 'mp' | 'mf' | 'f' | 'ff' | 'fff' | 'ffff'
+  /** Accents in their own right: a stroke's weight, not a passage's. */
+  | 'sfz' | 'fp' | 'fz'
+
 export type Stroke = {
   duration: Duration
   hand?: Hand
@@ -54,6 +83,12 @@ export type Stroke = {
    */
   graces?: number
   roll?: Roll
+  /**
+   * The dynamic printed at this note, in force until the next one is
+   * printed. Absent means the page says nothing *here*, not that it says
+   * nothing at all.
+   */
+  dynamic?: Dynamic
 }
 
 /** A silence occupying its own length. */

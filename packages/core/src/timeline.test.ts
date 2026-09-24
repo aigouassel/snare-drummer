@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { type Bar } from './bar'
 import { EIGHTH, QUARTER, SIXTEENTH } from './duration'
-import { atSeconds, lengthInBeats, place, selectBars } from './timeline'
+import { atSeconds, dynamicBefore, lengthInBeats, place, selectBars } from './timeline'
 
 const bar = (n: number, events: Bar['events'], meter: Bar['meter'] = [4, 4]): Bar => ({
   n, meter, events, verdict: { trusted: true },
@@ -77,5 +77,61 @@ describe('atSeconds', () => {
 describe('SIXTEENTH', () => {
   it('is a quarter of a beat', () => {
     expect(SIXTEENTH).toEqual([1, 4])
+  })
+})
+
+describe('dynamics in force', () => {
+  /**
+   * A page marks a dynamic once and means it until it says otherwise, so
+   * almost every note carries none of its own. Resolving that here keeps one
+   * answer to "how loud is this note" rather than one per consumer.
+   */
+  it('carries a printed dynamic forward to the notes after it', () => {
+    const placed = place([
+      bar(1, [
+        { duration: QUARTER, dynamic: 'p' as const },
+        { duration: QUARTER },
+        { duration: QUARTER, dynamic: 'ff' as const },
+        { duration: QUARTER },
+      ]),
+      bar(2, [{ duration: QUARTER }, { duration: QUARTER }, { duration: QUARTER },
+              { duration: QUARTER }]),
+    ])
+    expect(placed.map((s) => s.dynamic)).toEqual([
+      'p', 'p', 'ff', 'ff', 'ff', 'ff', 'ff', 'ff',
+    ])
+  })
+
+  it('leaves it absent until the page prints one', () => {
+    const placed = place([
+      bar(1, [{ duration: QUARTER }, { duration: QUARTER, dynamic: 'mf' as const },
+              { duration: QUARTER }, { duration: QUARTER }]),
+    ])
+    // Absent is not a quiet default: a score that marks nothing is played at
+    // one weight, and one that opens pianissimo is not.
+    expect(placed[0]?.dynamic).toBeUndefined()
+    expect(placed[1]?.dynamic).toBe('mf')
+  })
+
+  it('starts a selection at the dynamic still in force before it', () => {
+    const bars = [
+      bar(1, [{ duration: QUARTER, dynamic: 'pp' as const }, { duration: QUARTER },
+              { duration: QUARTER }, { duration: QUARTER }]),
+      bar(2, four),
+      bar(3, four),
+    ]
+    expect(dynamicBefore(bars, 3)).toBe('pp')
+    expect(dynamicBefore(bars, 1)).toBeUndefined()
+    const placed = place(selectBars(bars, 3, 3), dynamicBefore(bars, 3))
+    expect(placed.every((s) => s.dynamic === 'pp')).toBe(true)
+  })
+
+  it('takes the last dynamic before the selection, not the first', () => {
+    const bars = [
+      bar(1, [{ duration: QUARTER, dynamic: 'pp' as const }, { duration: QUARTER },
+              { duration: QUARTER }, { duration: QUARTER, dynamic: 'f' as const }]),
+      bar(2, four),
+    ]
+    expect(dynamicBefore(bars, 2)).toBe('f')
   })
 })
