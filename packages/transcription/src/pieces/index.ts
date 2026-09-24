@@ -95,7 +95,8 @@ import piece84 from './let-the-groove-get-in.json' with { type: 'json' }
 import piece85 from './lets-go.json' with { type: 'json' }
 import piece86 from './roots-2017-snare-feature.json' with { type: 'json' }
 import piece87 from './solo.json' with { type: 'json' }
-import piece88 from './start-it-up.json' with { type: 'json' }
+import piece88 from './stainless-drum-set.json' with { type: 'json' }
+import piece89 from './start-it-up.json' with { type: 'json' }
 
 export const RAW_PIECES: readonly unknown[] = [
   piece0,
@@ -187,4 +188,5 @@ export const RAW_PIECES: readonly unknown[] = [
   piece86,
   piece87,
   piece88,
+  piece89,
 ]

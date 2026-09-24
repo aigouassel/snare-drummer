@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DYNAMICS, isRest } from '@snare-drummer/core/stroke'
 import { barBeats, playedBeats } from '@snare-drummer/core/bar'
 import { equals } from '@snare-drummer/core/fraction'
 import { trust } from '@snare-drummer/core/piece'
@@ -111,4 +112,62 @@ describe('transcriptions', () => {
       expect(trusted).toBeGreaterThan(0)
     }
   })
+
+  /**
+   * What the page says in words, as opposed to what it draws in notes.
+   *
+   * These four readings share one failure mode: they are all plausible when
+   * wrong and none of them is checked by the bar's arithmetic. A dynamic
+   * attached to the wrong note, a sticking on the wrong hand or a tempo out
+   * by a factor of two all produce a piece that plays. So what is asserted
+   * here is the only thing a test can assert -- that nothing outside the
+   * stated vocabularies got through.
+   */
+  it('reads a tempo only where the page prints one, and a believable one', () => {
+    const printed = PIECES.filter((p) => p.bpm !== undefined)
+    expect(printed.length).toBeGreaterThan(PIECES.length / 2)
+    for (const piece of printed) {
+      // Below 30 nothing is a tempo, and above 300 nothing is playable on a
+      // drum. A mark read at half or twice its value lands inside this range,
+      // so the bound catches a misreading of the unit, never of the digits.
+      expect(piece.bpm).toBeGreaterThanOrEqual(30)
+      expect(piece.bpm).toBeLessThanOrEqual(300)
+    }
+  })
+
+  it('never invents a sticking, a dynamic or an ornament', () => {
+    const dynamics = new Set([...DYNAMICS, 'sfz', 'fp', 'fz'])
+    let hands = 0
+    let marks = 0
+    for (const piece of PIECES) {
+      for (const bar of piece.bars) {
+        for (const event of bar.events) {
+          if (isRest(event)) {
+            // A silence has no hand and no weight. Hanging either on one
+            // would be the mark landing on the wrong event entirely.
+            expect('hand' in event).toBe(false)
+            expect('dynamic' in event).toBe(false)
+            continue
+          }
+          if (event.hand) {
+            expect(['right', 'left']).toContain(event.hand)
+            hands++
+          }
+          if (event.dynamic) {
+            expect(dynamics.has(event.dynamic)).toBe(true)
+            marks++
+          }
+          if (event.graces !== undefined) {
+            // A flam is one grace note, a drag two, a ruff three. More than
+            // that is not an ornament, it is noteheads read as ornaments.
+            expect(event.graces).toBeGreaterThan(0)
+            expect(event.graces).toBeLessThanOrEqual(3)
+          }
+        }
+      }
+    }
+    expect(hands).toBeGreaterThan(0)
+    expect(marks).toBeGreaterThan(0)
+  })
 })
+

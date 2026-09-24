@@ -25,6 +25,8 @@ type RawEvent = {
   zone?: string
   roll?: string
   graces?: number
+  hand?: string
+  dynamic?: string
 }
 
 type RawBar = {
@@ -43,6 +45,7 @@ type RawPiece = {
   corps: string
   circuit: string
   year?: number
+  bpm?: number
   source: { url: string; listedAt: string; read: string }
   bars: readonly RawBar[]
 }
@@ -58,6 +61,8 @@ const toEvent = (raw: RawEvent): Event =>
         ...(raw.zone ? { zone: raw.zone as never } : {}),
         ...(raw.roll ? { roll: raw.roll as never } : {}),
         ...(raw.graces ? { graces: raw.graces } : {}),
+        ...(raw.hand ? { hand: raw.hand as never } : {}),
+        ...(raw.dynamic ? { dynamic: raw.dynamic as never } : {}),
       }
 
 const toBar = (raw: RawBar): Bar => {
@@ -88,6 +93,7 @@ const toPiece = (raw: RawPiece): Piece => ({
   corps: raw.corps,
   circuit: raw.circuit as Circuit,
   ...(raw.year === undefined ? {} : { year: raw.year }),
+  ...(raw.bpm === undefined ? {} : { bpm: raw.bpm }),
   bars: raw.bars.map(toBar),
   source: raw.source,
 })
