@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img"
+     aria-label="une note sur une portée à une ligne">
+  <!--
+    What this app draws, at sixteen pixels: one staff line and one note on it.
+
+    A snare part is written on a single line, because everything is the same
+    drum — so the icon is the notation itself rather than a picture of a drum.
+    It also survives being shrunk, which a drum shell with tension rods does
+    not: at this size a favicon is three shapes or it is a smudge.
+
+    The proportions are not the score's. Drawn to scale the head swallowed the
+    left half of the line and the icon read as a corner with a blob on it, so
+    the head is smaller and set right of centre — the line has to be visible
+    on *both* sides of it or nothing says "staff".
+
+    The ink follows the browser's own scheme, so the line does not vanish into
+    a dark tab strip. Firefox and Safari honour this in an SVG favicon; where
+    it is ignored the light value is used, which is the one that suits the
+    default tab bar.
+  -->
+  <style>
+    .ink { fill: #16181d; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #e8eaed; }
+    }
+  </style>
+  <rect class="ink" x="1" y="19.4" width="30" height="3" rx="1.5" />
+  <rect class="ink" x="17.4" y="9" width="2.8" height="11.6" rx="1.2" />
+  <ellipse cx="14" cy="20.9" rx="4.8" ry="3.5" fill="#2563eb"
+           transform="rotate(-20 14 20.9)" />
+</svg>

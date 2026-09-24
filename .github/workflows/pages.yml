@@ -1,0 +1,65 @@
+# Build the player and publish it as a GitHub Page.
+#
+# The gate is the test suite and nothing else, deliberately. Typecheck and
+# build both run here anyway -- the build cannot succeed if the types are
+# wrong -- so adding them as separate required steps would say twice what is
+# already said once, and a check that can only fail alongside another one
+# teaches you to stop reading the red.
+#
+# The pipeline that reads the PDFs is not run here. It needs the scores, and
+# the scores are never committed: a page is built from what was already read
+# into packages/transcription/src/pieces, not from the catalogue itself.
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One deployment at a time, and a push that lands mid-deploy waits rather than
+# cancelling: a half-published page is worse than a late one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # Yarn 4 arrives through corepack, pinned by packageManager in
+          # package.json, so nothing here decides which version is used.
+          cache: yarn
+
+      - run: corepack enable
+      - run: yarn install --immutable
+
+      - name: Tests
+        run: yarn test
+
+      - name: Build
+        run: yarn build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: apps/web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
