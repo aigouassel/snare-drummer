@@ -56,6 +56,18 @@ ZONES = {
 # A flam is one grace note, a drag two, a ruff three. There is no fourth.
 MAX_GRACES = 3
 
+# The narrowest strip that can still be a bar, in staff spaces, when nothing
+# rhythmic was found in it. A courtesy clef or time signature printed after
+# the last barline of a system leaves a strip behind it that looks like a bar
+# and holds no music: measured across the catalogue those are 2 to 3 spaces
+# wide, while a bar that does hold music is almost never under 9. Counting
+# them shifted every later bar's number by one, and a bar number is how a
+# passage is addressed here.
+COURTESY_STRIP = 4.0
+
+# How far above the staff a multi-bar rest's count is printed, in spaces.
+MULTI_REST_REACH = 6.0
+
 GRID = [Fraction(1, 8), Fraction(1, 6), Fraction(1, 4), Fraction(1, 3),
         Fraction(3, 8), Fraction(1, 2), Fraction(2, 3), Fraction(3, 4),
         Fraction(1), Fraction(3, 2), Fraction(2), Fraction(3), Fraction(4)]
@@ -443,6 +455,43 @@ def shape_dynamics(named, spacing):
             for item in out if item['text'].lower() in text.DYNAMICS]
 
 
+def multi_rest_count(named, words, bar, system):
+    """How many bars a multi-bar rest stands for, or 0 if it does not say.
+
+    The count is printed above the staff, over the bar it applies to, and it
+    is the only thing on the page that states how many bars are being passed
+    over. Read from the shapes first and the letters second, as everywhere
+    else here.
+
+    Zero is a real answer. A multi-bar rest whose count cannot be read leaves
+    the piece's numbering wrong from that point on -- every later bar is
+    addressed by a number that is not its own -- so the bar is left empty and
+    flagged rather than guessed at one.
+    """
+    reach = system['top'] + MULTI_REST_REACH * system['spacing']
+    drawn = sorted([(g['x'], int(s.split('.')[1])) for g, s in named
+                    if s and s.startswith('digit.')
+                    and system['top'] + 1 < g.get('inkY', g['y']) <= reach])
+    spelled = []
+    for word in words:
+        characters = ''.join(c for c in word['text'] if c.isalnum())
+        if not characters.isdigit():
+            continue
+        if not (system['top'] + 1 < word['y'] <= reach):
+            continue
+        for offset, character in enumerate(characters):
+            spelled.append((word['x'] + offset * word['size'] * 0.5,
+                            int(character)))
+
+    for digits in (drawn, spelled):
+        if not digits:
+            continue
+        count = int(''.join(str(d) for _x, d in sorted(digits)))
+        if 1 <= count <= 99:
+            return count
+    return 0
+
+
 def _by_spacing(onsets, bar, total):
     """Durations from how far apart the notes were set on the page.
 
@@ -627,6 +676,26 @@ def transcribe(path, entry):
             if printed:
                 meter = printed
 
+            # A multi-bar rest is several bars printed in one place, and it is
+            # written out as the bars it stands for. Read as the single bar it
+            # occupies, it loses the rest of them and renumbers everything
+            # after it -- and a bar number is how a passage is addressed here.
+            if layout.multi_rest(page['segments'], bar, system):
+                count = multi_rest_count(named, in_bar, bar, system)
+                for _ in range(count or 1):
+                    bars.append({
+                        'n': len(bars) + 1,
+                        'meter': meter,
+                        'events': ([{'duration': [meter[0] * 4, meter[1]],
+                                     'rest': True}]
+                                   if (meter and count) else []),
+                        'unnamedSymbols': 0,
+                        'readFrom': 'notation' if (meter and count) else 'none',
+                        'at': {'page': page['page'], 'system': bar['system'],
+                               'x0': bar['x0'], 'x1': bar['x1']},
+                    })
+                continue
+
             context = {
                 'spacing': system['spacing'],
                 'middle': (system['bottom'] + system['top']) / 2,
@@ -639,6 +708,10 @@ def transcribe(path, entry):
                 'lines': len(system.get('lines') or []),
                 'tuplets': tuplet_numbers(named, system, in_bar, bar['x0']),
             }
+            if not any(role(s) in RHYTHMIC for _g, s in named) and \
+                    bar['x1'] - bar['x0'] < COURTESY_STRIP * system['spacing']:
+                continue
+
             events, unnamed, source, onsets = reconstruct(
                 named, bar, meter, context)
             events = decorate(events, named, onsets)

@@ -291,3 +291,41 @@ if __name__ == '__main__':
         mine = [b for b in found if b['system'] == i]
         print(f"  systeme {i}: y={s['top']:8.2f} interligne={s['spacing']:5.2f} "
               f"mesures={[b['n'] for b in mine]}")
+
+
+# A multi-bar rest is a thick horizontal bar centred on the staff, with the
+# number of bars it stands for printed above it. These are the proportions it
+# is recognised by, measured on the scores that use them.
+MULTI_REST_SPAN = 0.5      # of the bar's width, at least
+MULTI_REST_THICK = 0.3     # of a staff space, at least
+MULTI_REST_CENTRED = 0.6   # spaces from the middle line, at most
+
+
+def multi_rest(segments, bar, system):
+    """Whether a bar holds a multi-bar rest, and how thick the bar is drawn.
+
+    A multi-bar rest is not an empty bar and not a long one: it is *several*
+    bars printed in one place, and a reader counts them off. Read as one bar
+    it loses the others -- and every bar after it in the piece is then
+    numbered wrong, which matters here more than in most projects, because the
+    bar number is how a passage is addressed.
+
+    What identifies it is a thick horizontal bar spanning most of the measure
+    and centred on the middle line. A staff line is thin and runs the whole
+    system; a beam is short and sits off the staff; a repeat sign is a slash
+    with dots. Nothing else on these pages is a long thick horizontal centred
+    on the staff.
+    """
+    middle = (system['bottom'] + system['top']) / 2
+    width = bar['x1'] - bar['x0']
+    spacing = system['spacing'] or 1.0
+    edges = []
+    for x0, x1, y in horizontals(segments, width * MULTI_REST_SPAN):
+        if x0 < bar['x0'] - 1 or x1 > bar['x1'] + 1:
+            continue
+        if abs(y - middle) > MULTI_REST_CENTRED * spacing:
+            continue
+        edges.append(y)
+    if len(edges) < 2:
+        return False
+    return (max(edges) - min(edges)) >= MULTI_REST_THICK * spacing
