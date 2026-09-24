@@ -261,12 +261,17 @@ yarn dev         # the player
 - [x] Rhythm read from beams, flags, dots and tuplet numbers, not from spacing
 - [x] The tempo, the sticking, the dynamics and the ornaments, read from the
       page's own words, drawn on the score and heard in playback
-- [x] The repertoire read end to end: 89 of its 129 sequences, 4,786 bars,
-      2,877 of them playable as read
-- [ ] **Bars whose durations do not add up: 19% of the repertoire.** Down from
+- [x] The repertoire read end to end: 89 of its 129 sequences, 5,192 bars,
+      2,919 playable as read and 3,753 — 72% — verified, the difference being
+      bars that are trustworthy and silent
+- [ ] **Bars whose durations do not add up: 17% of the repertoire.** Down from
       44.5%, by taking one failing bar at a time, cropping it out of its PDF
-      and comparing it with what had been read. Six causes so far and no two
+      and comparing it with what had been read. Ten causes so far and no two
       alike; the remainder is a long tail and the method still works
+- [ ] Some of that 17% is the source being wrong rather than the reading. One
+      4/4 bar of this catalogue holds a half rest and a quarter rest and
+      nothing else: these are transcriptions people made by ear, and a bar
+      that does not add up on the page cannot be made to add up here
 - [ ] The 40 sequences held back. Six of them draw their music as vector
       outlines with no glyphs at all, which is optical music recognition and
       out of scope for ever; the rest read a page but not a rhythm
