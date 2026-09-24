@@ -3,6 +3,8 @@
 Read snare drum transcriptions out of their PDFs, and play them back, so a
 score can be *heard* before it is practised on a pad.
 
+**→ [aigouassel.github.io/snare-drummer](https://aigouassel.github.io/snare-drummer/)**
+
 The material comes from the snare drum transcriptions listed at
 [lothype.com](https://lothype.com/transcriptions/snare-drum-transcriptions/) —
 884 PDFs from DCI, WGI and DCA. Every piece the app shows carries the URL it

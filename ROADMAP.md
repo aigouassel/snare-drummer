@@ -242,7 +242,7 @@ les ligatures (rapport 12 à 22) sans rien inventer.
 
 ---
 
-## 6 · Diffusion et présentation
+## 6 · Présentation
 
 ### P1 — Revoir la taille des partitions retranscrites
 
@@ -253,8 +253,8 @@ préciser au moment de la prendre.
 grosse à 96 Ko (`2019-closer-1`, 196 mesures). Elles sont toutes importées
 d'un coup par `src/pieces/index.ts`, donc le paquet livré pèse **4,27 Mo**
 avant compression. Aucune partition n'est chargée à la demande : ouvrir une
-pièce de quinze mesures télécharge les cent cinq. Ça n'a jamais gêné en local ;
-ça compte pour P2.
+pièce de quinze mesures télécharge les cent cinq. Ça ne gênait pas en local ;
+depuis que le site est publié, c'est ce que chaque visiteur télécharge.
 
 Pistes : import dynamique par pièce, ou un format plus serré — le JSON répète
 `"duration"`, `"rest"`, `"accent"`, `"hand"` sur chacune des 42 261 frappes.
@@ -264,27 +264,3 @@ Pistes : import dynamique par pièce, ou un format plus serré — le JSON rép�
 empilent, plus la marge). Une pièce de 200 mesures fait donc plusieurs milliers
 de pixels de haut, sans zoom ni densité réglable. Les repères ont été mesurés
 sur le rendu, pas choisis : les revoir veut dire les re-mesurer.
-
-### P2 — Publier en GitHub Page
-
-L'app est un build Vite statique, donc techniquement c'est une action et un
-fichier de workflow : chemin de base à configurer (`base` dans la config Vite,
-le site vivant sous `/<dépôt>/`), un workflow `pages`, et le dépôt poussé — ce
-qui est ton domaine.
-
-Deux choses à regarder avant, et elles ne sont pas techniques :
-
-- **Le poids.** 4,27 Mo de JavaScript à chaque visite (voir P1). Supportable,
-  mais c'est le moment où ça cesse d'être gratuit.
-- **Ce qu'on publie.** Jusqu'ici les transcriptions restent sur ta machine et
-  le dépôt ne contient aucun PDF — c'est une règle écrite du projet. Publier
-  met en ligne les *relevés dérivés* de transcriptions faites par d'autres, de
-  spectacles sous droits. Chaque pièce porte l'URL dont elle vient et l'app
-  l'affiche, ce qui est déjà le minimum honnête ; à toi de voir si ça suffit à
-  ton usage. Ce n'est pas une objection, c'est un point à trancher en
-  connaissance de cause.
-
-### P3 — Créer un favicon
-
-`apps/web/index.html` n'en déclare aucun : l'onglet affiche l'icône par
-défaut. Petit, et visible dès P2.
