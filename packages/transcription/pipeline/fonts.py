@@ -24,10 +24,11 @@ unrelated Opus scores, matching symbols agree to within a few bits out of 256,
 and their aspect ratios -- computed independently -- agree to two decimals.
 """
 import logging
+import re
 from io import BytesIO
 
 import pymupdf
-from fontTools.agl import UV2AGL
+from fontTools.agl import UV2AGL, toUnicode
 from fontTools.cffLib import CFFFontSet
 from fontTools.pens.recordingPen import RecordingPen
 from fontTools.ttLib import TTFont
@@ -300,6 +301,17 @@ def _pdf_widths(doc, xref):
     truncated the font's own metrics table, which happens in this catalogue.
     """
     kind, value = doc.xref_get_key(xref, 'Widths')
+    # /Widths is routinely an indirect object rather than a literal array --
+    # it is a long array, and producers share one between subsets. Reading
+    # only the literal form found no widths at all for those fonts, and a
+    # width that is missing becomes a width of zero one layer up: every glyph
+    # of a run lands on the same x, and the run then sorts into nonsense.
+    if kind == 'xref':
+        try:
+            value = doc.xref_object(int(value.split()[0]), compressed=False)
+            kind = 'array' if value.strip().startswith('[') else kind
+        except Exception:
+            return {}
     if kind == 'array':
         first = doc.xref_get_key(xref, 'FirstChar')
         start = int(first[1]) if first[0] == 'int' else 0
@@ -419,6 +431,69 @@ def _encoding(doc, xref):
     return base, differences
 
 
+def _to_unicode(doc, xref):
+    """The font's /ToUnicode CMap, as code -> the text it stands for.
+
+    This is a different kind of table from the three above it, and the
+    difference is the point. A cmap, a /Differences array and a /CIDToGIDMap
+    all answer "which outline does this code draw"; /ToUnicode alone answers
+    "what does this code *mean*", and a producer writes it so that copying
+    text out of the page works. Nothing on the page depends on it, which is
+    why it is optional -- and why a composite font without one spells nothing
+    and must be reported rather than guessed at.
+
+    Without it, every Identity-H text font on these pages is mute: its glyphs
+    are named glyph00042 and carry no letter at all. That is 70% of the words
+    in this catalogue, including most of the tempo marks and stickings.
+    """
+    kind, value = doc.xref_get_key(xref, 'ToUnicode')
+    if kind != 'xref':
+        return {}
+    try:
+        stream = doc.xref_stream(int(value.split()[0])).decode('latin-1')
+    except Exception:
+        return {}
+
+    out = {}
+    for block in re.findall(r'beginbfchar(.*?)endbfchar', stream, re.S):
+        for code, target in re.findall(r'<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]*)>', block):
+            text = _utf16(target)
+            if text:
+                out[int(code, 16)] = text
+    for block in re.findall(r'beginbfrange(.*?)endbfrange', stream, re.S):
+        # Two forms: a run mapping to consecutive code points, and a run
+        # mapping to an explicit list.
+        for low, high, body in re.findall(
+                r'<([0-9A-Fa-f]+)>\s*<([0-9A-Fa-f]+)>\s*(\[[^\]]*\]|<[0-9A-Fa-f]*>)',
+                block, re.S):
+            start, end = int(low, 16), int(high, 16)
+            if end - start > 0xFFFF:
+                continue
+            if body.startswith('['):
+                targets = re.findall(r'<([0-9A-Fa-f]*)>', body)
+                for offset, target in enumerate(targets):
+                    text = _utf16(target)
+                    if text:
+                        out[start + offset] = text
+            else:
+                base = _utf16(body.strip('<>'))
+                if not base:
+                    continue
+                for code in range(start, end + 1):
+                    out[code] = chr(ord(base[0]) + code - start) + base[1:]
+    return out
+
+
+def _utf16(digits):
+    """A bfchar target: big-endian UTF-16, however many code units long."""
+    if not digits or len(digits) % 4:
+        return ''
+    try:
+        return bytes.fromhex(digits).decode('utf-16-be')
+    except (ValueError, UnicodeDecodeError):
+        return ''
+
+
 def _describe(doc, xref, basefont, encoding):
     """One embedded font: its family, its code width, and a fingerprint per code.
 
@@ -440,8 +515,10 @@ def _describe(doc, xref, basefont, encoding):
         'bytes': 2 if (encoding or '').startswith('Identity') else 1,
         'upem': units_per_em(buf) if buf else 1000,
         'codes': {},
+        'chars': {},
         'advances': {},
     }
+    glyphs, order, builtin, addressed, advance = {}, [], {}, {}, {}
     if buf:
         try:
             glyphs, order, builtin, advance = _glyphset(buf)
@@ -480,6 +557,44 @@ def _describe(doc, xref, basefont, encoding):
                         advance[gname] * 1000.0 / (record['upem'] or 1000))
         except Exception as exc:
             record['error'] = str(exc)[:80]
+    # What a code *means* is a different question from which outline it
+    # draws, and the same four sources answer them differently.
+    #
+    # For a shape the font's own cmap has the last word: it knows what it
+    # holds. For a letter that cmap is often worse than useless -- a subset
+    # carries a symbol cmap whose glyphs are named glyph00012 -- so it is
+    # allowed to override the PDF's encoding only where its name actually
+    # spells something. Letting it override regardless replaced the m of
+    # "mm=180" with a name that spells nothing; ignoring it entirely lost the
+    # Sibelius dialect, where the quarter-note glyph really is named q.
+    #
+    # Only codes the font can draw get a letter. A base encoding covers the
+    # whole Latin range, and applying it wholesale had every font on the page
+    # claiming to spell 213 characters it does not contain.
+    if record['bytes'] == 1:
+        base, differences = _encoding(doc, xref)
+        # No /Encoding at all means the font's own, which for the standard
+        # text faces is StandardEncoding -- and over the ASCII range that is
+        # the one thing every base encoding here agrees on.
+        spelling = base_encoding(base or 'StandardEncoding')
+        spelling.update({code: gname for code, gname in builtin.items()
+                         if toUnicode(gname)})
+        spelling.update(differences)
+        drawable = {code for code, gname in addressed.items()
+                    if gname in glyphs} or set(spelling)
+        for code, gname in spelling.items():
+            if code not in drawable:
+                continue
+            char = toUnicode(gname)
+            if char:
+                record['chars']['%04x' % code] = char
+
+    # /ToUnicode overrides whatever the glyph names spelled: it is the
+    # producer stating outright what the code means, where the names are only
+    # a convention the subsetter was free to destroy.
+    for code, text in _to_unicode(doc, xref).items():
+        record['chars']['%04x' % code] = text
+
     # The PDF has the last word: it is what the page was laid out with, and
     # it survives a font whose own metrics table was truncated.
     for code, width in _pdf_widths(doc, xref).items():

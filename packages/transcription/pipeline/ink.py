@@ -115,6 +115,16 @@ def orientation(page):
     return (0.0, 1.0, -1.0, 0.0, float(h), 0.0)
 
 
+# What to advance by when the font does not say. Zero would be the obvious
+# default and is the dangerous one: every glyph of a run then lands on the
+# same x, and the run sorts into an anagram of itself -- "Blue Devils 2009"
+# came out as "lBuedevis2l009". Half an em is wrong by a little for every
+# glyph, which keeps a line in the order it was written, and it is only ever
+# reached by the standard text faces a PDF is allowed to leave unembedded on
+# the grounds that a reader knows their metrics already.
+NOMINAL_ADVANCE = 500.0
+
+
 def replay(content, fonts, unhandled, base=IDENTITY):
     """Interpret one content stream: the glyphs it draws, and the ink it lays.
 
@@ -212,7 +222,8 @@ def replay(content, fonts, unhandled, base=IDENTITY):
                         'size': round(size * (matrix[3] or 1), 3),
                     })
                     tm = mul((1, 0, 0, 1,
-                              advances.get(code, 0.0) / 1000 * size, 0), tm)
+                              advances.get(code, NOMINAL_ADVANCE)
+                              / 1000 * size, 0), tm)
 
         elif op == 'm':
             px, py = sx, sy = number(-2), number(-1)
