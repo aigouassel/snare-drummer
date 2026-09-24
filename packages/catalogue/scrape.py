@@ -156,6 +156,21 @@ def group(entries):
     return mark_current(ordered)
 
 
+# Sequences that are not transcriptions at all, listed by id.
+#
+# The site publishes engraved PDFs, and this whole pipeline is built on that:
+# a notehead is a glyph or a painted path with exact coordinates, and there is
+# nothing to infer from pixels. One entry is a photograph of a page instead --
+# no segments, no paths, one image -- and reading it would be optical music
+# recognition, which this project does not do and is not going to.
+#
+# Listed here rather than discovered, because a scan cannot be told from an
+# engraving without opening it, and the catalogue is built without opening
+# anything. Kept in the listing, left out of the repertoire: it exists, it is
+# just not work anybody can do here.
+SCANNED = {'1971-drum-break'}
+
+
 def mark_current(works):
     """Flag each corps' most recent season as the one in the repertoire.
 
@@ -174,10 +189,18 @@ def mark_current(works):
     nothing to prefer it to. A corps that has dated seasons loses its undated
     one, which cannot be shown to be the most recent.
     """
+    for work in works:
+        for sequence in work['sequences']:
+            if sequence['id'] in SCANNED:
+                sequence['scanned'] = True
+        # A season with nothing readable in it is not the season to practise,
+        # so it cannot be the one the repertoire keeps.
+        work['readable'] = any(s['id'] not in SCANNED for s in work['sequences'])
+
     latest = {}
     for work in works:
         year = work.get('year')
-        if year is None:
+        if year is None or not work['readable']:
             continue
         if work['corps'] not in latest or year > latest[work['corps']]:
             latest[work['corps']] = year
@@ -186,8 +209,10 @@ def mark_current(works):
         year = work.get('year')
         current = (year == latest[work['corps']] if work['corps'] in latest
                    else year is None)
-        if current:
+        if current and work.pop('readable'):
             work['current'] = True
+        else:
+            work.pop('readable', None)
     return works
 
 

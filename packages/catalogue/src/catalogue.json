@@ -133,12 +133,12 @@
    "corps": "Anaheim Kingsmen",
    "circuit": "DCI",
    "year": 1971,
-   "current": true,
    "sequences": [
     {
      "id": "1971-drum-break",
      "title": "Drum Break",
-     "url": "https://lothype.com/wp-content/uploads/2020/01/1971-Drum-Break.pdf"
+     "url": "https://lothype.com/wp-content/uploads/2020/01/1971-Drum-Break.pdf",
+     "scanned": true
     }
    ]
   },

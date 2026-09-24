@@ -35,6 +35,15 @@ export type Sequence = {
   id: string
   title: string
   url: string
+  /**
+   * A photograph of a page rather than an engraved score.
+   *
+   * Reading one would be optical music recognition, which this project does
+   * not do: everything here rests on a notehead having exact coordinates.
+   * Such a sequence stays in the listing — it exists — and is kept out of the
+   * repertoire, because the repertoire is what somebody could work on.
+   */
+  scanned?: true
 }
 
 /** One corps in one season, and the sequences its show was written in. */
@@ -61,8 +70,17 @@ const file = data as unknown as CatalogueFile
 /** Everything the page lists, every season of every corps. */
 export const LISTED_WORKS: readonly Work[] = file.works
 
-/** The repertoire: each corps at its most recent season. */
-export const WORKS: readonly Work[] = LISTED_WORKS.filter((w) => w.current)
+/**
+ * The repertoire: each corps at its most recent season, minus what is not a
+ * transcription at all. A scanned page is dropped here rather than in the
+ * app, so every count downstream agrees without anyone having to remember.
+ */
+export const WORKS: readonly Work[] = LISTED_WORKS.filter((w) => w.current).map(
+  (w) =>
+    w.sequences.some((s) => s.scanned)
+      ? { ...w, sequences: w.sequences.filter((s) => !s.scanned) }
+      : w,
+)
 
 export const SEQUENCE_COUNT: number = WORKS.reduce((n, w) => n + w.sequences.length, 0)
 

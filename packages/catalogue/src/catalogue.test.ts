@@ -138,9 +138,38 @@ describe('the repertoire', () => {
     expect(perCorps.size).toBe(corpsList().length)
   })
 
-  it('loses no corps from the listing', () => {
-    expect(new Set(WORKS.map((w) => w.corps)))
-      .toEqual(new Set(LISTED_WORKS.map((w) => w.corps)))
+  /**
+   * The reduction to one season per corps must not quietly lose a corps —
+   * that is the difference between narrowing a library and shrinking it.
+   *
+   * There is one exception, and it is not a shortfall of the reduction: a
+   * corps every one of whose listed sequences is a scan has nothing this
+   * project can read, in any season. Stated as a list rather than tolerated
+   * as a count, so that a second one appearing has to be looked at.
+   */
+  it('loses no corps from the listing, except those with nothing readable', () => {
+    const readable = (work: (typeof LISTED_WORKS)[number]) =>
+      work.sequences.some((s) => !s.scanned)
+    const expected = new Set(
+      LISTED_WORKS.filter(readable).map((w) => w.corps),
+    )
+    expect(new Set(WORKS.map((w) => w.corps))).toEqual(expected)
+
+    const lost = [...new Set(LISTED_WORKS.map((w) => w.corps))].filter(
+      (corps) => !expected.has(corps),
+    )
+    expect(lost).toEqual(['Anaheim Kingsmen'])
+  })
+
+  it('keeps no scanned sequence in the repertoire', () => {
+    for (const work of WORKS) {
+      for (const sequence of work.sequences) {
+        expect(sequence.scanned, `${sequence.id} is a scan`).toBeUndefined()
+      }
+    }
+    // And the listing still holds it, because it does exist.
+    const scanned = LISTED_WORKS.flatMap((w) => w.sequences).filter((s) => s.scanned)
+    expect(scanned.map((s) => s.id)).toEqual(['1971-drum-break'])
   })
 
   it('keeps the latest season a corps has, and no earlier one', () => {
