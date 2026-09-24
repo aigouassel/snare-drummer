@@ -8,6 +8,15 @@ sans refaire le diagnostic. Les entrées marquées **décision** ne sont pas des
 défauts à corriger : ce sont des choix à trancher, où le pipeline fait
 aujourd'hui ce qu'on lui a demandé de faire.
 
+> **Ce fichier est temporaire : à supprimer une fois tout traité.**
+>
+> Ce n'est pas de la coquetterie. Une feuille de route vidée de sa substance
+> qui reste à la racine d'un dépôt devient un document qu'on croit à jour et
+> qui ne l'est pas — exactement ce que `HELD-BACK.md` évite en étant généré.
+> Ce qui mérite de survivre à une entrée traitée part dans le message de
+> commit, dans le `README` ou dans `CLAUDE.md` ; le reste s'en va avec le
+> fichier.
+
 > État au 24 septembre 2026 : 105 des 128 séquences du répertoire sont
 > jouables, 5 792 mesures dont 3 263 jouables (56,3 %). Le détail de ce qui
 > est écarté vit dans [`packages/transcription/HELD-BACK.md`](packages/transcription/HELD-BACK.md),
