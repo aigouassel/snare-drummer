@@ -40,10 +40,11 @@ NEAR_STEM = 0.35           # spaces; how far a stem may sit from a head's edge
 DOT_REACH = 2.2            # spaces to the right of a notehead
 DOT_LEVEL = 0.6            # spaces; a dot further off in y is a staccato
 
-# A grace notehead is engraved at cue size. Measured across the catalogue the
-# two populations sit at 1.37 and 0.82 spaces wide, or 1.28 and 0.77 -- always
-# about three fifths -- with nothing in between, so the threshold falls in a
-# gap rather than at a guess.
+# A grace notehead is engraved at cue size, which engravers set at three
+# fifths and SMuFL defines as 0.6. Measured on this catalogue as a type size:
+# 14.7pt against 8.9pt on one score and 20.5 against 12.3 on another, both
+# exactly 0.60, with nothing drawn in between. The threshold sits in that gap
+# rather than at its edge.
 GRACE_RATIO = 0.8
 
 
@@ -153,16 +154,23 @@ RESTS = {
 }
 
 
-def is_grace(width, full):
+def is_grace(size, full):
     """Whether a notehead was engraved at cue size.
 
-    This matters more here than in most repertoires. A flam is a grace note
-    and a snare part is full of them, and a grace note read as a real one
-    does not break anything visibly -- it just makes the bar longer than its
-    metre, which is indistinguishable from a duration misread. The two sizes
-    are far apart and nothing is engraved between them.
+    Judged on the type size the glyph was drawn at, not on how wide its
+    outline came out. Those are different measurements and only the first is
+    about scale: a cross notehead is narrower than an oval one at the same
+    size, so measuring ink conflates the shape of the head with the cue. On
+    one score that put a whole class of full-size noteheads at 0.79 of the
+    commonest width -- just inside the threshold -- and deleted ninety-nine
+    real notes from the arithmetic as ornaments.
+
+    It matters more here than in most repertoires. A flam is a grace note and
+    a snare part is full of them, and a grace note read as a real one does
+    not break anything visibly: it just makes the bar longer than its metre,
+    which is indistinguishable from a duration misread.
     """
-    return bool(full) and width > 0 and width < GRACE_RATIO * full
+    return bool(full) and size > 0 and size < GRACE_RATIO * full
 
 
 def dotted(length, count):

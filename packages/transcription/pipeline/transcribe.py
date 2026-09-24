@@ -191,27 +191,36 @@ def reconstruct(named, bar, meter, context):
     # A grace note is written, played and gone; it takes no time of its own,
     # so it is carried onto the note it decorates rather than counted.
     #
-    # Past three, it is not an ornament. A flam is one grace note, a drag two
-    # and a ruff three, and nothing in this repertoire writes a fourth -- so a
-    # run of four cue-size noteheads means the size test has failed, and they
-    # are real notes written small. Left as ornaments they would be four
-    # attacks removed from the bar without changing its arithmetic, which is
-    # the one kind of error nothing downstream can catch. Put back as notes
-    # they take time, the sum stops adding up, and the bar is reported.
+    # Three ways that reading can be wrong, and each of them used to lose a
+    # note in silence rather than report one. Past three it is not an
+    # ornament: a flam is one grace note, a drag two and a ruff three, so a
+    # run of four means the cue-size test failed and they are notes written
+    # small. Nothing decorates a rest. And nothing decorates the barline --
+    # a run left pending at the end of the bar has no note to attach to.
+    #
+    # In all three the pending heads are put back as notes. They then take
+    # time, the sum stops adding up and the bar is reported, where as
+    # ornaments they were attacks removed from the bar without changing its
+    # arithmetic -- the one kind of error nothing downstream can catch.
     onsets, graces, pending = [], [], []
+
+    def flush():
+        for item in pending:
+            onsets.append(item)
+            graces.append(0)
+        pending.clear()
+
     for g, symbol in marks:
-        if role(symbol) == 'notehead' and rhythm.is_grace(g.get('ink', 0.0),
+        if role(symbol) == 'notehead' and rhythm.is_grace(g.get('size', 0.0),
                                                           context['notehead']):
             pending.append((g, symbol))
             continue
-        if len(pending) > MAX_GRACES:
-            for item in pending:
-                onsets.append(item)
-                graces.append(0)
-            pending = []
+        if len(pending) > MAX_GRACES or role(symbol) == 'rest':
+            flush()
         onsets.append((g, symbol))
         graces.append(len(pending))
-        pending = []
+        pending.clear()
+    flush()
 
     if not onsets or meter is None:
         return [], unnamed, 'none', onsets
@@ -247,14 +256,19 @@ def reconstruct(named, bar, meter, context):
     return events, unnamed, source, onsets
 
 
-def _notehead_width(page, fonts, vocabularies):
-    """How wide a full-size notehead is on this page, in points.
+def _notehead_size(page, fonts, vocabularies):
+    """The type size a full-size notehead is drawn at on this page, in points.
 
-    The *commonest* width, not the largest. A page carries both sizes and a
+    The *commonest* size, not the largest. A page carries both sizes and a
     handful of outsized noteheads besides -- a cue, a heading, an oversized
-    example -- and taking the largest lets one of those redefine full size
-    and turn every real note on the page into a grace note. The commonest is
-    the one the music is written in.
+    example -- and taking the largest lets one of those redefine full size and
+    turn every real note on the page into a grace note. The commonest is the
+    one the music is written in.
+
+    The type size and not the ink width, which was measured here before. Ink
+    width mixes the scale with the shape of the head, so a cross or a diamond
+    at full size reads as a cue-size oval; type size is the scale alone, and
+    on this catalogue it comes out cleanly bimodal.
     """
     seen = defaultdict(int)
     for glyph in page['glyphs']:
@@ -262,17 +276,30 @@ def _notehead_width(page, fonts, vocabularies):
         vocab = vocabularies.get(glyph['family'])
         if not vocab:
             continue
-        upem = font.get('upem') or 1000
         for code in glyph['codes']:
             fp = font.get('codes', {}).get(code)
             if fp and role(vocab.resolve(fp)) == 'notehead':
-                seen[round(fp['width'] * glyph['size'] / upem, 2)] += 1
+                seen[round(glyph['size'], 2)] += 1
     if not seen:
         return 0.0
     return max(seen.items(), key=lambda kv: (kv[1], kv[0]))[0]
 
 
-def tuplet_numbers(named, system):
+# How far outside the staff a tuplet number is still a tuplet number. It is
+# printed against the beam of the notes it governs, so it sits close; a bar
+# number or a rehearsal mark stands clear of the music. Measured at 2.6 spaces
+# on the score this was found on.
+TUPLET_REACH = 4.0
+
+# How far past the barline a digit has to be before it can be a tuplet number.
+# A bar number is set against the barline itself -- measured at 0.2 to 1.2
+# points from it on three engravers -- while a tuplet number is centred over
+# the notes it governs, so even one starting on the downbeat sits several
+# spaces in. Without this, a system beginning at bar 5 read a quintuplet.
+BAR_NUMBER_EDGE = 1.5
+
+
+def tuplet_numbers(named, system, words=(), x0=None):
     """Tuplet counts printed in a bar, with what they stand in the time of.
 
     Read outside the staff only. A time signature is printed *on* the staff
@@ -281,12 +308,47 @@ def tuplet_numbers(named, system):
 
     A printed ratio -- 4:3, 7:6, which this repertoire does use -- states both
     numbers, so it is read as written rather than assumed.
+
+    Two sources, tried in order and never merged, for the same reason the time
+    signature has two: Finale sets its tuplet numbers in a text italic and
+    Sibelius engraves them in the music font, and reading only the shapes lost
+    every tuplet of a whole engraver. Merged, a family whose digits are both a
+    named shape and a letter would yield the same number twice and the ratio
+    would be applied twice -- silently, and wrong by an exact factor.
+
+    A digit read as text has to sit near the staff, and clear of the barline.
+    A bar number is printed above the staff at the start of its bar and is
+    otherwise indistinguishable from a tuplet number -- same size, same
+    height, and 3, 5 and 6 are all counts a tuplet can have. What separates
+    them is where they sit horizontally: a bar number is set against the
+    barline, a tuplet number over its notes.
     """
     marks = sorted(
         [(g, s) for g, s in named
          if s and (s.startswith('digit.') or s == 'text.colon')
          and not (system['bottom'] - 1 <= g['y'] <= system['top'] + 1)],
         key=lambda p: p[0]['x'])
+
+    if not marks:
+        reach = TUPLET_REACH * system['spacing']
+        for word in words:
+            characters = word['text'].strip()
+            if not (characters.isdigit() or characters.replace(':', '').isdigit()):
+                continue
+            if system['bottom'] - 1 <= word['y'] <= system['top'] + 1:
+                continue
+            if not (system['bottom'] - reach <= word['y']
+                    <= system['top'] + reach):
+                continue
+            if x0 is not None and word['x'] - x0 < BAR_NUMBER_EDGE * system['spacing']:
+                continue
+            for offset, character in enumerate(characters):
+                marks.append(({'x': word['x'] + offset * word['size'] * 0.5,
+                               'y': word['y']},
+                              'text.colon' if character == ':'
+                              else f'digit.{character}'))
+        marks.sort(key=lambda p: p[0]['x'])
+
     if not marks:
         return []
 
@@ -518,7 +580,7 @@ def transcribe(path, entry):
                 out.append((symbol, width, middle))
             return out
 
-        notehead_width = _notehead_width(page, fonts, vocabularies)
+        notehead_size = _notehead_size(page, fonts, vocabularies)
         page_words = text.words(page)
 
         geometry = {}
@@ -553,8 +615,8 @@ def transcribe(path, entry):
                 'flags': [(g['x'], rhythm.HALVES[s]) for g, s in named
                           if s in rhythm.HALVES],
                 'dots': [(g['x'], g['y']) for g, s in named if s == 'dot'],
-                'notehead': notehead_width,
-                'tuplets': tuplet_numbers(named, system),
+                'notehead': notehead_size,
+                'tuplets': tuplet_numbers(named, system, in_bar, bar['x0']),
             }
             events, unnamed, source, onsets = reconstruct(
                 named, bar, meter, context)
