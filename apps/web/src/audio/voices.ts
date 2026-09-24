@@ -10,21 +10,45 @@
  * sampled drum with its own room and its own player does not.
  */
 
-/** Relative weight of each written dynamic. */
-const WEIGHT: Record<string, number> = {
-  ghost: 0.18,
-  tap: 0.45,
-  accent: 0.9,
-  marcato: 1,
+/**
+ * How loud a passage is, and how loud one note is within it.
+ *
+ * Two scales, multiplied, because the page states two different things. A
+ * dynamic governs a passage until the next one; an accent says this note
+ * stands out *from its neighbours*. Folding them into one number would make
+ * an accented note in a piano passage as loud as an accented note in a forte
+ * one, which is the opposite of what either mark means.
+ *
+ * The dynamic scale is compressed rather than proportional. Real dynamic
+ * range would make a pianissimo passage inaudible on laptop speakers, and
+ * what this playback is for is hearing whether the transcription is right.
+ */
+const LEVEL: Record<string, number> = {
+  pppp: 0.22, ppp: 0.28, pp: 0.36, p: 0.46, mp: 0.58,
+  mf: 0.72, f: 0.85, ff: 0.95, fff: 1, ffff: 1,
+  // Not passage marks at all: a single stroke's weight, so they sit at the
+  // top of the scale and the accent below does the rest.
+  sfz: 1, fz: 1, fp: 0.9,
 }
 
-const DEFAULT_WEIGHT = 0.6
+/** Weight of one stroke relative to the passage it sits in. */
+const WEIGHT: Record<string, number> = {
+  ghost: 0.3,
+  tap: 0.7,
+  accent: 1.35,
+  marcato: 1.6,
+}
+
+const DEFAULT_LEVEL = 0.7
+const DEFAULT_WEIGHT = 1
 
 export type Hit = {
   /** When, on the AudioContext clock. */
   at: number
   accent?: string
   zone?: string
+  /** The dynamic in force, carried from wherever it was last printed. */
+  dynamic?: string
   /** Grace notes in front: one is a flam, two a drag. */
   graces?: number
   roll?: 'buzz' | 'double'
@@ -74,7 +98,8 @@ const strike = (ctx: AudioContext, out: AudioNode, at: number, weight: number,
 }
 
 export const playHit = (ctx: AudioContext, out: AudioNode, hit: Hit) => {
-  const weight = WEIGHT[hit.accent ?? ''] ?? DEFAULT_WEIGHT
+  const level = LEVEL[hit.dynamic ?? ''] ?? DEFAULT_LEVEL
+  const weight = level * (WEIGHT[hit.accent ?? ''] ?? DEFAULT_WEIGHT)
 
   // Grace notes sit *before* the beat, which is what makes a flam sound like
   // a flam rather than two notes: the main stroke stays where it was written.

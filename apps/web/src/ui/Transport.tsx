@@ -10,11 +10,13 @@ import { useEngine } from './useEngine'
  * is a first-class control rather than a hidden feature, and clicking a bar
  * in the score sets it.
  */
-export const Transport = ({ bars, bpm, setBpm, selection, setSelection, loop,
-                           setLoop, click, setClick }: {
+export const Transport = ({ bars, bpm, setBpm, printed, selection, setSelection,
+                           loop, setLoop, click, setClick }: {
   bars: readonly Bar[]
   bpm: number
   setBpm: (bpm: number) => void
+  /** The tempo the score prints, where it prints one. */
+  printed?: number
   selection: Selection
   setSelection: (selection: Selection) => void
   loop: boolean
@@ -41,15 +43,24 @@ export const Transport = ({ bars, bpm, setBpm, selection, setSelection, loop,
       <label>
         Tempo
         <input
-          type="range" min={30} max={200} value={bpm}
+          type="range" min={30} max={300} value={bpm}
           onChange={(e) => setBpm(Number(e.target.value))}
         />
         <input
-          type="number" min={30} max={240} value={bpm}
+          type="number" min={30} max={300} value={bpm}
           onChange={(e) => setBpm(Number(e.target.value) || bpm)}
         />
         bpm
       </label>
+
+      {/* The printed tempo is offered, never imposed past the first look: a
+          show tempo is not a practice tempo, and the whole point of this app
+          is working a passage slowly and winding it up. */}
+      {printed !== undefined && printed !== bpm && (
+        <button className="printed" onClick={() => setBpm(printed)}>
+          partition : {printed}
+        </button>
+      )}
 
       <label>
         Mesures

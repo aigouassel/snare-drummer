@@ -29,7 +29,11 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
   const piece = sequence ? pieceById(sequence.id) : undefined
   const state = useEngine()
 
-  const [bpm, setBpm] = useState(90)
+  // The score's own tempo where it prints one, and a working tempo where it
+  // does not. Not a default dressed up as a reading: `piece.bpm` is absent
+  // when the page said nothing, and 90 is then this app's choice, not the
+  // arranger's.
+  const [bpm, setBpm] = useState(piece?.bpm ?? 90)
   const [loop, setLoop] = useState(true)
   const [click, setClick] = useState(true)
   const [selection, setSelection] = useState<Selection>({ from: 1, to: 1 })
@@ -38,7 +42,8 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
   useEffect(() => {
     engine.stop()
     setSelection({ from: 1, to: last })
-  }, [piece?.id, last])
+    setBpm(piece?.bpm ?? 90)
+  }, [piece?.id, piece?.bpm, last])
 
   const flagged = useMemo(
     () => (piece ? piece.bars.filter((b) => !b.verdict.trusted) : []),
@@ -85,7 +90,7 @@ export const WorkView = ({ work, sequenceId, onSelectSequence }: {
         <>
           <Transport
             bars={piece.bars}
-            bpm={bpm} setBpm={setBpm}
+            bpm={bpm} setBpm={setBpm} {...(piece.bpm ? { printed: piece.bpm } : {})}
             selection={selection} setSelection={setSelection}
             loop={loop} setLoop={setLoop}
             click={click} setClick={setClick}

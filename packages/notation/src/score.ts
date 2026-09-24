@@ -1,8 +1,9 @@
 import {
-  Articulation, Beam, Dot, Formatter, Renderer, Stave, StaveNote, Tuplet, Voice,
+  Annotation, Articulation, Beam, Dot, Formatter, GraceNote, GraceNoteGroup,
+  Renderer, Stave, StaveNote, Tuplet, Voice,
 } from 'vexflow'
 import { type Bar, meterText } from '@snare-drummer/core/bar'
-import { type Event, isRest } from '@snare-drummer/core/stroke'
+import { type Event, isRest, isStroke } from '@snare-drummer/core/stroke'
 import { type Options, type PlacedBar, DEFAULTS, layout } from './systems'
 import { resolve } from './vexDuration'
 
@@ -21,20 +22,26 @@ import { resolve } from './vexDuration'
  */
 
 const LINE = 'b/4'          // the one line a snare part is written on
-const STAVE_HEIGHT = 120
+const STAVE_HEIGHT = 140
 const TOP_MARGIN = 28
 
 // How far the music reaches either side of the staff line, in pixels, measured
-// off a rendered page: accents and beams sit above, stems and flags below. The
-// page came out at 20.5 above and 34.5 below, and these leave a staff space of
-// margin on each. Measured, not derived -- an earlier pair guessed from the
+// off a rendered page: accents and beams sit above, stems, flags, sticking and
+// dynamics below. Measured, not derived -- an earlier pair guessed from the
 // stave's own numbers and put the outline above the music it was marking.
+//
+// Re-measured once the page started carrying the sticking and the dynamic: a
+// sticking letter reaches 49.5 below the line and a dynamic stacked under it
+// 65.3, where the old pair stopped at 45. The outline on a doubtful bar was
+// cutting through the very notes it was meant to be marking.
 const ABOVE_LINE = 30
-const BELOW_LINE = 45
+const BELOW_LINE = 76
 // The one line of the five that is drawn, and where it falls relative to the y
 // the stave is built at.
 const STAFF_LINE = 2
 const LINE_OFFSET = 60
+const STICKING_SIZE = 9
+const DYNAMIC_SIZE = 10
 
 export type ScoreOptions = Partial<Options> & {
   /** Bar currently under the playhead, outlined as it plays. */
@@ -57,14 +64,51 @@ const noteOf = (event: Event): { note: StaveNote; tuplet?: { notes: number; inSp
   })
   for (let i = 0; i < vex.dots; i++) Dot.buildAndAttach([note], { all: true })
 
-  if (!isRest(event)) {
+  if (isStroke(event)) {
     // Accents go above the line: on a one-line stave there is no "away from
     // the notehead" direction to fall back on, so the side is chosen once.
     const mark = event.accent === 'accent' ? 'a>' : event.accent === 'marcato' ? 'a^' : null
     if (mark) note.addModifier(new Articulation(mark).setPosition(3), 0)
+
+    // A flam is a grace note, and drawing it is the whole reason it is worth
+    // reading: the count is already audible, but a player checking the
+    // transcription against the page has to *see* that the ornament is there.
+    // Slashed, because in this repertoire a grace note is always played as
+    // one — nothing here is an appoggiatura taking half the beat.
+    if (event.graces) {
+      const graces = Array.from({ length: event.graces }, () =>
+        new GraceNote({ keys: [LINE], duration: '8', slash: true }))
+      note.addModifier(new GraceNoteGroup(graces, true).beamNotes(), 0)
+    }
+
+    // Sticking under the notes, the dynamic below that, each on its own
+    // line so neither has to give way to the other.
+    if (event.hand) {
+      note.addModifier(
+        annotation(event.hand === 'right' ? 'R' : 'L', STICKING_SIZE), 0)
+    }
+    if (event.dynamic) {
+      note.addModifier(annotation(event.dynamic, DYNAMIC_SIZE, true), 0)
+    }
   }
 
   return vex.tuplet ? { note, tuplet: vex.tuplet } : { note }
+}
+
+/**
+ * A word set below the staff.
+ *
+ * Bottom-justified so that VexFlow stacks several of them rather than drawing
+ * one over another: a note can carry both a sticking letter and a dynamic,
+ * and a fixed offset for each would collide on exactly the notes that matter
+ * most.
+ */
+const annotation = (word: string, size: number, italic = false) => {
+  const mark = new Annotation(word)
+  mark.setVerticalJustification(Annotation.VerticalJustify.BOTTOM)
+  mark.setFont('system-ui', size, italic ? 'bold' : 'normal',
+               italic ? 'italic' : 'normal')
+  return mark
 }
 
 const drawBar = (context: ReturnType<Renderer['getContext']>, placed: PlacedBar,
@@ -108,7 +152,14 @@ const drawBar = (context: ReturnType<Renderer['getContext']>, placed: PlacedBar,
   }
   if (pending) tuplets.push(makeTuplet(pending))
 
-  if (notes.length === 0) return
+  // An empty bar is still drawn, numbered and marked. Returning early here
+  // left the *most* doubtful bars in a piece as the only ones carrying no
+  // number and no outline -- a blank stretch of staff that looked like a
+  // rendering gap rather than a reading the app is telling you not to trust.
+  if (notes.length === 0) {
+    markBar(context, bar, stave, width, options)
+    return
+  }
 
   const beams = Beam.generateBeams(notes)
   const voice = new Voice({ numBeats: bar.meter[0], beatValue: bar.meter[1] })

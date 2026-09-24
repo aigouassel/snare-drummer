@@ -78,6 +78,7 @@ body {
 .transport input[type='number'] { width: 62px; font: inherit; font-size: 13px; padding: 4px 6px;
   border: 1px solid var(--line); border-radius: 6px; }
 .transport input[type='range'] { width: 150px; }
+.transport button.printed { font-size: 12px; color: var(--muted); padding: 3px 8px; }
 
 .trust {
   display: flex; gap: 10px; align-items: baseline;

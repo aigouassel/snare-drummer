@@ -1,7 +1,9 @@
 import { type Bar, barBeats } from '@snare-drummer/core/bar'
 import { toNumber } from '@snare-drummer/core/fraction'
 import { isRest } from '@snare-drummer/core/stroke'
-import { type PlacedStroke, atSeconds, lengthInBeats, place, selectBars } from '@snare-drummer/core/timeline'
+import {
+  type PlacedStroke, atSeconds, dynamicBefore, lengthInBeats, place, selectBars,
+} from '@snare-drummer/core/timeline'
 import { type Hit, playClick, playHit } from './voices'
 
 /**
@@ -108,9 +110,15 @@ export class Engine {
     this.options = options
     this.totalBeats = toNumber(lengthInBeats(selected))
 
+    // A passage played from the middle keeps the dynamic printed before it:
+    // the mark at bar 12 is still in force at bar 40, and a selection that
+    // started from silence would play the whole excerpt at the wrong weight.
+    const opening = options.selection
+      ? dynamicBefore(bars, options.selection.from)
+      : undefined
     // Each stroke's length in seconds is wanted for rolls, which fill their
     // written duration rather than striking once.
-    this.strokes = place(selected).map((stroke) => ({
+    this.strokes = place(selected, opening).map((stroke) => ({
       ...stroke,
       seconds: atSeconds(stroke.stroke.duration, options.bpm),
     }))
@@ -160,6 +168,7 @@ export class Engine {
           ...(stroke.stroke.zone ? { zone: stroke.stroke.zone } : {}),
           ...(stroke.stroke.graces ? { graces: stroke.stroke.graces } : {}),
           ...(stroke.stroke.roll ? { roll: stroke.stroke.roll } : {}),
+          ...(stroke.dynamic ? { dynamic: stroke.dynamic } : {}),
         }
         playHit(context, master, hit)
       }
