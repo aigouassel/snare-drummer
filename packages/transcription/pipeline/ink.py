@@ -31,7 +31,7 @@ from collections import defaultdict
 
 import pymupdf
 
-from fonts import font_table
+from fonts import font_table, outline
 
 TOKEN = re.compile(rb"""
       (?P<hex><[0-9A-Fa-f\s]*>)
@@ -124,6 +124,21 @@ def orientation(page):
 # the grounds that a reader knows their metrics already.
 NOMINAL_ADVANCE = 500.0
 
+# How finely a curve is broken into points when a shape is fingerprinted.
+# Six matches what fonts.py uses for a glyph outline, which is what these
+# shapes have to be comparable with.
+CURVE_STEPS = 6
+
+
+def _bezier(p0, c1, c2, p1):
+    out = []
+    for i in range(1, CURVE_STEPS + 1):
+        t = i / CURVE_STEPS
+        u = 1 - t
+        out.append((u**3 * p0[0] + 3*u*u*t * c1[0] + 3*u*t*t * c2[0] + t**3 * p1[0],
+                    u**3 * p0[1] + 3*u*u*t * c1[1] + 3*u*t*t * c2[1] + t**3 * p1[1]))
+    return out
+
 
 def replay(content, fonts, unhandled, base=IDENTITY):
     """Interpret one content stream: the glyphs it draws, and the ink it lays.
@@ -137,6 +152,13 @@ def replay(content, fonts, unhandled, base=IDENTITY):
     font_ref, size, leading = None, 0.0, 0.0
     px = py = sx = sy = 0.0
     glyphs, segments, pending, operands = [], [], [], []
+    # The path's outline, curves included. Kept apart from `pending`, which
+    # holds straight segments only: layout, stems and beams all measure
+    # straight lines, and flattening a slur into a hundred little segments
+    # would drown them. Here the curve is the point -- some engravers draw
+    # their music as paths rather than as characters, and the shape is the
+    # only thing that identifies it.
+    drawn, shapes = [], []
 
     def number(i):
         try:
@@ -227,22 +249,32 @@ def replay(content, fonts, unhandled, base=IDENTITY):
 
         elif op == 'm':
             px, py = sx, sy = number(-2), number(-1)
+            drawn.append((px, py))
         elif op == 'l':
             x, y = number(-2), number(-1)
             pending.append((px, py, x, y))
             px, py = x, y
+            drawn.append((px, py))
         elif op == 'h':
             pending.append((px, py, sx, sy))
             px, py = sx, sy
+            drawn.append((px, py))
         elif op == 're':
             x, y, w, h = number(-4), number(-3), number(-2), number(-1)
             pending += [(x, y, x + w, y), (x + w, y, x + w, y + h),
                         (x + w, y + h, x, y + h), (x, y + h, x, y)]
+            drawn += [(x, y), (x + w, y), (x + w, y + h), (x, y + h), (x, y)]
             px, py = sx, sy = x, y
         elif op in ('c', 'v', 'y'):
-            # Slurs and hairpins are curves. Only the endpoint matters for the
-            # current point; the shape itself is not read here.
-            px, py = number(-2), number(-1)
+            end = (number(-2), number(-1))
+            if op == 'c':
+                first, second = (number(-6), number(-5)), (number(-4), number(-3))
+            elif op == 'v':
+                first, second = (px, py), (number(-4), number(-3))
+            else:
+                first, second = (number(-4), number(-3)), end
+            drawn += _bezier((px, py), first, second, end)
+            px, py = end
         elif op in ('S', 's', 'f', 'F', 'f*', 'B', 'B*', 'b', 'b*'):
             closing = op in ('s', 'b', 'b*')
             if closing:
@@ -254,15 +286,18 @@ def replay(content, fonts, unhandled, base=IDENTITY):
                 segments.append({'x0': round(a[0], 3), 'y0': round(a[1], 3),
                                  'x1': round(b[0], 3), 'y1': round(b[1], 3),
                                  'fill': filled})
-            pending = []
+            shape = outline([apply(ctm, x, y) for x, y in drawn])
+            if shape:
+                shapes.append(shape)
+            pending, drawn = [], []
         elif op == 'n':
-            pending = []
+            pending, drawn = [], []
         elif op not in IGNORED:
             unhandled[op] += 1
 
         operands = []
 
-    return glyphs, segments
+    return glyphs, segments, shapes
 
 
 def read(path):
@@ -273,12 +308,16 @@ def read(path):
     pages = []
     for number, page in enumerate(doc, start=1):
         fonts = font_table(doc, page, cache)
-        glyphs, segments = replay(page.read_contents(), fonts, unhandled,
-                                  base=orientation(page))
+        glyphs, segments, shapes = replay(page.read_contents(), fonts,
+                                          unhandled, base=orientation(page))
         pages.append({
             'page': number,
             'glyphs': glyphs,
             'segments': segments,
+            # Every painted path, fingerprinted. Only wanted where a page
+            # draws its music instead of setting it, which is why nothing
+            # downstream looks at these unless the page carries no music font.
+            'shapes': shapes,
             'fonts': fonts,
         })
     doc.close()

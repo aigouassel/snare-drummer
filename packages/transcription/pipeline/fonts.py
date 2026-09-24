@@ -104,18 +104,19 @@ def _flatten(commands):
     return pts
 
 
-def fingerprint(glyphset, name):
-    pen = RecordingPen()
-    try:
-        glyphset[name].draw(pen)
-    except Exception:
-        return None
-    pts = _flatten(pen.value)
-    if len(pts) < 3:
-        return None
+def outline(points):
+    """A fingerprint from points lying on a shape's outline.
 
-    xs = [p[0] for p in pts]
-    ys = [p[1] for p in pts]
+    Shared with the path reader, which is the whole point: an outline is an
+    outline whether it came from a font program or from the page's own drawing
+    instructions. Some of this catalogue draws its music as curves rather than
+    as characters, and those shapes match the vocabularies learned from fonts
+    because they are the same shapes, measured the same way.
+    """
+    if len(points) < 3:
+        return None
+    xs = [p[0] for p in points]
+    ys = [p[1] for p in points]
     w, h = max(xs) - min(xs), max(ys) - min(ys)
     if w <= 0 and h <= 0:
         return None
@@ -126,7 +127,7 @@ def fingerprint(glyphset, name):
     scale = max(w, h) or 1
     ox, oy = min(xs), min(ys)
     bits = 0
-    for x, y in pts:
+    for x, y in points:
         gx = min(GRID - 1, int((x - ox) / scale * GRID))
         gy = min(GRID - 1, int((y - oy) / scale * GRID))
         bits |= 1 << (gy * GRID + gx)
@@ -144,6 +145,15 @@ def fingerprint(glyphset, name):
         'ymin': round(min(ys), 1),
         'xmin': round(min(xs), 1),
     }
+
+
+def fingerprint(glyphset, name):
+    pen = RecordingPen()
+    try:
+        glyphset[name].draw(pen)
+    except Exception:
+        return None
+    return outline(_flatten(pen.value))
 
 
 # The three base encodings a PDF names for a simple font. Each is a

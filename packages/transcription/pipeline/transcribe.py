@@ -35,7 +35,7 @@ import layout
 import rhythm
 import text
 from fonts import MUSIC_FAMILIES
-from vocabulary import RHYTHMIC, Vocabulary, attribute, role
+from vocabulary import MUSICAL, RHYTHMIC, Vocabulary, attribute, role
 
 # Durations an engraver actually writes, as a fraction of a quarter-note beat.
 # Reconstruction snaps to these: a value that lands between two of them is not
@@ -55,6 +55,11 @@ ZONES = {
 
 # A flam is one grace note, a drag two, a ruff three. There is no fourth.
 MAX_GRACES = 3
+
+# How many musical shapes a page has to draw before its outlines are read as
+# music at all. A handful of accidental matches among slurs and brackets is
+# not a score.
+MIN_DRAWN_MATCHES = 20
 
 # The narrowest strip that can still be a bar, in staff spaces, when nothing
 # rhythmic was found in it. A courtesy clef or time signature printed after
@@ -296,6 +301,76 @@ def _head_widths(glyph, symbol, context):
     return (ink, plain)
 
 
+def drawn_symbols(page, known):
+    """Symbols read off a page that draws its music instead of setting it.
+
+    Some engravers -- or some PDF producers -- convert the music to outlines,
+    so a notehead arrives as a painted path rather than as a character in a
+    font. Twenty-two sequences of this repertoire are written that way and
+    were unreadable: not misread, but never read, because ink.py kept only the
+    straight segments of a path and threw the curves away.
+
+    Nothing new is needed to name them. A fingerprint is taken from the points
+    of an outline, and an outline is an outline wherever it came from, so
+    these shapes match the vocabularies learned from fonts. That is the
+    project's own claim about identity, tested somewhere it was not designed
+    for.
+
+    One family is chosen for the page, by which one its shapes agree with
+    most, and every shape is then read against that one alone. Resolving each
+    shape against all seven independently produced a page whose noteheads were
+    Maestro's and whose ledger lines were Bravura's, which is not a page
+    anybody engraved.
+
+    A shape that matches nothing is *not* counted as an unnamed symbol. On a
+    page like this every stem, beam, barline and staff line is a painted path
+    too, and there is no way to tell an unrecognised notehead from a stem. So
+    these scores carry a weaker guarantee than the rest, and that is worth
+    knowing: what the confidence rule still checks for them is the arithmetic,
+    not the vocabulary.
+    """
+    shapes = page.get('shapes') or []
+    if not shapes:
+        return []
+
+    tally = defaultdict(int)
+    for family, vocab in known.items():
+        for shape in shapes:
+            symbol = vocab.resolve(shape)
+            if role(symbol) in MUSICAL:
+                tally[family] += 1
+    if not tally:
+        return []
+    family = max(tally.items(), key=lambda kv: kv[1])[0]
+    if tally[family] < MIN_DRAWN_MATCHES:
+        return []
+
+    vocab = known[family]
+    out = []
+    for shape in shapes:
+        symbol = vocab.resolve(shape)
+        if symbol is None:
+            continue
+        out.append({
+            'x': shape['xmin'],
+            # A notehead glyph's origin sits at its own middle, which is what
+            # everything downstream measures staff position from, so a drawn
+            # shape is given the same.
+            'y': shape['ymin'] + shape['height'] / 2,
+            'inkY': shape['ymin'] + shape['height'] / 2,
+            'ink': shape['width'],
+            # Cue size is a size, and a drawn shape has no type size -- its
+            # own height stands in, which is the same measurement for the
+            # same purpose: a notehead is one staff space tall.
+            'size': shape['height'],
+            'family': family,
+            'font': None,
+            'codes': [],
+            'symbol': symbol,
+        })
+    return out
+
+
 def rescale_one_line(systems, page, fonts, vocabularies):
     """Fix the staff spacing of one-line staves against the noteheads drawn.
 
@@ -321,6 +396,10 @@ def rescale_one_line(systems, page, fonts, vocabularies):
         heights = defaultdict(int)
         for glyph in page['glyphs']:
             if abs(glyph['y'] - middle) > 3 * system['spacing']:
+                continue
+            if 'symbol' in glyph:
+                if glyph['symbol'] == 'notehead.black':
+                    heights[round(glyph['size'], 2)] += 1
                 continue
             font = fonts.get(glyph['font'] or '', {})
             vocab = vocabularies.get(glyph['family'])
@@ -359,6 +438,10 @@ def _notehead_size(page, fonts, vocabularies):
     """
     seen = defaultdict(int)
     for glyph in page['glyphs']:
+        if 'symbol' in glyph:
+            if role(glyph['symbol']) == 'notehead':
+                seen[round(glyph['size'], 2)] += 1
+            continue
         font = fonts.get(glyph['font'] or '', {})
         vocab = vocabularies.get(glyph['family'])
         if not vocab:
@@ -388,6 +471,10 @@ def _notehead_ink(page, fonts, vocabularies, size):
     seen = defaultdict(int)
     for glyph in page['glyphs']:
         if abs(glyph['size'] - size) > 0.01:
+            continue
+        if 'symbol' in glyph:
+            if role(glyph['symbol']) == 'notehead':
+                seen[round(glyph['ink'], 2)] += 1
             continue
         font = fonts.get(glyph['font'] or '', {})
         vocab = vocabularies.get(glyph['family'])
@@ -680,6 +767,7 @@ def transcribe(path, entry):
     meter = None
     bpm = None
     bars = []
+    drawn_pages = 0
     families = set()
     systems_total = 0
 
@@ -710,6 +798,13 @@ def transcribe(path, entry):
                 glyph['family'] = fonts.get(glyph['font'] or '', {}).get('family')
 
         page_families = {g['family'] for g in page['glyphs'] if g['family']}
+        if not page_families:
+            # Nothing was *set* on this page, so read what was *drawn*.
+            drawn = drawn_symbols(page, known)
+            if drawn:
+                page['glyphs'] = page['glyphs'] + drawn
+                page_families = {drawn[0]['family']}
+                drawn_pages += 1
         families |= page_families
         vocabularies = {f: known[f] for f in page_families if f in known}
 
@@ -720,6 +815,9 @@ def transcribe(path, entry):
             notehead's right edge, one notehead away from the origin the PDF
             records, and a down-stem at its left.
             """
+            if 'symbol' in glyph:
+                # Read off the page's own drawing; already named.
+                return [(glyph['symbol'], glyph['ink'], glyph['inkY'])]
             font = fonts.get(glyph['font'] or '', {})
             codes = font.get('codes', {})
             chars = font.get('chars', {})
@@ -860,6 +958,7 @@ def transcribe(path, entry):
                 {f for f in attributed.values() if f}),
             'unhandledOperators': data['unhandled'],
             'pages': len(data['pages']),
+            'pagesDrawn': drawn_pages,
             'systems': systems_total,
         },
     }
