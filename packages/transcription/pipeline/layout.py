@@ -34,7 +34,11 @@ music on exactly that reasoning. Bar width varies legitimately with density;
 it is not evidence of anything.
 """
 TOLERANCE = 0.6        # coordinates closer than this are the same line
-HAIRLINE = 1.0         # a rule drawn as a thin rectangle is this thick, at most
+HAIRLINE = 1.0
+# How far apart the ends of two rules may be and still be one rectangle's two
+# edges. They are drawn from the same coordinates, so this is a rounding
+# allowance rather than a real distance.
+CO_EXTENT = 1.0         # a rule drawn as a thin rectangle is this thick, at most
 EXTENT = 3.0           # the five lines of one staff start and end together
 SYMMETRY = 0.15        # a barline straddles its staff evenly; a stem does not
 
@@ -79,15 +83,25 @@ def rules(segments, min_length):
     edges of a hairline here is what makes the two cases indistinguishable
     further up.
 
-    Rules merge only when they overlap horizontally as well. Two staves
-    printed side by side sit at the same y and must stay two rules, or their
-    extents run together and neither is recognisable.
+    Rules merge only when they run between the same two x, not merely when
+    they overlap. Two edges of one filled rectangle are exactly co-extent by
+    construction, and nothing else on a page is: a beam drawn three quarters
+    of a point above a staff line overlaps it completely and is sixty points
+    long against five hundred. Merging on overlap alone swallowed the top line
+    of a staff into the beams above it and moved it off the even spacing, so
+    the five-line test failed and the whole system was read as a one-line
+    percussion staff -- which made every stem on it look like a barline and
+    cut a twelve-note bar into twelve bars of one note.
+
+    Two staves printed side by side sit at the same y and must also stay two
+    rules, which co-extent settles for the same reason.
     """
     out = []
     for x0, x1, y in horizontals(segments, min_length):
         for rule in out:
             if (abs(rule['y'] - y) <= HAIRLINE
-                    and x0 <= rule['x1'] + 1 and x1 >= rule['x0'] - 1):
+                    and abs(rule['x0'] - x0) <= CO_EXTENT
+                    and abs(rule['x1'] - x1) <= CO_EXTENT):
                 rule['x0'] = min(rule['x0'], x0)
                 rule['x1'] = max(rule['x1'], x1)
                 rule['y'] = (rule['y'] + y) / 2
