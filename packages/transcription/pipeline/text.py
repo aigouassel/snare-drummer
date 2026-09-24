@@ -47,8 +47,16 @@ SIBELIUS_DIGITS = str.maketrans({
 
 # Dynamics, in the order a louder one must beat a quieter one when both are
 # read. Relative weight is decided in TypeScript, not here.
-DYNAMICS = ('pppp', 'ppp', 'pp', 'p', 'mp', 'mf', 'f', 'ff', 'fff', 'ffff',
-            'sfz', 'sf', 'sffz', 'fp', 'rfz', 'fz')
+# Dynamics, as the page spells them on the left and as the model names them
+# on the right. The variants are spellings of one thing -- sf, sfz and sffz
+# are one engraver's habit against another's -- and collapsing them here keeps
+# the model's list short enough to be given a sound apiece.
+DYNAMICS = {
+    'pppp': 'pppp', 'ppp': 'ppp', 'pp': 'pp', 'p': 'p', 'mp': 'mp',
+    'mf': 'mf', 'f': 'f', 'ff': 'ff', 'fff': 'fff', 'ffff': 'ffff',
+    'sf': 'sfz', 'sfz': 'sfz', 'sffz': 'sfz', 'rfz': 'sfz', 'rf': 'sfz',
+    'fz': 'fz', 'fp': 'fp',
+}
 
 # A sticking letter, and nothing else. `b` is a common shorthand in this
 # repertoire for a stroke played with both hands.
@@ -224,3 +232,57 @@ def _normalise(line):
     """One string, with the dialects folded into plain characters."""
     line = line.translate(SIBELIUS_DIGITS)
     return unicodedata.normalize('NFKC', line)
+
+
+def sticking(page_words):
+    """Which hand plays which note, where the page writes it under the notes.
+
+    A sticking letter is a word of its own -- one character, sometimes with a
+    trailing dot or a dash -- so it is matched as a whole word and never as a
+    letter found inside one. "Rolls" is not an R.
+
+    Case is read as well as the letter. This repertoire writes an accented
+    stroke as a capital and a tap as a lowercase, consistently enough to be a
+    convention, and it is often the only thing distinguishing the two in a
+    passage the engraver never marked with an accent. A printed accent still
+    wins wherever both are present; deciding that is not this layer's job, and
+    the emphasis is reported beside the hand rather than folded into it.
+
+    `b` and `B` are left unread on purpose. They are common here and they are
+    not a hand -- backsticking in some books, both hands in others -- and a
+    guess would put a stroke in the wrong hand for a whole passage.
+    """
+    out = []
+    for word in page_words:
+        letter = word['text'].strip().rstrip('.-·')
+        if letter not in STICKING:
+            continue
+        hand, emphatic = STICKING[letter]
+        out.append({'x': word['x'], 'y': word['y'],
+                    'hand': hand, 'emphatic': emphatic})
+    return out
+
+
+def dynamics(page_words):
+    """Dynamics printed on the page, as a level and where it sits.
+
+    Matched against a closed set, whole word, because the alternative is a
+    disaster in a repertoire whose engraving fonts spell arbitrary letters:
+    an f found inside a word is as likely to be a notehead as a forte.
+
+    Only fonts that draw music qualify. A dynamic is engraved in the music
+    font -- that is what makes it slanted and bold -- and the f of "Transcribed
+    from footage" is set in the body face. This is the one reader that uses
+    the distinction, because it is the one whose vocabulary is a single
+    letter.
+    """
+    out = []
+    for word in page_words:
+        if not word.get('music'):
+            continue
+        mark = word['text'].strip().rstrip('.')
+        if mark.lower() not in DYNAMICS:
+            continue
+        out.append({'x': word['x'], 'y': word['y'],
+                    'level': DYNAMICS[mark.lower()]})
+    return out

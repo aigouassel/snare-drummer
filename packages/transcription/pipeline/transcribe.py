@@ -33,6 +33,7 @@ from fractions import Fraction
 import ink
 import layout
 import rhythm
+import text
 from fonts import MUSIC_FAMILIES
 from vocabulary import RHYTHMIC, Vocabulary, attribute, role
 
@@ -51,6 +52,9 @@ ZONES = {
     'notehead.circleDot': 'rimshot',
     'notehead.circleSlash': 'rimshot',
 }
+
+# A flam is one grace note, a drag two, a ruff three. There is no fourth.
+MAX_GRACES = 3
 
 GRID = [Fraction(1, 8), Fraction(1, 6), Fraction(1, 4), Fraction(1, 3),
         Fraction(3, 8), Fraction(1, 2), Fraction(2, 3), Fraction(3, 4),
@@ -80,7 +84,7 @@ def glyphs_in(glyphs, bar, system):
     return sorted(inside, key=lambda g: g['x'])
 
 
-def read_meter(named, system):
+def read_meter(named, system, words=()):
     """A time signature: digits stacked one above the other, read as two numbers.
 
     Read only where it is printed -- at the head of a system, or wherever the
@@ -94,6 +98,43 @@ def read_meter(named, system):
     digits are grouped by proximity and read left to right, which is how they
     are printed.
 
+    Two sources, tried in order and never mixed. Most engravers set the
+    signature in the music font, where the shape vocabulary names it; several
+    set it in a text font, which no shape vocabulary can ever name, because a
+    4 in Times is a 4 in Times and enrolling it would make every body face a
+    music font. Mixing the two reads the same signature twice -- the families
+    whose digits are both a named shape and a letter turned 4/4 into 44/44 --
+    so the letters are consulted only where the shapes said nothing.
+    """
+    span = system['top'] - system['bottom']
+
+    def on_staff(y):
+        return system['bottom'] - span / 2 <= y <= system['top'] + span / 2
+
+    drawn = [({**g, 'y': g.get('inkY', g['y'])}, int(s.split('.')[1]))
+             for g, s in named
+             if s and s.startswith('digit.')
+             and on_staff(g.get('inkY', g['y']))]
+
+    spelled = []
+    for word in words:
+        characters = word['text'].strip()
+        if not characters.isdigit() or not on_staff(word['y']):
+            continue
+        for offset, character in enumerate(characters):
+            spelled.append(({'x': word['x'] + offset * word['size'] * 0.5,
+                             'y': word['y']}, int(character)))
+
+    for digits in (drawn, spelled):
+        found = _signature(digits, system)
+        if found:
+            return found
+    return None
+
+
+def _signature(digits, system):
+    """Two numbers out of a cluster of digits, or nothing.
+
     Which digits are the numerator is decided *relatively*, from the two
     heights the cluster itself occupies, and not by comparing each digit to
     the middle of the staff. A glyph's y is where its origin was placed, and
@@ -102,18 +143,12 @@ def read_meter(named, system):
     tenth of a point and finds no signature at all. Whole pieces came out
     metreless that way.
     """
-    span = system['top'] - system['bottom']
-    digits = [({**g, 'y': g.get('inkY', g['y'])}, int(s.split('.')[1]))
-              for g, s in named
-              if s and s.startswith('digit.')
-              and system['bottom'] - span / 2 <= g.get('inkY', g['y'])
-              <= system['top'] + span / 2]
     if not digits:
         return None
 
     # One time signature is a tight cluster in x; a tuplet number further
     # along the bar is a separate one, and must not be read into it.
-    digits.sort(key=lambda p: p[0]['x'])
+    digits = sorted(digits, key=lambda p: p[0]['x'])
     clusters, current = [], [digits[0]]
     for item in digits[1:]:
         if item[0]['x'] - current[-1][0]['x'] <= system['spacing'] * 2.5:
@@ -155,18 +190,31 @@ def reconstruct(named, bar, meter, context):
 
     # A grace note is written, played and gone; it takes no time of its own,
     # so it is carried onto the note it decorates rather than counted.
-    onsets, graces, pending = [], [], 0
+    #
+    # Past three, it is not an ornament. A flam is one grace note, a drag two
+    # and a ruff three, and nothing in this repertoire writes a fourth -- so a
+    # run of four cue-size noteheads means the size test has failed, and they
+    # are real notes written small. Left as ornaments they would be four
+    # attacks removed from the bar without changing its arithmetic, which is
+    # the one kind of error nothing downstream can catch. Put back as notes
+    # they take time, the sum stops adding up, and the bar is reported.
+    onsets, graces, pending = [], [], []
     for g, symbol in marks:
         if role(symbol) == 'notehead' and rhythm.is_grace(g.get('ink', 0.0),
                                                           context['notehead']):
-            pending += 1
+            pending.append((g, symbol))
             continue
+        if len(pending) > MAX_GRACES:
+            for item in pending:
+                onsets.append(item)
+                graces.append(0)
+            pending = []
         onsets.append((g, symbol))
-        graces.append(pending)
-        pending = 0
+        graces.append(len(pending))
+        pending = []
 
     if not onsets or meter is None:
-        return [], unnamed, 'none'
+        return [], unnamed, 'none', onsets
 
     total = Fraction(meter[0] * 4, meter[1])
 
@@ -182,7 +230,7 @@ def reconstruct(named, bar, meter, context):
         source = 'spacing'
         lengths = _by_spacing(onsets, bar, total)
         if lengths is None:
-            return [], unnamed, 'none'
+            return [], unnamed, 'none', onsets
 
     events = []
     for (g, symbol), duration, grace in zip(onsets, lengths, graces):
@@ -196,7 +244,7 @@ def reconstruct(named, bar, meter, context):
                 event['graces'] = grace
         events.append(event)
 
-    return events, unnamed, source
+    return events, unnamed, source, onsets
 
 
 def _notehead_width(page, fonts, vocabularies):
@@ -276,6 +324,43 @@ def tuplet_numbers(named, system):
     return out
 
 
+def shape_dynamics(named, spacing):
+    """Dynamics drawn as symbols rather than spelled as letters.
+
+    MuseScore and the SMuFL fonts engrave a dynamic as one glyph per letter,
+    and those glyphs spell nothing at all -- so the text reader, which is what
+    catches Sibelius and Finale, sees no dynamic on a third of the catalogue.
+    Here the letters come back from the shape vocabulary instead and are
+    joined in the order they were set.
+
+    Joined, and then matched against the closed set whole. A lone p from a
+    vocabulary is worth no more than a lone p from a font: only "mf", "ff",
+    "sfz" and their kin are a dynamic, and anything else assembled here is
+    dropped rather than approximated.
+    """
+    letters = sorted(
+        [(g['x'], s.split('.')[1]) for g, s in named
+         if s and s.startswith('dynamic.')],
+        key=lambda pair: pair[0])
+    if not letters:
+        return []
+
+    out, current = [], None
+    for x, letter in letters:
+        if current and x - current['x1'] <= spacing * 1.2:
+            current['text'] += letter
+            current['x1'] = x
+        else:
+            if current:
+                out.append(current)
+            current = {'x': x, 'x1': x, 'text': letter}
+    if current:
+        out.append(current)
+
+    return [{'x': item['x'], 'level': text.DYNAMICS[item['text'].lower()]}
+            for item in out if item['text'].lower() in text.DYNAMICS]
+
+
 def _by_spacing(onsets, bar, total):
     """Durations from how far apart the notes were set on the page.
 
@@ -292,18 +377,22 @@ def _by_spacing(onsets, bar, total):
     return [snap(float(total) * gap / span)[0] for gap in gaps]
 
 
-def decorate(events, named):
+def decorate(events, named, onsets):
     """Hang articulations on the note they sit above or below.
 
     Proximity is the only available evidence -- a PDF says where a mark was
     drawn, not what it belongs to -- so this is the one genuinely heuristic
     step, and the place where a wrong reading is least likely to be caught by
     arithmetic. Kept deliberately narrow: nearest onset, or nothing.
+
+    The onsets are the ones reconstruction actually used, not a fresh reading
+    of the bar. Rebuilding the list here counted grace noteheads as notes
+    while reconstruction had folded them into the note they decorate, so in
+    every bar holding a flam each accent landed one note late.
     """
     marks = [(g, s) for g, s in named
              if s in ('articulation.accent', 'articulation.marcato',
                       'tremolo.slash', 'roll.buzz')]
-    onsets = [(g, s) for g, s in named if role(s) in RHYTHMIC]
     for mark, symbol in marks:
         if not onsets:
             break
@@ -321,12 +410,48 @@ def decorate(events, named):
     return events
 
 
+def annotate(events, onsets, marks, spacing):
+    """Hang the page's words on the notes they were written under.
+
+    Nearest onset by x, and only within half a notehead's reach. A sticking
+    letter is set directly under its note -- that is what makes it readable
+    at all -- so a mark that lands between two notes belongs to neither and
+    is dropped. Being wrong here is quiet: a hand attached to the note next
+    door teaches a sticking nobody wrote, and no arithmetic downstream would
+    ever catch it.
+    """
+    if not onsets or not events:
+        return events
+    for mark in marks:
+        index = min(range(len(onsets)),
+                    key=lambda i: abs(onsets[i][0]['x'] - mark['x']))
+        if index >= len(events):
+            continue
+        if abs(onsets[index][0]['x'] - mark['x']) > spacing * 1.6:
+            continue
+        event = events[index]
+        if event.get('rest'):
+            continue
+        if 'hand' in mark:
+            event['hand'] = mark['hand']
+            # A capital is an accented stroke and a lowercase a tap, which is
+            # often the only weight a passage states. The printed accent
+            # still wins: it is the engraver saying so outright, where the
+            # case is a convention being relied on.
+            if 'accent' not in event:
+                event['accent'] = 'accent' if mark['emphatic'] else 'tap'
+        if 'level' in mark:
+            event['dynamic'] = mark['level']
+    return events
+
+
 def transcribe(path, entry):
     data = ink.read(path)
 
     # The metre carries across pages. A signature printed once on page 1
     # governs page 2 as well, because that is what a reader does with it.
     meter = None
+    bpm = None
     bars = []
     families = set()
     systems_total = 0
@@ -335,6 +460,8 @@ def transcribe(path, entry):
     attributed = {}
 
     for page in data['pages']:
+        if bpm is None:
+            bpm = text.tempo(page)
         systems, found = layout.bars(page['segments'])
         systems_total += len(systems)
         fonts = page['fonts']
@@ -368,11 +495,19 @@ def transcribe(path, entry):
             """
             font = fonts.get(glyph['font'] or '', {})
             codes = font.get('codes', {})
+            chars = font.get('chars', {})
             upem = font.get('upem') or 1000
             vocab = vocabularies.get(glyph['family'])
             out = []
             for code in glyph['codes']:
                 fp = codes.get(code)
+                # A space draws nothing, so there is nothing to recognise and
+                # nothing to report. Counted as unnamed it made a bar suspect
+                # for containing a word gap -- forty-two of them on one score
+                # -- which is a warning that fires on correct input, the one
+                # kind this project treats as worse than no warning at all.
+                if not fp and not (chars.get(code) or '').strip():
+                    continue
                 symbol = vocab.resolve(fp) if (fp and vocab) else None
                 if fp:
                     scale = glyph['size'] / upem
@@ -384,6 +519,7 @@ def transcribe(path, entry):
             return out
 
         notehead_width = _notehead_width(page, fonts, vocabularies)
+        page_words = text.words(page)
 
         geometry = {}
         for index, system in enumerate(systems):
@@ -400,7 +536,12 @@ def transcribe(path, entry):
                     named.append(({**glyph, 'ink': width, 'inkY': middle},
                                   symbol))
 
-            printed = read_meter(named, system)
+            in_bar = [w for w in page_words
+                      if bar['x0'] - 1 <= w['x'] < bar['x1'] - 1
+                      and system['bottom'] - 8 * system['spacing']
+                      <= w['y'] <= system['top'] + 8 * system['spacing']]
+
+            printed = read_meter(named, system, in_bar)
             if printed:
                 meter = printed
 
@@ -415,8 +556,18 @@ def transcribe(path, entry):
                 'notehead': notehead_width,
                 'tuplets': tuplet_numbers(named, system),
             }
-            events, unnamed, source = reconstruct(named, bar, meter, context)
-            events = decorate(events, named)
+            events, unnamed, source, onsets = reconstruct(
+                named, bar, meter, context)
+            events = decorate(events, named, onsets)
+            # The page's own words, last: they say who plays the note and how
+            # loud, neither of which any other reading can recover.
+            events = annotate(
+                events, onsets,
+                sorted(text.sticking(in_bar)
+                       + text.dynamics(in_bar)
+                       + shape_dynamics(named, system['spacing']),
+                       key=lambda mark: mark['x']),
+                system['spacing'])
 
             bars.append({
                 # Numbered across the whole piece, not per page: a bar number
@@ -437,6 +588,10 @@ def transcribe(path, entry):
         'corps': entry['corps'],
         'circuit': entry['circuit'],
         **({'year': entry['year']} if entry.get('year') else {}),
+        # Absent where the page prints none, which is most of the point: a
+        # tempo invented here would be indistinguishable from one that was
+        # read, and the app already plays at whatever tempo you set.
+        **({'bpm': bpm} if bpm else {}),
         'source': {'url': entry['url'],
                    'listedAt': entry['listedAt'],
                    'read': entry['read']},
