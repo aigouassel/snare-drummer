@@ -36,10 +36,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          # Yarn 4 arrives through corepack, pinned by packageManager in
-          # package.json, so nothing here decides which version is used.
-          cache: yarn
 
+      # Yarn 4 arrives through corepack, pinned by packageManager in
+      # package.json, so nothing here decides which version is used.
+      #
+      # And no `cache: yarn` on the step above, which is what it looks like it
+      # wants: that cache runs `yarn` to find out where the cache lives, and
+      # at that point the only yarn on the runner is the global 1.22, which
+      # refuses to act on a project pinned to 4. The cache would run before
+      # the tool it caches.
       - run: corepack enable
       - run: yarn install --immutable
 
