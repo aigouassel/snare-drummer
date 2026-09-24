@@ -296,6 +296,53 @@ def _head_widths(glyph, symbol, context):
     return (ink, plain)
 
 
+def rescale_one_line(systems, page, fonts, vocabularies):
+    """Fix the staff spacing of one-line staves against the noteheads drawn.
+
+    A one-line staff has no second line to measure a space against, so
+    layout.py infers one from the barline. That inference is wrong by a factor
+    of two for most of this catalogue: some engravers draw the barline of a
+    one-line staff two spaces tall and others draw it the full four, and
+    nothing in the segments says which.
+
+    A notehead settles it, because a notehead is exactly one space tall in
+    every engraving font -- that is what a space is. Measured against the
+    guess, 45 of 56 one-line systems had noteheads half a space tall, so every
+    stem on them came out at half its real length and was rejected as too
+    short to be a stem. Whole scores read no rhythm at all for this.
+
+    Only the spacing moves. The staff's top and bottom stay where the barline
+    actually reaches, which was measured and not guessed.
+    """
+    for system in systems:
+        if len(system.get('lines') or []) >= 5:
+            continue
+        middle = (system['bottom'] + system['top']) / 2
+        heights = defaultdict(int)
+        for glyph in page['glyphs']:
+            if abs(glyph['y'] - middle) > 3 * system['spacing']:
+                continue
+            font = fonts.get(glyph['font'] or '', {})
+            vocab = vocabularies.get(glyph['family'])
+            if not vocab:
+                continue
+            upem = font.get('upem') or 1000
+            for code in glyph['codes']:
+                fp = font.get('codes', {}).get(code)
+                if fp and vocab.resolve(fp) == 'notehead.black':
+                    heights[round(fp['height'] * glyph['size'] / upem, 2)] += 1
+        if not heights:
+            continue
+        measured = max(heights.items(), key=lambda kv: (kv[1], kv[0]))
+        # Only believe it when there are enough of them, and when it is the
+        # same order of magnitude as the guess -- a lone oversized notehead
+        # must not redefine the staff.
+        if measured[1] < 4 or not (0.3 < measured[0] / system['spacing'] < 3):
+            continue
+        system['spacing'] = measured[0]
+    return systems
+
+
 def _notehead_size(page, fonts, vocabularies):
     """The type size a full-size notehead is drawn at on this page, in points.
 
@@ -697,6 +744,10 @@ def transcribe(path, entry):
                     width, middle = 0.0, glyph['y']
                 out.append((symbol, width, middle))
             return out
+
+        # Before anything is measured in staff spaces, make sure a staff
+        # space is what it says it is.
+        rescale_one_line(systems, page, fonts, vocabularies)
 
         notehead_size = _notehead_size(page, fonts, vocabularies)
         notehead_ink = _notehead_ink(page, fonts, vocabularies, notehead_size)

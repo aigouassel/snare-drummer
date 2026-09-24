@@ -140,11 +140,17 @@ def _single_line(rule, columns):
     """A one-line staff, or None.
 
     The staff's spacing has to be inferred, since there is no second line to
-    measure it against. The barline supplies it: on a one-line staff it is
-    drawn one space above the line and one below, which two independent
-    measurements confirm -- the noteheads on those pages come out at 1.05 and
-    1.13 spaces tall against that scale, and a notehead is one space by
-    definition.
+    measure it against, and the barline is the only thing here to infer it
+    from: it is taken to be drawn one space above the line and one below.
+
+    That is a guess, and on most of this catalogue it is wrong by a factor of
+    two -- Maestro and BroadwayCopyist draw the barline of a one-line staff
+    the full height of a five-line one. It was generalised from two Opus
+    scores, where it happens to hold. The number below is therefore only a
+    starting point: transcribe.py measures the noteheads actually drawn on
+    the system and rescales, a notehead being exactly one space tall in every
+    engraving font. The barline's own extent, which is measured rather than
+    guessed, stays as the staff's top and bottom.
     """
     even = _crossings(rule, columns)
     if len(even) < 2:
