@@ -261,9 +261,13 @@ yarn dev         # the player
 - [x] Rhythm read from beams, flags, dots and tuplet numbers, not from spacing
 - [x] The tempo, the sticking, the dynamics and the ornaments, read from the
       page's own words, drawn on the score and heard in playback
-- [x] The repertoire read end to end: 89 of its 129 sequences, 5,192 bars,
-      2,919 playable as read and 3,753 — 72% — verified, the difference being
-      bars that are trustworthy and silent
+- [x] The repertoire read end to end: 98 of its 129 sequences, 5,606 bars,
+      3,202 playable as read
+- [x] Music that a page *draws* rather than sets. Some producers convert a
+      score to outlines, so a notehead arrives as a painted path and not as a
+      character. Nothing new was needed to name them: a fingerprint is taken
+      from the points of an outline, and an outline is an outline wherever it
+      came from, so they match the vocabularies learned from fonts
 - [ ] **Bars whose durations do not add up: 17% of the repertoire.** Down from
       44.5%, by taking one failing bar at a time, cropping it out of its PDF
       and comparing it with what had been read. Ten causes so far and no two
@@ -272,6 +276,9 @@ yarn dev         # the player
       4/4 bar of this catalogue holds a half rest and a quarter rest and
       nothing else: these are transcriptions people made by ear, and a bar
       that does not add up on the page cannot be made to add up here
-- [ ] The 40 sequences held back. Six of them draw their music as vector
-      outlines with no glyphs at all, which is optical music recognition and
-      out of scope for ever; the rest read a page but not a rhythm
+- [ ] Beams on a page that draws its music. A drawn page draws its beams too,
+      and the beam reader finds several hundred filled quadrilaterals where a
+      set page has ninety-six — so those scores read a rhythm that is four
+      times too fast. Geometry, not naming
+- [ ] The 31 sequences held back. Six of them draw their music as vector
+      outlines with no glyphs at all; the rest read a page but not a rhythm
