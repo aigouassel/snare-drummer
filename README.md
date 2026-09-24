@@ -86,13 +86,26 @@ of 256, with the nearest unrelated symbol at 30.
 
 So naming happens **once per engraving family**, off a contact sheet, and
 resolves everywhere after. Three families carry the catalogue — Opus
-(Sibelius), Maestro (Finale) and MScore (MuseScore) — with four more in the
+(Sibelius), Maestro (Finale) and MScore (MuseScore) — with five more in the
 tail: Bravura and Engraver turn out to be text companions supplying accents,
-digits and tremolo slashes while the notes come from elsewhere, and Gootville
-and Reprise were not recognised as music fonts at all. 99% of the musical
-glyphs in an 80-score sample now carry a name. A shape with no label stays
-unnamed, is counted, and makes its bar suspect — never matched to the nearest
-thing and waved through.
+digits and tremolo slashes while the notes come from elsewhere, Gootville and
+Reprise were not recognised as music fonts at all, and BroadwayCopyist is
+Finale's handwritten face. 99% of the musical glyphs in an 80-score sample now
+carry a name. A shape with no label stays unnamed, is counted, and makes its
+bar suspect — never matched to the nearest thing and waved through.
+
+A family nobody has named is invisible for ever, and that is worth stating
+plainly, because it looks like it should not be. Attribution by shape rescues
+a font whose *name* embedding destroyed, but it can only compare against
+vocabularies that already exist — so an engraver nobody has met reads as no
+music at all. Eight held-back sequences turned out to be one such family.
+
+The contact sheet also cannot settle anything positional. It shows a shape at
+a fixed size with no staff around it, so a thick slash drawn 541 times could
+be a notehead or a diddle; it took a cropped page to see that it crosses a
+stem. Anything that might carry rhythm gets measured or cropped, because
+misnaming an inert mark is free and calling an inert mark a notehead invents
+an attack the arithmetic catches only half the time.
 
 The sheet counts a symbol by how often it was **drawn**, not by how many fonts
 contain it. A font's repertoire is a poor guide to a family's: of nine Maestro
@@ -105,6 +118,40 @@ to get it right: the font's own cmap, the base encoding the PDF names, its
 Identity-H means the code is the *CID* and the CID is the glyph index only when
 the font says so. Reading a code as an index found a fingerprint for 2% of
 single-byte codes, the wrong one by coincidence, and none for the other 98%.
+
+## What the page says, as opposed to what it draws
+
+A score is not only notation. It prints a tempo over the first bar, a sticking
+letter under every note, a dynamic beneath the staff — and every one of those
+is *typed text* in an ordinary font, not a symbol in an engraving one. None of
+it was being read, because the shape vocabulary is the wrong instrument for
+the letter R set in two hundred subsetted fonts.
+
+Reading it meant a fourth encoding table, and one of a different kind. A
+cmap, a `/Differences` array and a `/CIDToGIDMap` all answer *which outline
+does this code draw*; `/ToUnicode` alone answers *what does this code mean*.
+It is what a producer writes so that copying text out of a page works, nothing
+on the page depends on it, and it is therefore optional — so a composite font
+without one spells nothing, and must be reported rather than guessed at. 70%
+of the words in this catalogue were mute without it.
+
+The resolution order is the reverse of the one for shapes. For an outline the
+font's own cmap has the last word, because it knows what it holds. For a
+letter that same cmap is worse than useless: these subsets carry a symbol cmap
+whose glyphs are named `glyph00012`, and applying it over WinAnsiEncoding
+replaced the m of `mm=180` with a name spelling nothing.
+
+Text is read from **every** font, engraving ones included, because Sibelius
+types its metronome mark into Opus Text and its dynamics are the plain letters
+f and p in the music font itself. Three dialects have to be understood: plain
+`q = 168`, the Sibelius convention where the digits are typed on the
+option-number keys and arrive as `q»¡§•`, and a dynamic that is a letter in a
+font that draws music.
+
+What comes back: the tempo on 77 of 90 pieces, the hand on 24,483 notes, a
+dynamic on 3,809, an ornament on 2,552. Absence stays meaningful throughout —
+a piece with no printed tempo gets none, and is played at whatever tempo you
+are working at today.
 
 ## Layout
 
@@ -158,7 +205,10 @@ Four layers, each trusting only what the one below actually read:
    barlines straddle a staff evenly and are all drawn to one height where a
    stem hangs to one side.
 3. `vocabulary.py` names symbols by shape.
-4. `rhythm.py` reads how long each note lasts, and `transcribe.py` places
+4. `text.py` reads what the page *says* — the tempo, the sticking, the
+   dynamics — from the characters its codes stand for rather than their
+   outlines.
+5. `rhythm.py` reads how long each note lasts, and `transcribe.py` places
    them in bars.
 
 Duration comes from the notation: the stem rising from the notehead, the
@@ -203,8 +253,17 @@ yarn dev         # the player
 - [x] Notation rendering, one line per bar, doubts outlined on the music
 - [x] Playback: lookahead scheduler, snare voice, metronome, bar ranges
 - [x] Rhythm read from beams, flags, dots and tuplet numbers, not from spacing
-- [x] The repertoire read end to end: 89 of its 129 sequences, 5,286 bars,
-      1,955 of them playable as read
-- [ ] The 40 sequences held back — two print no time signature anywhere, the
-      rest read nothing that could be trusted
+- [x] The tempo, the sticking, the dynamics and the ornaments, read from the
+      page's own words, drawn on the score and heard in playback
+- [x] The repertoire read end to end: 90 of its 129 sequences, 5,319 bars,
+      1,988 of them playable as read
+- [ ] **Bars whose durations do not add up: 44.5% of the repertoire, and the
+      one thing worth working on next.** The shortfalls form a long tail
+      rather than a single cause — a quarter of them are bars where almost
+      nothing was read, the rest are one note short or one note long — so
+      there is no single fix, and measuring which engraver produces which
+      shortfall is where it starts
 - [ ] Tuplets whose bracket spans fewer notes than their number suggests
+- [ ] The 39 sequences held back. Six of them draw their music as vector
+      outlines with no glyphs at all, which is optical music recognition and
+      out of scope for ever; the rest read a page but not a rhythm
