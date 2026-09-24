@@ -250,11 +250,59 @@ def find_barlines(segments, system):
     return cluster(found, 1.5)
 
 
+def principal_staves(systems, segments):
+    """Drop the lower staff of every system written on more than one.
+
+    A few of these transcriptions put two snare parts on two staves braced
+    together, with the barlines running through both. Read as ordinary
+    systems they come out one after the other, so the piece alternates
+    between two parts that were meant to sound at once -- music that was
+    never written, played back with no sign that anything is wrong.
+
+    What identifies a brace is a barline that spans both staves: a system's
+    own barlines stop at its own top and bottom. Only the top staff is kept,
+    which is a choice rather than a reading -- the second part is not read at
+    all, and the app says a piece is a snare part.
+
+    The test is narrow enough to act on wherever it fires. A barline through
+    a braced pair runs from the lower staff's bottom line to the upper
+    staff's top and stops there, inside the staff's own horizontal extent;
+    across two hundred scores it fires ten times, on five, and every one
+    checked is a real brace. Requiring it to be systematic first was wrong:
+    these scores mix braced pairs with single staves, so it never was.
+    """
+    columns = verticals(segments)
+    order = sorted(range(len(systems)), key=lambda i: -systems[i]['top'])
+    lower = set()
+    # Adjacent staves only. A brace joins the staves of one system, which are
+    # neighbours by definition; a vertical reaching from the top of a page to
+    # the bottom is a margin rule or a bracket around the whole score, and
+    # pairing across it would drop most of the page.
+    for above, below in zip(order, order[1:]):
+        upper, under = systems[above], systems[below]
+        if under['top'] >= upper['bottom']:
+            continue
+        if not (upper['x0'] < under['x1'] and under['x0'] < upper['x1']):
+            continue
+        # Spanning both, and not much more: a barline through a braced pair
+        # reaches from the lower staff's bottom line to the upper staff's
+        # top, give or take a rounding, and stops there.
+        margin = (upper['top'] - upper['bottom']) or 1.0
+        for x, y0, y1 in columns:
+            if (y0 <= under['bottom'] + 1 and y1 >= upper['top'] - 1
+                    and y0 >= under['bottom'] - margin
+                    and y1 <= upper['top'] + margin
+                    and upper['x0'] - 2 <= x <= upper['x1'] + 2):
+                lower.add(below)
+                break
+    return [s for i, s in enumerate(systems) if i not in lower]
+
+
 def bars(segments):
     """Every bar on the page, numbered in reading order."""
     xs = [v for s in segments for v in (s['x0'], s['x1'])]
     page_width = (max(xs) - min(xs)) if xs else 0
-    systems = find_systems(segments, page_width)
+    systems = principal_staves(find_systems(segments, page_width), segments)
 
     out, n = [], 0
     for index, system in enumerate(systems):
