@@ -17,8 +17,10 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > commit, dans le `README` ou dans `CLAUDE.md` ; le reste s'en va avec le
 > fichier.
 
-> État au 24 septembre 2026 : 105 des 128 séquences du répertoire sont
-> jouables, 5 792 mesures dont 3 263 jouables (56,3 %). Le détail de ce qui
+> État au 25 septembre 2026 : 110 des 128 séquences du répertoire sont
+> jouables, 5 982 mesures dont 3 314 jouables (55,4 %). La proportion baisse
+> pendant que le compte monte : cinq partitions sont entrées, et elles
+> apportent plus de mesures qu'elles n'en font boucler. Le détail de ce qui
 > est écarté vit dans [`packages/transcription/HELD-BACK.md`](packages/transcription/HELD-BACK.md),
 > qui est généré et ne peut pas vieillir.
 
@@ -72,8 +74,8 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**1 062 mesures (18,3 %) dont les durées ne bouclent pas.** C'était 44,5 % en
-début de parcours ; dix causes distinctes ont été trouvées et corrigées, aucune
+**1 193 mesures (19,9 %) dont les durées ne bouclent pas.** C'était 44,5 % en
+début de parcours ; onze causes distinctes ont été trouvées et corrigées, aucune
 deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
 
 La méthode qui marche : prendre **une** mesure fautive, la découper de son PDF
@@ -91,13 +93,13 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 3 263 (56,3 %) |
-| **somme fausse** | **1 062 (18,3 %)** |
-| que des silences (vérifiées, muettes) | 844 (14,6 %) |
-| sans métrique | 342 (5,9 %) |
-| lues à l'espacement | 142 (2,5 %) |
-| vides | 78 (1,3 %) |
-| symbole inconnu | 61 (1,1 %) |
+| jouables | 3 314 (55,4 %) |
+| **somme fausse** | **1 193 (19,9 %)** |
+| que des silences (vérifiées, muettes) | 901 (15,1 %) |
+| sans métrique | 343 (5,7 %) |
+| vides | 126 (2,1 %) |
+| lues à l'espacement | 53 (0,9 %) |
+| symbole inconnu | 52 (0,9 %) |
 
 ---
 
@@ -139,13 +141,7 @@ Les options :
 
 ---
 
-## 4 · Les 23 séquences écartées
-
-### A1 — Chiffrage tracé, imprimé mais non lu · 2 séquences
-
-`2017-opener-8` (6/4), `2019-snare-break-early-season-2` (4/4). Vérifié à
-l'œil : le chiffrage est bien imprimé. Leurs chiffres sont des contours absents
-du vocabulaire `Drawn`. **Courte** : étendre la planche de contact des tracés.
+## 4 · Les 18 séquences écartées
 
 ### A2 — **décision** : aucun chiffrage imprimé · 6 séquences
 
@@ -165,6 +161,16 @@ arithmétique devient alors partiellement circulaire, et il faudrait le dire.
 
 `2004-battery-break`, `2004-feature`, `2009-drum-feature-5`.
 
+Depuis que les empreintes décrivent une forme, le même manque se voit sur des
+partitions **publiées** : `training-day`, `2017-drum-break-finals` et
+`2019-segment` sont tracées dans une famille qu'aucune table ne nomme, et
+n'étaient lues que par des appariements marginaux — leurs têtes tombaient à
+douze bits de *deux* familles à la fois, et laquelle gagnait tenait au compte.
+`2019-segment` y a perdu 4 mesures et `2019-ghost-break` une. C'est une
+planche de contact à faire, pas un seuil à desserrer : le mesurer a montré
+qu'un seuil plus serré coûte ailleurs sans rien gagner ici (voir
+`vocabulary.py`).
+
 Leurs polices portent trois noms mutilés différents (`TTFF55A818t00`,
 `TTFE612310t00`…), mais leurs empreintes se recoupent : **28/40, 30/40,
 15/17**. C'est **la même police ré-incorporée trois fois**. Une seule planche
@@ -172,15 +178,11 @@ de contact les nomme toutes les trois — c'est exactement le cas
 BroadwayCopyist, qui avait rapporté huit partitions. **Meilleur rapport
 effort/résultat du lot**, et probablement plus large que ces trois-là.
 
-### A4 — Pas de hampes sur pages tracées · 2 séquences
+### A5 — La police Helsinki de Sibelius · 1 séquence · *entrée, à peine*
 
-`2019-closer-snare-break`, `2019-snare-break-2`. Leurs lignes de portée ne sont
-**pas** remplies, donc le correctif des ligatures ne les concernait pas. Leurs
-mesures sortent en `none` ou `spacing` : aucune hampe trouvée. Non diagnostiqué.
-
-### A5 — La police Helsinki de Sibelius · 1 séquence
-
-`2018-demonic-thesis`, 111 mesures, **401 empreintes à nommer**. Beaucoup
+`2018-demonic-thesis` est publiée depuis que les empreintes décrivent une
+forme, mais **1 mesure sur 118** boucle. Les 401 empreintes restent à nommer
+si on veut en faire une partition et pas une ligne au catalogue. Beaucoup
 d'effort pour une seule partition ; à faire en dernier, ou jamais.
 
 ### A6 — Aucune portée trouvée · 3 séquences, trois causes distinctes
@@ -194,10 +196,15 @@ d'effort pour une seule partition ; à faire en dernier, ou jamais.
 - `2016-snare-break-4` : 62 filets longs et **zéro** croisement symétrique.
   Non diagnostiqué.
 
-### A7 — Durées qui ne bouclent pas · 4 séquences
+### A7 — Durées qui ne bouclent pas · 3 séquences
 
-`2010-keelan-s-solo`, `2011-movement-3-3`, `the-10-second-lick`,
-`the-10-second-lick-simple`. Même méthode que M1, une mesure à la fois.
+`2010-keelan-s-solo`, `2011-movement-3-3`, `the-10-second-lick-simple`. Même
+méthode que M1, une mesure à la fois.
+
+### A9 — Symboles non nommés · 1 séquence
+
+`the-10-second-lick`. Elle était sous A7 ; ce n'est plus l'arithmétique qui la
+bloque en premier mais son vocabulaire.
 
 ### A8 — Rythme illisible en BroadwayCopyist · 2 séquences
 
@@ -239,6 +246,16 @@ reste du catalogue.
 Piste pour resserrer : ne compter comme inconnue qu'une forme de **taille de
 tête de note posée sur la portée**, ce qui exclut les hampes (rapport 0,12) et
 les ligatures (rapport 12 à 22) sans rien inventer.
+
+### C5 — Six entrées Opus perdues au report des empreintes
+
+`digit.4`, `digit.7`, `digit.8`, `tremolo.slash`, `tremolo.wavy`,
+`notehead.squareOpen`. Les étiquettes ont été reportées sur les empreintes
+parcourues en retrouvant chaque entrée sur une page du corpus ; ces six-là
+n'apparaissent sur aucune des 203 partitions téléchargées, donc sur aucune
+qu'on sache remesurer. Elles ont été nommées sur un corpus plus large que
+celui d'aujourd'hui. À reprendre en élargissant le corpus, ou à laisser : un
+chiffrage Opus en 4, 7 ou 8 n'est plus lu.
 
 ---
 
