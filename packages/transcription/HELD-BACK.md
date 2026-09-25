@@ -1,6 +1,6 @@
 # Ce qui n’est pas retranscrit
 
-110 des 128 séquences du répertoire sont jouables dans l’application. Voici les 18 autres, et pourquoi.
+112 des 128 séquences du répertoire sont jouables dans l’application. Voici les 16 autres, et pourquoi.
 
 > Généré par `pipeline/held.py`, à partir de la lecture que le pipeline fait aujourd’hui. Une liste écrite à la main deviendrait fausse dès que quelque chose se met à marcher.
 
@@ -29,19 +29,13 @@ Le pipeline ne devine jamais une métrique. Ces partitions n'en impriment pas au
   16 mesures lues : 16 métrique  
   [source](https://lothype.com/wp-content/uploads/2020/01/1993-Drum-Break.pdf)
 
-## Les notes n'ont pas été lues — 3 séquences
+## Les notes n'ont pas été lues — 1 séquence
 
 Les portées et les barres sont trouvées, mais rien de rythmique ne l'est. En général une police de gravure que personne n'a nommée : une famille inconnue reste invisible, puisque l'attribution par forme ne compare qu'aux vocabulaires existants.
 
-- **Great Lakes Percussion 2004 — Battery Break** (`2004-battery-break`)  
-  7 mesures lues : 4 vide, 3 somme  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2004-Battery-Break.pdf)
 - **Great Lakes Percussion 2004 — Feature** (`2004-feature`)  
   20 mesures lues : 16 vide, 4 somme  
   [source](https://lothype.com/wp-content/uploads/2020/01/2004-Feature.pdf)
-- **Velvet Knights 2009 — Drum Feature** (`2009-drum-feature-5`)  
-  37 mesures lues : 33 vide, 3 silences, 1 somme  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2009-Drum-Feature-5.pdf)
 
 ## Le rythme n'a pas pu être lu dans la notation — 2 séquences
 
