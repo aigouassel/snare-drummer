@@ -173,8 +173,64 @@ def _crossings(rule, columns):
         above, below = y1 - rule['y'], rule['y'] - y0
         height = y1 - y0
         if abs(above - below) <= SYMMETRY * height:
-            even.append(height)
+            even.append((x, height))
     return even
+
+
+def _barlines_among(even):
+    """The crossings that are barlines, out of everything that straddles a rule.
+
+    The height test below wants one height and one only, and on most pages it
+    gets it. It does not on a page that prints a percussion clef: the clef is
+    two thick strokes, arrives as four edges each about a space tall, and sits
+    on the line as evenly as any barline. Read as barlines those four make the
+    heights disagree, and the whole staff -- metre, bars and all -- is thrown
+    away for carrying a clef.
+
+    They are told apart by where they sit rather than by how tall they are. A
+    clef is four verticals inside seven points; barlines are a bar apart. This
+    is not the width reasoning the module refuses elsewhere: nothing here
+    concludes anything from how wide a bar is, only that four strokes closer
+    together than a single staff space cannot be four bars -- which is the
+    same thing `bars` already says when it declines to open a bar between the
+    two strokes of a double barline.
+
+    So the crossings are grouped by height, and each group's positions are
+    then clustered at that same 1.2 spaces, so that strokes too close to have
+    a bar between them count once. A group that still leaves two marks is a
+    set of barlines; a clef collapses to one and drops out. Where exactly one
+    group survives it is taken; where several do the rule is left alone,
+    because the reading is then genuinely ambiguous, and a silent choice
+    between two of them is how a wrong staff gets built.
+
+    A single height is returned untouched, and that restraint is the point.
+    Applied to a rule that already agrees with itself, the mark test rejects
+    correct music: the last system of a piece may carry no barline at all
+    until its closing double bar, whose two strokes are four points apart and
+    collapse to one mark. One score lost its final staff that way. So this
+    only ever speaks where the test below would otherwise refuse the rule
+    outright, and never overrules an answer that test could reach on its own.
+    """
+    groups = []
+    for x, height in sorted(even, key=lambda e: e[1]):
+        for group in groups:
+            if abs(height - group[0][1]) <= 0.05 * height:
+                group.append((x, height))
+                break
+        else:
+            groups.append([(x, height)])
+    if len(groups) <= 1:
+        return even
+
+    kept = []
+    for group in groups:
+        height = sorted(h for _, h in group)[len(group) // 2]
+        # `bars` uses the same 1.2 spaces to refuse to open a bar between the
+        # two strokes of a double barline; a clef falls under it as squarely.
+        marks = cluster([x for x, _ in group], 1.2 * (height / 2))
+        if len(marks) >= 2:
+            kept.append(group)
+    return kept[0] if len(kept) == 1 else None
 
 
 def _single_line(rule, columns):
@@ -193,9 +249,10 @@ def _single_line(rule, columns):
     engraving font. The barline's own extent, which is measured rather than
     guessed, stays as the staff's top and bottom.
     """
-    even = _crossings(rule, columns)
-    if len(even) < 2:
+    barlines = _barlines_among(_crossings(rule, columns))
+    if barlines is None or len(barlines) < 2:
         return None
+    even = [h for _, h in barlines]
     height = sorted(even)[len(even) // 2]
     # Every barline of one staff is the same height. A spread means these are
     # not barlines.
