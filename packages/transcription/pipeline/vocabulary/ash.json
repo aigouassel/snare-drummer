@@ -1,0 +1,218 @@
+{
+ "family": "Ash",
+ "read": "2026-09-25",
+ "method": "planche de contact des tracés, packages/transcription/work/ash-sheet.png",
+ "note": "La gravure d'un moteur web, dont la musique n'arrive qu'en courbes : aucune police musicale n'est embarquée, seule sa police de texte l'est, et elle s'appelle `ashtext` -- d'où le nom, qui est lu dans le fichier et non deviné. Douze partitions du catalogue en relèvent, imprimées par quatre chaînes différentes (jsPDF, PDFium, Quartz, Print To PDF) : c'est le contour, pas le producteur, qui les réunit.\nElles étaient lues jusqu'ici par ressemblance avec Opus et Maestro, à douze ou treize bits des deux à la fois, et laquelle des deux gagnait tenait au décompte. Ce n'est plus le cas.\nCe qui reste sans nom l'est exprès. Un trait oblique fin de 3,8 x 4,5 points, vu 195 fois, peut être la barre d'une note d'agrément, une barre de roulement dessinée fine ou la moitié d'une croix : sur une page tracée, hampes et ligatures sont des tracés comme les autres et rien ne les distingue d'une tête de note non reconnue. Le nommer compterait peut-être deux frappes là où la page en imprime une.",
+ "symbols": [
+  {
+   "bits": "0000000000003fc0e0708018800c80068003800180014001200118010e0303fe",
+   "aspect": 1.25,
+   "seen": 2916,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "0000000000000000000000000003001f01fe0ff0ff80ee003fe007fc007f000f",
+   "aspect": 1.68,
+   "seen": 451,
+   "symbol": "articulation.accent"
+  },
+  {
+   "bits": "0000000000008000e000b8008e008380c0e030380c0e030300c10031000d0003",
+   "aspect": 1.32,
+   "seen": 427,
+   "symbol": "tremolo.slash"
+  },
+  {
+   "bits": "00010001000300070005000b001f003800300030003000200030003000100018",
+   "aspect": 0.36,
+   "seen": 268,
+   "symbol": "flag.eighth"
+  },
+  {
+   "bits": "07e00bf01258124812701b000df00710037006c0048604cf0649026d01bf00fe",
+   "aspect": 0.78,
+   "seen": 228,
+   "symbol": "digit.3"
+  },
+  {
+   "bits": "e007b00dd81b6c36366c1bd80db0066006600db01bd8366c6c36d81bb00de007",
+   "aspect": 1.0,
+   "seen": 166,
+   "symbol": "notehead.cross"
+  },
+  {
+   "bits": "00100038002800280068004c005c009c00bc00a6012601660347024302c30783",
+   "aspect": 0.63,
+   "seen": 110,
+   "symbol": "articulation.marcato"
+  },
+  {
+   "bits": "ffff800187ffc6006300318018c00c6006300318018c00c60063ffe18001ffff",
+   "aspect": 1.0,
+   "seen": 96,
+   "symbol": "roll.buzz"
+  },
+  {
+   "bits": "001c000e000600070007000300030003000300030003000700070006000e001c",
+   "aspect": 0.25,
+   "seen": 83,
+   "symbol": "text.parenthesis"
+  },
+  {
+   "bits": "000300070006000e000e000c001c00140014001c000c000e000a000600070003",
+   "aspect": 0.26,
+   "seen": 82,
+   "symbol": "text.parenthesis"
+  },
+  {
+   "bits": "3cfe264e27482fe819a800ec00640074003400320012001a000b000900090007",
+   "aspect": 0.87,
+   "seen": 58,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "03f003100198068807c805ec04f4045e044e04471c7f1c7f0440044018701ff0",
+   "aspect": 0.79,
+   "seen": 54,
+   "symbol": "digit.4"
+  },
+  {
+   "bits": "000000000000000000000000000000000000ffff80018001800180018001ffff",
+   "aspect": 2.53,
+   "seen": 49,
+   "symbol": "rest.rectangle"
+  },
+  {
+   "bits": "001800300030003000200020003000300038001f000b00050007000300010001",
+   "aspect": 0.37,
+   "seen": 49,
+   "symbol": "flag.eighth"
+  },
+  {
+   "bits": "0f9f089108910891089108910891089108910891089108910891089108910f9f",
+   "aspect": 0.7,
+   "seen": 46,
+   "symbol": "clef.percussion"
+  },
+  {
+   "bits": "0006000e001c0034003600130009000b000e000c001f0039003500050007000e",
+   "aspect": 0.34,
+   "seen": 45,
+   "symbol": "rest.quarter"
+  },
+  {
+   "bits": "003c002c00280018001c0014001c000e000a000a000e00070005001f000f0007",
+   "aspect": 0.37,
+   "seen": 45,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "0ff0381c20064002c001800180018001800180018001c0036002300418180ff0",
+   "aspect": 1.0,
+   "seen": 43,
+   "symbol": "dot"
+  },
+  {
+   "bits": "031f019101d1017101e300fe00c000e000e00060006000700030003000300038",
+   "aspect": 0.56,
+   "seen": 33,
+   "symbol": "rest.eighth"
+  },
+  {
+   "bits": "0ff8060803f80018000c000c03fc067e048e0486048704850645036701bd00fe",
+   "aspect": 0.72,
+   "seen": 30,
+   "symbol": "digit.5"
+  },
+  {
+   "bits": "07f0012001a000a000a000f0005000500050006800283028182c181417361fff",
+   "aspect": 0.82,
+   "seen": 24,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "3ff02fa048a048a048e0685034501fd007f8052805280f2c0a140a141e167c7f",
+   "aspect": 0.9,
+   "seen": 20,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "00000000018003c006600cf019bc731ec61bc86378ce3d981f30046003c00180",
+   "aspect": 1.15,
+   "seen": 16,
+   "symbol": "notehead.diamond"
+  },
+  {
+   "bits": "0000000000000000000000000007003f03fe1fe0ff00ef001fe003fc007f000f",
+   "aspect": 1.63,
+   "seen": 16,
+   "symbol": "articulation.accent"
+  },
+  {
+   "bits": "001000100010001000100010001000100010001000100018001f00110011000f",
+   "aspect": 0.3,
+   "seen": 15,
+   "symbol": "text.noteValue"
+  },
+  {
+   "bits": "0f8f088908890889088908890889088908890889088908890889088908890f8f",
+   "aspect": 0.7,
+   "seen": 11,
+   "symbol": "clef.percussion"
+  },
+  {
+   "bits": "3e005f006d803ac00e700e7001600120012000a000b000d00057006d003f001f",
+   "aspect": 0.88,
+   "seen": 11,
+   "symbol": "dynamic.f"
+  },
+  {
+   "bits": "00de00d200f2007c00600067003d0039003f00360018001800180018000c000c",
+   "aspect": 0.47,
+   "seen": 11,
+   "symbol": "rest.sixteenth"
+  },
+  {
+   "bits": "07f0014001e000a000a000a000d0005000500078002830283028181c1f341fff",
+   "aspect": 0.84,
+   "seen": 10,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "000000000c0077e0c030800c8006800280018001c0014001200118010e0303fc",
+   "aspect": 1.22,
+   "seen": 10,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "3ff06f2058a050a058a068f03c501fd005f0052805280a280a1c0a1416167c7f",
+   "aspect": 0.91,
+   "seen": 9,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "000000000e007bc0c0708018800c800280038001c0014001700118010e0303fc",
+   "aspect": 1.22,
+   "seen": 9,
+   "symbol": "notehead.black"
+  },
+  {
+   "bits": "03f005f804bc0696039a000b01f9027902d902890289024d0345016501bf00fe",
+   "aspect": 0.66,
+   "seen": 8,
+   "symbol": "digit.6"
+  },
+  {
+   "bits": "003c002c0038001c0014001c000c000a000a000e000700050005001f000f0007",
+   "aspect": 0.35,
+   "seen": 8,
+   "symbol": "text.letter"
+  },
+  {
+   "bits": "7dc0dff094f096589258926c9b20c9206d1037901e9800880048004c01c701ff",
+   "aspect": 1.03,
+   "seen": 7,
+   "symbol": "dynamic.p"
+  }
+ ]
+}

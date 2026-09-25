@@ -41,7 +41,7 @@ STEPS = 12   # samples per curve segment when flattening
 MUSIC_FAMILIES = ('Bravura', 'Maestro', 'Opus', 'MScore', 'Engraver',
                   'BroadwayCopyist',
                   'Gootville', 'Reprise', 'Petaluma', 'Sonata', 'November',
-                  'Emmentaler')
+                  'Emmentaler', 'Ash')
 
 
 def family_of(basefont):
