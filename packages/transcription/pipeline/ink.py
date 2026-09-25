@@ -157,8 +157,9 @@ def replay(content, fonts, unhandled, base=IDENTITY):
     # straight lines, and flattening a slur into a hundred little segments
     # would drown them. Here the curve is the point -- some engravers draw
     # their music as paths rather than as characters, and the shape is the
-    # only thing that identifies it.
-    drawn, shapes = [], []
+    # only thing that identifies it. Kept one list per contour, which is what
+    # fonts.outline walks.
+    drawn, shapes = [[]], []
 
     def number(i):
         try:
@@ -249,21 +250,21 @@ def replay(content, fonts, unhandled, base=IDENTITY):
 
         elif op == 'm':
             px, py = sx, sy = number(-2), number(-1)
-            drawn.append((px, py))
+            drawn.append([(px, py)])
         elif op == 'l':
             x, y = number(-2), number(-1)
             pending.append((px, py, x, y))
             px, py = x, y
-            drawn.append((px, py))
+            drawn[-1].append((px, py))
         elif op == 'h':
             pending.append((px, py, sx, sy))
             px, py = sx, sy
-            drawn.append((px, py))
+            drawn[-1].append((px, py))
         elif op == 're':
             x, y, w, h = number(-4), number(-3), number(-2), number(-1)
             pending += [(x, y, x + w, y), (x + w, y, x + w, y + h),
                         (x + w, y + h, x, y + h), (x, y + h, x, y)]
-            drawn += [(x, y), (x + w, y), (x + w, y + h), (x, y + h), (x, y)]
+            drawn.append([(x, y), (x + w, y), (x + w, y + h), (x, y + h), (x, y)])
             px, py = sx, sy = x, y
         elif op in ('c', 'v', 'y'):
             end = (number(-2), number(-1))
@@ -273,7 +274,7 @@ def replay(content, fonts, unhandled, base=IDENTITY):
                 first, second = (px, py), (number(-4), number(-3))
             else:
                 first, second = (number(-4), number(-3)), end
-            drawn += _bezier((px, py), first, second, end)
+            drawn[-1] += _bezier((px, py), first, second, end)
             px, py = end
         elif op in ('S', 's', 'f', 'F', 'f*', 'B', 'B*', 'b', 'b*'):
             closing = op in ('s', 'b', 'b*')
@@ -286,12 +287,13 @@ def replay(content, fonts, unhandled, base=IDENTITY):
                 segments.append({'x0': round(a[0], 3), 'y0': round(a[1], 3),
                                  'x1': round(b[0], 3), 'y1': round(b[1], 3),
                                  'fill': filled})
-            shape = outline([apply(ctm, x, y) for x, y in drawn])
+            shape = outline([[apply(ctm, x, y) for x, y in contour]
+                             for contour in drawn])
             if shape:
                 shapes.append(shape)
-            pending, drawn = [], []
+            pending, drawn = [], [[]]
         elif op == 'n':
-            pending, drawn = [], []
+            pending, drawn = [], [[]]
         elif op not in IGNORED:
             unhandled[op] += 1
 

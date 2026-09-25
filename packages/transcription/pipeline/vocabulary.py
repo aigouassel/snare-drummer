@@ -15,9 +15,17 @@ way to catch downstream.
 
 Matching allows a small distance because the same symbol arrives as quadratic
 curves in one score and cubic in another, so its grid can differ by a few bits.
-Measured across unrelated scores, true matches sat at 0-11 bits out of 256 and
-the nearest unrelated symbol at 30, so the threshold sits in a real gap rather
-than at a guessed value. Aspect ratio -- computed from the raw dimensions,
+The threshold sits in a measured gap rather than at a guessed value, and the
+gap moved once the grid started recording the cells an outline *passes
+through* rather than the cells its samples landed in (see fonts._walk). Over
+sixty scores, a glyph placed on a page now sits 0 to 6 bits from the entry
+that names it -- 29 644 of 29 926 at zero -- while the nearest *different*
+symbol of the same family sits at 19. Sixteen is therefore no longer the
+middle of the gap but its upper edge, and it is left there deliberately:
+tightening it to twelve was measured neutral over a sample of eighty and to
+eight, worse. What lives in that upper band is not misreading but two scores
+whose engraving family is in no table here, read on marginal matches to two
+families at once -- which is a vocabulary to name, not a threshold to tune. Aspect ratio -- computed from the raw dimensions,
 sharing no arithmetic with the grid -- has to agree as well, which is what
 keeps two symbols of similar outline but different proportions apart.
 """
@@ -28,7 +36,7 @@ from fonts import hamming
 
 TABLE_DIR = os.path.join(os.path.dirname(__file__), 'vocabulary')
 
-MAX_DISTANCE = 16      # bits out of 256; true matches measured at 0-11
+MAX_DISTANCE = 16      # bits out of 256; true matches measured at 0-6
 MAX_ASPECT_DRIFT = 0.08
 
 

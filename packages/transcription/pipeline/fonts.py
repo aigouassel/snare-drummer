@@ -58,8 +58,13 @@ def family_of(basefont):
 
 
 def _flatten(commands):
-    """Pen commands -> points lying on the outline."""
-    pts, cur, start = [], (0.0, 0.0), (0.0, 0.0)
+    """Pen commands -> one list of points per contour.
+
+    Contours are kept apart because `outline` walks each of them, and a line
+    from the end of one to the start of the next is ink nobody laid.
+    """
+    contours, cur, start = [[]], (0.0, 0.0), (0.0, 0.0)
+    pts = contours[0]
 
     def bezier(p0, ctrl, p1):
         for i in range(1, STEPS + 1):
@@ -77,6 +82,8 @@ def _flatten(commands):
     for op, args in commands:
         if op == 'moveTo':
             cur = start = args[0]
+            pts = []
+            contours.append(pts)
             pts.append(cur)
         elif op == 'lineTo':
             cur = args[0]
@@ -101,11 +108,54 @@ def _flatten(commands):
         elif op == 'closePath':
             pts.append(start)
             cur = start
-    return pts
+    return [c for c in contours if c]
 
 
-def outline(points):
-    """A fingerprint from points lying on a shape's outline.
+# How much finer than a grid cell the outline is walked before it is
+# gridded. Four is enough that every cell the contour passes through is
+# visited, and cheap enough to run on every glyph and every path.
+SUBCELL = 4
+
+
+def _walk(contours, scale):
+    """Every point of the outline, plus the points between them.
+
+    The grid below asks which cells the shape's outline occupies, and for a
+    long time it answered with the cells the *samples* landed in -- so the
+    fingerprint described the shape and how many curve segments its author
+    used, which are not the same thing. A font draws a notehead as a dozen
+    segments and twelve samples are taken along each; a producer that converts
+    that same notehead to a path draws it as four cubic beziers, which is
+    twenty-four points for the whole ellipse. Measured on
+    `2019-closer-snare-break`, the page's cells came out a strict *subset* of
+    Bravura's noteheadBlack -- the same ellipse, sampled more thinly -- 25
+    bits away against a threshold of 16. Every notehead on that page went
+    unnamed, and a sparse grid being a small target, shapes that are not
+    noteheads landed inside 16 bits of one by coincidence: the slash of a
+    diddle was read as a triangular notehead thirty-two times.
+
+    Walking the outline instead takes the segment count out of the
+    measurement without inventing anything, since every point added lies on a
+    chord the shape already drew. Contours are walked one at a time, because
+    the jump from the end of one to the start of the next is not ink.
+    """
+    step = scale / (GRID * SUBCELL)
+    out = []
+    for contour in contours:
+        if not contour:
+            continue
+        out.append(contour[0])
+        for (x0, y0), (x1, y1) in zip(contour, contour[1:]):
+            steps = int(max(abs(x1 - x0), abs(y1 - y0)) / step) + 1
+            for i in range(1, steps):
+                t = i / steps
+                out.append((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t))
+            out.append((x1, y1))
+    return out
+
+
+def outline(contours):
+    """A fingerprint from the outline of a shape, contour by contour.
 
     Shared with the path reader, which is the whole point: an outline is an
     outline whether it came from a font program or from the page's own drawing
@@ -113,6 +163,10 @@ def outline(points):
     as characters, and those shapes match the vocabularies learned from fonts
     because they are the same shapes, measured the same way.
     """
+    points = [p for contour in contours for p in contour]
+    # Below three points there is nothing to fingerprint, and walking one
+    # would invent something: a stroked segment is two points, and filling it
+    # in would turn every staff line on the page into a shape.
     if len(points) < 3:
         return None
     xs = [p[0] for p in points]
@@ -127,7 +181,7 @@ def outline(points):
     scale = max(w, h) or 1
     ox, oy = min(xs), min(ys)
     bits = 0
-    for x, y in points:
+    for x, y in _walk(contours, scale):
         gx = min(GRID - 1, int((x - ox) / scale * GRID))
         gy = min(GRID - 1, int((y - oy) / scale * GRID))
         bits |= 1 << (gy * GRID + gx)

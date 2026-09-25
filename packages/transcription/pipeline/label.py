@@ -123,7 +123,7 @@ def _contours(commands):
         run.append((op, args))
     if run:
         out.append(run)
-    return [pts for pts in (_flatten(c) for c in out) if len(pts) >= 3]
+    return [pts for c in out for pts in _flatten(c) if len(pts) >= 3]
 
 
 def contact_sheet(records, out, title):
