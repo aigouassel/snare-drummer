@@ -104,6 +104,44 @@ def attribute(codes, families):
     return best
 
 
+MIN_CORROBORATED = 2
+
+
+def corroborate(codes, vocabularies, established):
+    """The family of a subset too small to be judged on its own.
+
+    A producer that re-embeds an engraving font does not always ship one
+    subset per document. Three scores here carry the music in *two* fonts:
+    one holding the clef, the rests, the flags and the digits, and a second
+    holding nothing but three noteheads. The first passes `attribute` easily;
+    the second cannot, because four matches are demanded of a font that
+    contains three glyphs -- so every notehead on the page was dropped and
+    the scores came out as bars with no strokes in them at all.
+
+    Lowering the threshold is not the answer: the reason it is four is that a
+    lone slash or ellipse is a shape any text font carries, and a font drawing
+    one of those would be enrolled as music. The evidence here is not the
+    shapes alone, it is the company they keep -- the family is *already*
+    established in this document by a font that met the full test, and this
+    one adds nothing but more of it. So the shapes have only to agree
+    unanimously with a family that is already there: one unnamed shape and the
+    font is something else, wrongly read.
+    """
+    # Sorted, so a font that could pass under two families passes under the
+    # same one every run: a reading that changes between runs is a reading
+    # nobody can check.
+    for family in sorted(established):
+        vocabulary = vocabularies.get(family)
+        if not vocabulary:
+            continue
+        named = [vocabulary.resolve(fp) for fp in codes]
+        if len(named) < MIN_CORROBORATED or not all(named):
+            continue
+        if any(role(s) in MUSICAL for s in named):
+            return family
+    return None
+
+
 def _aspects_agree(a, b):
     """Whether two aspect ratios are the same ratio, measured twice.
 

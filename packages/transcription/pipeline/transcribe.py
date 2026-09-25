@@ -35,7 +35,8 @@ import layout
 import rhythm
 import text
 from fonts import MUSIC_FAMILIES
-from vocabulary import MUSICAL, RHYTHMIC, Vocabulary, attribute, role
+from vocabulary import (MUSICAL, RHYTHMIC, Vocabulary, attribute, corroborate,
+                        role)
 
 # Durations an engraver actually writes, as a fraction of a quarter-note beat.
 # Reconstruction snaps to these: a value that lands between two of them is not
@@ -777,6 +778,7 @@ def transcribe(path, entry):
 
     known = {f: Vocabulary(f) for f in KNOWN_FAMILIES}
     attributed = {}
+    corroborated = {}
 
     for page in data['pages']:
         if bpm is None:
@@ -796,6 +798,21 @@ def transcribe(path, entry):
                 attributed[key] = attribute(list(font['codes'].values()), known)
             if attributed[key]:
                 font['family'] = attributed[key]
+                font['attributedByShape'] = True
+        # A second pass, because a subset of three noteheads is too small to
+        # be judged alone and has to be read against the families this
+        # document has already established -- including on an earlier page.
+        established = {f['family'] for f in fonts.values() if f.get('family')}
+        established |= families
+        for ref, font in fonts.items():
+            if font.get('family') or not font.get('codes'):
+                continue
+            key = font.get('xref')
+            if key not in corroborated:
+                corroborated[key] = corroborate(
+                    list(font['codes'].values()), known, established)
+            if corroborated[key]:
+                font['family'] = corroborated[key]
                 font['attributedByShape'] = True
         for glyph in page['glyphs']:
             if not glyph['family']:
