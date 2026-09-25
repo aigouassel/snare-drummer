@@ -518,6 +518,12 @@
    "aspect": 1.33,
    "seen": 1,
    "symbol": "notehead.triangle"
+  },
+  {
+   "bits": "0000000000000000ffffe007700e700c381c1c381c300e7007e007c003c00180",
+   "aspect": 1.33,
+   "seen": 1,
+   "symbol": "notehead.triangleDown"
   }
  ]
 }
