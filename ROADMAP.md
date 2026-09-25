@@ -149,37 +149,47 @@ Les options :
 
 ## 4 · Les 16 séquences écartées
 
-### A2 — Aucun chiffrage lu · 6 séquences, et quatre sont un défaut
+### A2 — Aucun chiffrage lu · les portées par bouts sont réglées, deux vrais cas restent
 
 L'entrée disait « aucun chiffrage imprimé » et se croyait une décision. Relevé
 page par page, **quatre de ces six partitions impriment bel et bien leur
 chiffrage** ; seules `2019-intro` et `2019-snare-break-1` commencent par une
 clé puis directement les notes.
 
-Pour trois des quatre autres, la cause est une seule et se répare : **leur
-portée n'est pas un filet mais une suite de segments abouts, un par mesure**,
-que `layout.rules` ne recolle pas. Chaque fragment est alors jugé comme une
-portée entière, et celui de gauche — celui qui porte le chiffrage — est rejeté
-par deux garde-fous de `_single_line` légitimes sur une portée complète : la
-largeur d'au moins dix interlignes (une mesure isolée fait 74 à 91 points
-contre un seuil de 100) et l'égalité des hauteurs de croisement (la tête de
-portée contient la double barre initiale à 9,6 quand les barres sont à 20).
+La cause des portées tracées par bouts est **réparée** (`layout._stitch`,
+`rhythm._staff_line_edges`, `layout._barlines_among`). Elle valait bien plus
+que le chiffrage, et bien plus que ces trois partitions : **53 des 203
+partitions tenues localement, un quart du corpus, gravent leurs filets mesure
+par mesure**. Sur le répertoire entier, 112 séquences passent à 116 et 3 320
+mesures jouables à 3 410, sans qu'aucune pièce ne perde une seule mesure
+jouable.
 
-Le dégât dépasse le chiffrage : `1993-drum-break` ne trouve que 16 mesures
-pour une page qui en imprime environ 35. Recoller les filets colinéaires et
-jointifs avant de les tester rendrait la métrique **et** les mesures perdues à
-la tête de chaque portée.
+`2017-opening-snare-break` était donné pour un quatrième cas, « une page
+tracée dont les chiffres ne sont pas dans `drawn.json` ». C'était faux deux
+fois : relevée forme par forme, la page n'a **rien** qu'aucune table ne nomme —
+son 4 de chiffrage est à 1 bit de celui de MScore, ses têtes, sa clé, ses
+crochets et ses accents à 0 — et elle est aujourd'hui livrée, 9 mesures, aucune
+sans métrique et aucun symbole non nommé. C'était le défaut de portée, seul.
 
-`2017-opening-snare-break` était donné comme un quatrième cas, « une page
-tracée dont les chiffres ne sont pas dans `drawn.json` ». Ce n'est plus vrai :
-relevée forme par forme, la page n'a **rien** qu'aucune table ne nomme — son
-4 de chiffrage est à 1 bit de celui de MScore, ses têtes, sa clé, ses crochets
-et ses accents à 0. Elle rend six mesures, chacune seule dans son « système »,
-toutes vides et sans métrique : c'est exactement le défaut ci-dessus, pas un
-manque de vocabulaire. `2014-solo-1` non plus n'est pas une affaire de
-vocabulaire ; voir A3.
+Ce qui a rendu ces pages lisibles, et qui mérite de survivre à cette entrée :
 
-**Pour les deux vrais cas, ne pas déduire la métrique.** La piste « prendre la
+- le recollement se pose sur l'about, pas sur le chevauchement. Mesuré sur les
+  203 partitions, 4 373 paires de filets colinéaires se touchent à 0,2 point
+  près et la paire non jointive la plus proche est à 2,55 points ; il n'y a
+  rien entre les deux. Fusionner deux portées voisines est donc hors de
+  portée du seuil.
+- `rhythm.py` devait suivre et personne ne l'avait vu. Sur une page convertie
+  en contours, un filet de portée n'est distingué d'une ligature que par son
+  identité — il court d'un bout à l'autre de sa portée. Une portée recollée
+  dont les segments ne le sont pas ne correspond plus à aucun de ses bouts :
+  `2017-drum-break-finals` s'est lue huit fois trop vite, et sans erreur.
+- la « double barre initiale » du relevé ci-dessus était une **clé de
+  percussion**. Deux traits épais, quatre filets, un interligne de haut.
+
+Reste `2014-solo-1`, que ne lit aucun vocabulaire — voir A3.
+
+**Pour les deux vrais cas — `2019-intro` et `2019-snare-break-1` — ne pas
+déduire la métrique.** La piste « prendre la
 somme que la majorité des mesures atteint » a été mesurée en aveugle sur 117
 séquences dont la métrique est imprimée et connue : elle se trompe sur
 **18,8 % des pièces et 26,9 % des mesures**, et ferait déclarer jouables 70
