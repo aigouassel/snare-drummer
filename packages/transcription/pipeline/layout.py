@@ -41,6 +41,12 @@ HAIRLINE = 1.0
 CO_EXTENT = 1.0         # a rule drawn as a thin rectangle is this thick, at most
 EXTENT = 3.0           # the five lines of one staff start and end together
 SYMMETRY = 0.15        # a barline straddles its staff evenly; a stem does not
+# How far apart the ends of two collinear rules may be and still be one staff
+# line drawn bar by bar. Measured over the 203 scores held locally: of 20 308
+# pairs of collinear rules, 4 373 abut to within 0.2 points and the next
+# nearest pair anywhere is 2.55 points away. Nothing at all falls between.
+# The number below sits in that empty band rather than at a guessed value.
+ABUTTING = 1.0
 
 
 def horizontals(segments, min_length):
@@ -108,6 +114,41 @@ def rules(segments, min_length):
                 break
         else:
             out.append({'y': y, 'x0': x0, 'x1': x1})
+    return _stitch(out)
+
+
+def _stitch(found):
+    """Rejoin a staff line that was drawn one segment per bar.
+
+    A quarter of the scores here engrave the rule of a one-line staff as a
+    run of abutting segments -- one per bar -- rather than as one line, and
+    the page looks identical either way. Read unjoined, each segment is put
+    to the one-line test as if it were a whole staff, and the two guards that
+    test applies are both true of a staff and false of a single bar of one:
+    the leftmost segment carries the head of the staff, whose double barline
+    crosses at half the height of the rest, and a lone bar is 74 to 91 points
+    wide against a floor of ten staff spaces. So the head of every staff was
+    discarded -- with its metre, and with its bars. One page printing about
+    thirty-five bars yielded sixteen.
+
+    Joining is on abutment, not on overlap, for the same reason the hairline
+    merge above is on co-extent: two segments of one rule are drawn from
+    shared coordinates and meet to within a fifth of a point, whereas the two
+    staves of a page set in columns are separated by a real gutter. Measured
+    across the catalogue there is nothing whatever between the two, so this
+    cannot silently fuse two neighbouring staves into one -- which would be a
+    worse fault than the one it repairs, since it would read music across a
+    line break that was never played that way.
+    """
+    out = []
+    for rule in sorted(found, key=lambda r: r['x0']):
+        for chain in out:
+            if (abs(chain['y'] - rule['y']) <= TOLERANCE
+                    and abs(rule['x0'] - chain['x1']) <= ABUTTING):
+                chain['x1'] = max(chain['x1'], rule['x1'])
+                break
+        else:
+            out.append(dict(rule))
     return out
 
 

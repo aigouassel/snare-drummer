@@ -54,10 +54,15 @@ GRACE_RATIO = 0.8
 # they say something about a page here and about a page there.
 STAFF_LINE_LEVEL = 1.0
 STAFF_LINE_EXTENT = 3.0
+# A staff line drawn one segment per bar meets its neighbour to within a fifth
+# of a point. layout.py measures that gap across the catalogue and stitches on
+# it; the same allowance is repeated here for the same reason the two above
+# are -- it says something about a page there and about a page here.
+STAFF_LINE_ABUTTING = 1.0
 
 
-def _is_staff_line(x0, x1, y, staves):
-    """Whether an edge is one side of a staff line rather than of a beam.
+def _staff_line_edges(edges, staves):
+    """Which of these filled edges are staff lines rather than beams.
 
     The distinction a beam reader rests on -- filled is a beam, stroked is a
     staff line -- is a fact about typesetters, not about pages. Where a
@@ -70,18 +75,42 @@ def _is_staff_line(x0, x1, y, staves):
     What separates them is not thickness or length but *identity*: layout.py
     has already found these lines and said where they are, so a beam reader
     need not guess. An edge is dropped only when it lies at the height of a
-    line of a staff and runs between that staff's own two ends -- a beam
-    spans a few notes, never a system -- which on the typeset scores measured
-    here discards nothing at all.
+    line of a staff and belongs to a run that reaches that staff's own two
+    ends -- a beam spans a few notes, never a system.
+
+    The run, and not the edge, is what has to reach the ends, because a page
+    that outlines its staff lines may also draw each of them in pieces, one
+    per bar. Testing the piece alone then matches nothing: the halves of a
+    line reach one end each and neither reaches both, so every staff line on
+    the page was counted as a beam and one score read eight times too fast.
+    Chaining first restores exactly the guarantee the single-edge test gave,
+    since a chain of beams cannot span a system either.
     """
+    drop = set()
     for staff in staves:
-        if (abs(x0 - staff['x0']) > STAFF_LINE_EXTENT
-                or abs(x1 - staff['x1']) > STAFF_LINE_EXTENT):
-            continue
-        if any(abs(y - line) <= STAFF_LINE_LEVEL
-               for line in staff.get('lines') or ()):
-            return True
-    return False
+        for line in staff.get('lines') or ():
+            mine = sorted(
+                (i for i, (x0, x1, y) in enumerate(edges)
+                 if abs(y - line) <= STAFF_LINE_LEVEL
+                 and x0 >= staff['x0'] - STAFF_LINE_EXTENT
+                 and x1 <= staff['x1'] + STAFF_LINE_EXTENT),
+                key=lambda i: edges[i][0])
+            run, reach = [], None
+            for i in mine + [None]:
+                # A rule filled as a rectangle arrives as two edges at the
+                # same x, so runs are unioned rather than merely abutted.
+                if i is not None and (reach is None
+                                      or edges[i][0] <= reach + STAFF_LINE_ABUTTING):
+                    reach = edges[i][1] if reach is None else max(reach, edges[i][1])
+                    run.append(i)
+                    continue
+                if (run and abs(edges[run[0]][0] - staff['x0']) <= STAFF_LINE_EXTENT
+                        and abs(reach - staff['x1']) <= STAFF_LINE_EXTENT):
+                    drop.update(run)
+                if i is None:
+                    break
+                run, reach = [i], edges[i][1]
+    return drop
 
 
 def beams(segments, spacing, staves=()):
@@ -104,9 +133,9 @@ def beams(segments, spacing, staves=()):
             continue
         x0, x1 = min(s['x0'], s['x1']), max(s['x0'], s['x1'])
         y = (s['y0'] + s['y1']) / 2
-        if _is_staff_line(x0, x1, y, staves):
-            continue
         edges.append((x0, x1, y))
+    edges = [e for i, e in enumerate(edges)
+             if i not in _staff_line_edges(edges, staves)]
 
     found, used = [], set()
     for i, (x0, x1, y) in enumerate(edges):
