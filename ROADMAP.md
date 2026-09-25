@@ -168,9 +168,16 @@ portée contient la double barre initiale à 9,6 quand les barres sont à 20).
 Le dégât dépasse le chiffrage : `1993-drum-break` ne trouve que 16 mesures
 pour une page qui en imprime environ 35. Recoller les filets colinéaires et
 jointifs avant de les tester rendrait la métrique **et** les mesures perdues à
-la tête de chaque portée. `2017-opening-snare-break` est le quatrième cas et
-relève d'une autre cause : c'est une page tracée dont les chiffres ne sont pas
-dans `drawn.json`. `2014-solo-1` n'est lue par aucun vocabulaire du tout.
+la tête de chaque portée.
+
+`2017-opening-snare-break` était donné comme un quatrième cas, « une page
+tracée dont les chiffres ne sont pas dans `drawn.json` ». Ce n'est plus vrai :
+relevée forme par forme, la page n'a **rien** qu'aucune table ne nomme — son
+4 de chiffrage est à 1 bit de celui de MScore, ses têtes, sa clé, ses crochets
+et ses accents à 0. Elle rend six mesures, chacune seule dans son « système »,
+toutes vides et sans métrique : c'est exactement le défaut ci-dessus, pas un
+manque de vocabulaire. `2014-solo-1` non plus n'est pas une affaire de
+vocabulaire ; voir A3.
 
 **Pour les deux vrais cas, ne pas déduire la métrique.** La piste « prendre la
 somme que la majorité des mesures atteint » a été mesurée en aveugle sur 117
@@ -198,31 +205,52 @@ faite à `label.py`, elle est auditable et par séquence, et surtout elle laisse
 le contrôle arithmétique **extérieur** : la métrique vient d'un œil, pas des
 durées qu'elle vérifie.
 
-### A3 — Une famille de gravure tracée que personne n'a nommée
+### A3 — ~~Une famille de gravure tracée que personne n'a nommée~~ · réglée
 
-L'entrée visait `2004-battery-break`, `2004-feature` et `2009-drum-feature-5`,
-et se trompait de cause : leurs polices aux noms mutilés sont du **Maestro**
-ré-incorporé, déjà nommé, leurs formes communes s'appariant à 0 bit sur 256.
-Ce qui les bloquait était que la seconde police de ces pages ne contient que
-trois têtes de note, quand `attribute()` exige quatre appariements. Réglé en
-rattachant une police sans famille à celle qu'une autre a déjà établie dans le
-même document, à l'unanimité de ses formes. `2004-feature` résiste encore.
+La famille s'appelle **Ash** et sa table est `pipeline/vocabulary/ash.json`.
+Le nom est lu dans les fichiers : ces pages n'embarquent aucune police
+musicale — leur musique n'arrive qu'en courbes — mais bien leur police de
+texte, qui s'appelle `ashtext`.
 
-Reste le vrai manque, et il touche des partitions **publiées** :
-`training-day`, `2017-drum-break-finals` et
-`2019-segment` sont tracées dans une famille qu'aucune table ne nomme, et
-n'étaient lues que par des appariements marginaux — leurs têtes tombaient à
-douze bits de *deux* familles à la fois, et laquelle gagnait tenait au compte.
-`2019-segment` y a perdu 4 mesures et `2019-ghost-break` une. C'est une
-planche de contact à faire, pas un seuil à desserrer : le mesurer a montré
-qu'un seuil plus serré coûte ailleurs sans rien gagner ici (voir
-`vocabulary.py`).
+Son étendue est de **douze partitions** du corpus, pas les trois que l'entrée
+visait, et elles sont imprimées par quatre chaînes différentes (jsPDF, PDFium,
+Quartz, Print To PDF) : c'est le contour qui les réunit, pas le producteur.
+Mesuré à mesures jouables, sur les neuf qui bougent :
 
-Nommer une famille résout toutes ses partitions d'un coup — BroadwayCopyist en
-avait rapporté huit — donc la planche vaut probablement plus que ces trois
-scores-là. Ces pages étant tracées, elle se fait sur des formes découpées de
-leur page et non sur les contours d'une police : `label.py` ne sait pas le
-faire.
+| | avant | après |
+| --- | --- | --- |
+| `training-day` *(publiée)* | écartée, 0/28 | 14/28 |
+| `2017-drum-break-finals` *(publiée)* | 20/57 | 31/57 |
+| `2019-segment` *(publiée)* | 3/30 | 10/30 |
+| `2019-ghost-break` | 16/42 | 26/42 |
+| `2019-opener-13` | 26/54 | 38/54 |
+| `2017-movement-2` | 22/81 | 27/81 |
+| `2018-snare-feature-1` | 9/24 | 13/24 |
+| `2019-closer-6` | 10/18 | 13/18 |
+| `2018-snare-feature` | 3/9 | 6/9 |
+
+Échantillon de 80 : 1 777 → 1 802 mesures jouables, deux pièces changées, dans
+le bon sens toutes les deux.
+
+Ce qui reste sans nom dans cette famille l'est exprès, et c'est l'entrée C4
+qui le dit : un trait oblique fin de 3,8 × 4,5 points, vu 195 fois sur neuf
+partitions, peut être la barre d'une note d'agrément, une barre de roulement
+dessinée fine ou la moitié d'une croix. Le nommer compterait peut-être deux
+frappes là où la page en imprime une.
+
+`2004-feature`, qui résistait encore : sa police de têtes n'en contient que
+trois et passe donc par `corroborate`, qui exige l'unanimité. Deux de ses trois
+formes étaient à zéro bit de Maestro, la troisième est un triangle pointe en
+bas que la table ne portait pas sous ce dessin-là, et toute la police tombait
+avec elle. Écartée (0/20) → **14/20**.
+
+`2014-solo-1` n'est pas une affaire de vocabulaire. Sa gravure manuscrite
+n'existe que là : sa tête de note, cherchée sur les 203 PDF du corpus, ne se
+retrouve dans aucun autre. Et nommer ne l'aiderait pas — l'essai a été fait,
+avec une table de neuf formes qui nomme ses têtes, ses lettres et sa clé : la
+page rend toujours **une** mesure, vide, alors qu'elle en imprime une douzaine.
+Ses six voisines de A2 sont dans le même cas. C'est la mise en page qu'il faut
+regarder, pas la table.
 
 ### A5 — La police Helsinki de Sibelius · 1 séquence · *entrée, à peine*
 
