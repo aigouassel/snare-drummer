@@ -17,10 +17,11 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > commit, dans le `README` ou dans `CLAUDE.md` ; le reste s'en va avec le
 > fichier.
 
-> État au 25 septembre 2026 : 110 des 128 séquences du répertoire sont
-> jouables, 5 982 mesures dont 3 314 jouables (55,4 %). La proportion baisse
-> pendant que le compte monte : cinq partitions sont entrées, et elles
-> apportent plus de mesures qu'elles n'en font boucler. Le détail de ce qui
+> État au 25 septembre 2026 : 112 des 128 séquences du répertoire sont
+> jouables, 6 026 mesures dont 3 320 jouables (55,1 %). La proportion baisse
+> pendant que le compte monte : sept partitions sont entrées, et elles
+> apportent plus de mesures qu'elles n'en font boucler. Une partition qu'on
+> ne lisait pas du tout ne dégradait aucun taux. Le détail de ce qui
 > est écarté vit dans [`packages/transcription/HELD-BACK.md`](packages/transcription/HELD-BACK.md),
 > qui est généré et ne peut pas vieillir.
 
@@ -74,8 +75,8 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**1 193 mesures (19,9 %) dont les durées ne bouclent pas.** C'était 44,5 % en
-début de parcours ; onze causes distinctes ont été trouvées et corrigées, aucune
+**1 227 mesures (20,4 %) dont les durées ne bouclent pas.** C'était 44,5 % en
+début de parcours ; douze causes distinctes ont été trouvées et corrigées, aucune
 deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
 
 La méthode qui marche : prendre **une** mesure fautive, la découper de son PDF
@@ -93,13 +94,18 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 3 314 (55,4 %) |
-| **somme fausse** | **1 193 (19,9 %)** |
-| que des silences (vérifiées, muettes) | 901 (15,1 %) |
+| jouables | 3 320 (55,1 %) |
+| **somme fausse** | **1 227 (20,4 %)** |
+| que des silences (vérifiées, muettes) | 904 (15,0 %) |
 | sans métrique | 343 (5,7 %) |
 | vides | 126 (2,1 %) |
 | lues à l'espacement | 53 (0,9 %) |
-| symbole inconnu | 52 (0,9 %) |
+| symbole inconnu | 53 (0,9 %) |
+
+Ces sept lignes comptent les mesures **livrées**, comme `bars_total` dans
+`batch.py`, qui n'incrémente qu'après le `continue` écartant une pièce sans
+rien de jouable. Le même décompte étendu aux seize séquences écartées donne
+6 246 mesures — juste aussi, et d'un autre nom.
 
 ---
 
@@ -141,28 +147,69 @@ Les options :
 
 ---
 
-## 4 · Les 18 séquences écartées
+## 4 · Les 16 séquences écartées
 
-### A2 — **décision** : aucun chiffrage imprimé · 6 séquences
+### A2 — Aucun chiffrage lu · 6 séquences, et quatre sont un défaut
 
-`1993-drum-break`, `2014-solo-1`, `2017-movement-3-5`,
-`2017-opening-snare-break`, `2019-intro`, `2019-snare-break-1`.
+L'entrée disait « aucun chiffrage imprimé » et se croyait une décision. Relevé
+page par page, **quatre de ces six partitions impriment bel et bien leur
+chiffrage** ; seules `2019-intro` et `2019-snare-break-1` commencent par une
+clé puis directement les notes.
 
-Vérifié page par page : la portée commence par une barre et enchaîne sur les
-notes. **Ce n'est pas un défaut** — c'est la règle « ne jamais deviner une
-métrique », qui est un pilier du projet. Les débloquer suppose de la changer.
+Pour trois des quatre autres, la cause est une seule et se répare : **leur
+portée n'est pas un filet mais une suite de segments abouts, un par mesure**,
+que `layout.rules` ne recolle pas. Chaque fragment est alors jugé comme une
+portée entière, et celui de gauche — celui qui porte le chiffrage — est rejeté
+par deux garde-fous de `_single_line` légitimes sur une portée complète : la
+largeur d'au moins dix interlignes (une mesure isolée fait 74 à 91 points
+contre un seuil de 100) et l'égalité des hauteurs de croisement (la tête de
+portée contient la double barre initiale à 9,6 quand les barres sont à 20).
 
-Une piste défendable si on y touche : lire toutes les durées (elles ne
-dépendent pas de la métrique), puis constater la somme que la majorité des
-mesures atteint. C'est une mesure, pas une invention — mais le contrôle
-arithmétique devient alors partiellement circulaire, et il faudrait le dire.
+Le dégât dépasse le chiffrage : `1993-drum-break` ne trouve que 16 mesures
+pour une page qui en imprime environ 35. Recoller les filets colinéaires et
+jointifs avant de les tester rendrait la métrique **et** les mesures perdues à
+la tête de chaque portée. `2017-opening-snare-break` est le quatrième cas et
+relève d'une autre cause : c'est une page tracée dont les chiffres ne sont pas
+dans `drawn.json`. `2014-solo-1` n'est lue par aucun vocabulaire du tout.
 
-### A3 — Une famille de gravure inconnue, partagée · 3 séquences
+**Pour les deux vrais cas, ne pas déduire la métrique.** La piste « prendre la
+somme que la majorité des mesures atteint » a été mesurée en aveugle sur 117
+séquences dont la métrique est imprimée et connue : elle se trompe sur
+**18,8 % des pièces et 26,9 % des mesures**, et ferait déclarer jouables 70
+mesures que leur page dément. `2011-movement-3-3` en donne la raison : son
+mode rassemble 67 % des mesures — plus net que celui de `2019-intro` — et il
+est faux. La netteté du pic ne distingue pas une métrique réelle d'un biais de
+lecture uniforme, donc aucun seuil ne sauve la piste. S'ajoute qu'un total en
+temps ne désigne pas une métrique : six temps, c'est 6/4 dans 150 mesures du
+catalogue, 3/2 dans 106 et 12/8 dans 57.
 
-`2004-battery-break`, `2004-feature`, `2009-drum-feature-5`.
+Ce que la déduction ferait perdre est exactement ce que ce dépôt craint. Le
+contrôle arithmétique garderait son pouvoir sur l'erreur locale et le perdrait
+entièrement sur l'**erreur uniforme** : un pipeline lisant toutes les durées de
+moitié produirait un mode de 2, en déduirait 2/4, et boucleraient à 100 %. Les
+douze pannes listées dans `CLAUDE.md` sont toutes de cette famille-là. Et
+`batch.py` cesserait de mesurer l'accord avec la page pour mesurer l'accord des
+mesures entre elles, sans plus pouvoir descendre sous la part du mode.
 
-Depuis que les empreintes décrivent une forme, le même manque se voit sur des
-partitions **publiées** : `training-day`, `2017-drum-break-finals` et
+La seule forme tenable, si on y tient : **déclarer** la métrique à la main pour
+ces deux séquences, dans un fichier à côté de `pipeline/vocabulary/` — pas dans
+`catalogue.json`, qui est scrapé et serait écrasé. C'est la concession déjà
+faite à `label.py`, elle est auditable et par séquence, et surtout elle laisse
+le contrôle arithmétique **extérieur** : la métrique vient d'un œil, pas des
+durées qu'elle vérifie.
+
+### A3 — Une famille de gravure tracée que personne n'a nommée
+
+L'entrée visait `2004-battery-break`, `2004-feature` et `2009-drum-feature-5`,
+et se trompait de cause : leurs polices aux noms mutilés sont du **Maestro**
+ré-incorporé, déjà nommé, leurs formes communes s'appariant à 0 bit sur 256.
+Ce qui les bloquait était que la seconde police de ces pages ne contient que
+trois têtes de note, quand `attribute()` exige quatre appariements. Réglé en
+rattachant une police sans famille à celle qu'une autre a déjà établie dans le
+même document, à l'unanimité de ses formes. `2004-feature` résiste encore.
+
+Reste le vrai manque, et il touche des partitions **publiées** :
+`training-day`, `2017-drum-break-finals` et
 `2019-segment` sont tracées dans une famille qu'aucune table ne nomme, et
 n'étaient lues que par des appariements marginaux — leurs têtes tombaient à
 douze bits de *deux* familles à la fois, et laquelle gagnait tenait au compte.
@@ -171,12 +218,11 @@ planche de contact à faire, pas un seuil à desserrer : le mesurer a montré
 qu'un seuil plus serré coûte ailleurs sans rien gagner ici (voir
 `vocabulary.py`).
 
-Leurs polices portent trois noms mutilés différents (`TTFF55A818t00`,
-`TTFE612310t00`…), mais leurs empreintes se recoupent : **28/40, 30/40,
-15/17**. C'est **la même police ré-incorporée trois fois**. Une seule planche
-de contact les nomme toutes les trois — c'est exactement le cas
-BroadwayCopyist, qui avait rapporté huit partitions. **Meilleur rapport
-effort/résultat du lot**, et probablement plus large que ces trois-là.
+Nommer une famille résout toutes ses partitions d'un coup — BroadwayCopyist en
+avait rapporté huit — donc la planche vaut probablement plus que ces trois
+scores-là. Ces pages étant tracées, elle se fait sur des formes découpées de
+leur page et non sur les contours d'une police : `label.py` ne sait pas le
+faire.
 
 ### A5 — La police Helsinki de Sibelius · 1 séquence · *entrée, à peine*
 
