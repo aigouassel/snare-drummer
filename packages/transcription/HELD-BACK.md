@@ -1,12 +1,12 @@
 # Ce qui n’est pas retranscrit
 
-105 des 128 séquences du répertoire sont jouables dans l’application. Voici les 23 autres, et pourquoi.
+110 des 128 séquences du répertoire sont jouables dans l’application. Voici les 18 autres, et pourquoi.
 
 > Généré par `pipeline/held.py`, à partir de la lecture que le pipeline fait aujourd’hui. Une liste écrite à la main deviendrait fausse dès que quelque chose se met à marcher.
 
 La raison donnée est celle qui bloque **le plus grand nombre de mesures** de la séquence ; le détail par mesure suit chaque entrée. Une séquence n’est publiée que si au moins une de ses mesures boucle exactement *et* contient une frappe.
 
-## Aucun chiffrage de mesure n'a été lu — 8 séquences
+## Aucun chiffrage de mesure n'a été lu — 6 séquences
 
 Le pipeline ne devine jamais une métrique. Ces partitions n'en impriment pas au début, ou l'impriment dans une fonte qu'aucun vocabulaire ne nomme — et sans métrique, une mesure n'a rien contre quoi boucler.
 
@@ -19,12 +19,6 @@ Le pipeline ne devine jamais une métrique. Ces partitions n'en impriment pas au
 - **Dartmouth HS 2014 — Solo** (`2014-solo-1`)  
   1 mesure lue : 1 métrique  
   [source](https://lothype.com/wp-content/uploads/2020/01/2014-Solo-1.pdf)
-- **Pulse 2019 — Snare Break (Early Season)** (`2019-snare-break-early-season-2`) · musique tracée en courbes  
-  22 mesures lues : 22 métrique  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2019-Snare-Break-Early-Season-2.pdf)
-- **SCVC 2017 — Opener** (`2017-opener-8`) · musique tracée en courbes  
-  21 mesures lues : 21 métrique  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2017-Opener-8.pdf)
 - **Santa Clara Vanguard (SCV) 2019 — Intro** (`2019-intro`)  
   47 mesures lues : 47 métrique  
   [source](https://lothype.com/wp-content/uploads/2020/01/2019-Intro.pdf)
@@ -35,13 +29,10 @@ Le pipeline ne devine jamais une métrique. Ces partitions n'en impriment pas au
   16 mesures lues : 16 métrique  
   [source](https://lothype.com/wp-content/uploads/2020/01/1993-Drum-Break.pdf)
 
-## Les notes n'ont pas été lues — 4 séquences
+## Les notes n'ont pas été lues — 3 séquences
 
 Les portées et les barres sont trouvées, mais rien de rythmique ne l'est. En général une police de gravure que personne n'a nommée : une famille inconnue reste invisible, puisque l'attribution par forme ne compare qu'aux vocabulaires existants.
 
-- **Atlanta Quest 2019 — Closer Snare Break** (`2019-closer-snare-break`) · musique tracée en courbes  
-  17 mesures lues : 8 vide, 7 espacement, 2 somme  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2019-Closer-Snare-Break.pdf)
 - **Great Lakes Percussion 2004 — Battery Break** (`2004-battery-break`)  
   7 mesures lues : 4 vide, 3 somme  
   [source](https://lothype.com/wp-content/uploads/2020/01/2004-Battery-Break.pdf)
@@ -52,13 +43,10 @@ Les portées et les barres sont trouvées, mais rien de rythmique ne l'est. En g
   37 mesures lues : 33 vide, 3 silences, 1 somme  
   [source](https://lothype.com/wp-content/uploads/2020/01/2009-Drum-Feature-5.pdf)
 
-## Le rythme n'a pas pu être lu dans la notation — 3 séquences
+## Le rythme n'a pas pu être lu dans la notation — 2 séquences
 
 Les notes sont là, mais leurs hampes ou leurs ligatures ne se laissent pas mesurer, donc la mesure retombe sur l'espacement — une lecture trop faible pour être publiée.
 
-- **Atlanta Quest 2019 — Snare Break** (`2019-snare-break-2`) · musique tracée en courbes  
-  12 mesures lues : 7 espacement, 3 vide, 1 métrique, 1 somme  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2019-Snare-Break-2.pdf)
 - **BYOS — Faded** (`faded`)  
   26 mesures lues : 14 espacement, 7 somme, 5 inconnu  
   [source](https://lothype.com/wp-content/uploads/2020/01/Faded.pdf)
@@ -66,30 +54,27 @@ Les notes sont là, mais leurs hampes ou leurs ligatures ne se laissent pas mesu
   33 mesures lues : 20 espacement, 5 inconnu, 5 somme, 3 vide  
   [source](https://lothype.com/wp-content/uploads/2020/01/Stainless-Drum-Set.pdf)
 
-## Les durées ne bouclent pas — 4 séquences
+## Des symboles n'ont pas pu être nommés — 1 séquence
+
+Une forme sans étiquette rend sa mesure suspecte plutôt que d'être rapprochée de la plus proche, ce qui est la règle du projet.
+
+- **Keelan Tobia — The 10 Second Lick** (`the-10-second-lick`)  
+  3 mesures lues : 2 inconnu, 1 somme  
+  [source](https://lothype.com/wp-content/uploads/2020/01/The-10-Second-Lick.pdf)
+
+## Les durées ne bouclent pas — 3 séquences
 
 Tout est lu, mais la somme d'une mesure ne fait pas sa métrique. Parfois c'est la lecture qui se trompe ; parfois c'est la source, qui est un relevé fait à l'oreille et se trompe aussi.
 
 - **Freelancers 2010 — Keelan_s Solo** (`2010-keelan-s-solo`)  
   4 mesures lues : 4 somme  
   [source](https://lothype.com/wp-content/uploads/2020/01/2010-Keelan_s-Solo.pdf)
-- **Keelan Tobia — The 10 Second Lick** (`the-10-second-lick`)  
-  3 mesures lues : 2 somme, 1 inconnu  
-  [source](https://lothype.com/wp-content/uploads/2020/01/The-10-Second-Lick.pdf)
 - **Keelan Tobia — The 10 Second Lick (Simple)** (`the-10-second-lick-simple`)  
   6 mesures lues : 3 somme, 2 vide, 1 espacement  
   [source](https://lothype.com/wp-content/uploads/2020/01/The-10-Second-Lick-Simple.pdf)
 - **Teal Sound 2011 — Movement 3** (`2011-movement-3-3`)  
   23 mesures lues : 18 somme, 5 vide  
   [source](https://lothype.com/wp-content/uploads/2020/01/2011-Movement-3-3.pdf)
-
-## Rien que des silences — 1 séquence
-
-La partition est vérifiable et muette : il n'y a rien à travailler.
-
-- **Cadets 2018 — Demonic Thesis** (`2018-demonic-thesis`) · musique tracée en courbes  
-  111 mesures lues : 51 silences, 49 vide, 7 somme, 4 espacement  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2018-_Demonic-Thesis_.pdf)
 
 ## Aucune portée n'a été trouvée — 3 séquences
 
