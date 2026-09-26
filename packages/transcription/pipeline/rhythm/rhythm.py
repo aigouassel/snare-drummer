@@ -37,7 +37,8 @@ STEM_MAX = 6.5
 BEAM_MIN_LENGTH = 0.8      # spaces; shorter than this is a stub, still a beam
 
 # A tremolo stroke -- the slash that says "roll this note" -- is filled, and
-# short, and so is a beam stub. What separates them is slant.
+# short, and so is a beam stub. Slant separates most of them; what a stroke
+# *joins* separates the rest.
 #
 # Measured over the whole corpus: of 52,188 filled horizontals long enough to
 # span a run, all but 25 slant less than 0.2, so that is as steep as beaming
@@ -50,6 +51,14 @@ BEAM_MIN_LENGTH = 0.8      # spaces; shorter than this is a stub, still a beam
 # counted as a beam halves its note, and the bar comes up short by exactly
 # that difference -- no symbol is unnamed, nothing is unread, and the bar is
 # simply wrong. 6,619 of them across 47 scores.
+# The slope alone was not enough, and the way it failed is worth keeping. A
+# beam joining two neighbouring notes is short, and slants because the notes do,
+# so it looked exactly like a stroke: refusing it doubled both their durations
+# and hung a roll on them, in 19 bars that had been closing. What tells them
+# apart is not shape at all but what the ink joins -- a beam is *shared*,
+# running from one stem to another, and a tremolo stroke crosses the one stem it
+# belongs to. Measured: of the short slanted runs, 441 span two stems and are
+# beams; none of the rest span more than one.
 TREMOLO_SLOPE = 0.2        # steeper than any beam this catalogue draws
 TREMOLO_LENGTH = 2.5       # spaces; longer than this is a beam, however slanted
 BEAM_MAX_THICKNESS = 0.9   # spaces; a beam is about half a space
@@ -130,9 +139,25 @@ def _staff_line_edges(edges, staves):
     return drop
 
 
-def _is_tremolo(dx, dy, spacing):
-    """A short filled run, slanted more steeply than beaming ever is here."""
-    return dx < TREMOLO_LENGTH * spacing and dy > TREMOLO_SLOPE * dx
+def _spans(x0, x1, y, found, spacing):
+    """How many stems a horizontal run touches."""
+    return sum(1 for s in found
+               if x0 - 0.3 * spacing <= s['x'] <= x1 + 0.3 * spacing
+               and s['y0'] - 0.3 * spacing <= y <= s['y1'] + 0.3 * spacing)
+
+
+def _is_tremolo(segment, spacing, found):
+    """A short slanted filled run that joins nothing: one stem, or none.
+
+    Shape first because it is cheap, and then the test that actually decides.
+    """
+    dx = abs(segment['x1'] - segment['x0'])
+    dy = abs(segment['y1'] - segment['y0'])
+    if dx >= TREMOLO_LENGTH * spacing or dy <= TREMOLO_SLOPE * dx:
+        return False
+    x0, x1 = min(segment['x0'], segment['x1']), max(segment['x0'], segment['x1'])
+    y = (segment['y0'] + segment['y1']) / 2
+    return _spans(x0, x1, y, found, spacing) < 2
 
 
 def tremolos(segments, spacing):
@@ -144,6 +169,7 @@ def tremolos(segments, spacing):
     roll, correct in its arithmetic and wrong on its face. That is the one
     kind of error this project holds to be worse than an open bar.
     """
+    found = stems(segments, spacing)
     out = []
     for s in segments:
         if not s['fill']:
@@ -151,7 +177,7 @@ def tremolos(segments, spacing):
         dx, dy = abs(s['x1'] - s['x0']), abs(s['y1'] - s['y0'])
         if dx < BEAM_MIN_LENGTH * spacing or dy > 0.5 * dx:
             continue
-        if _is_tremolo(dx, dy, spacing):
+        if _is_tremolo(s, spacing, found):
             out.append({'x': (s['x0'] + s['x1']) / 2,
                         'y': (s['y0'] + s['y1']) / 2})
     return out
@@ -172,6 +198,7 @@ def beams(segments, spacing, staves=()):
     They are taken out here and read by `tremolos()` instead; leaving them in
     halved a note apiece.
     """
+    found = stems(segments, spacing)
     edges = []
     for s in segments:
         if not s['fill']:
@@ -179,7 +206,7 @@ def beams(segments, spacing, staves=()):
         dx, dy = abs(s['x1'] - s['x0']), abs(s['y1'] - s['y0'])
         if dx < BEAM_MIN_LENGTH * spacing or dy > 0.5 * dx:
             continue
-        if _is_tremolo(dx, dy, spacing):
+        if _is_tremolo(s, spacing, found):
             continue
         x0, x1 = min(s['x0'], s['x1']), max(s['x0'], s['x1'])
         y = (s['y0'] + s['y1']) / 2

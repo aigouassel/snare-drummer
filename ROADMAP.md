@@ -18,7 +18,7 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > fichier.
 
 > État au 26 septembre 2026 : 116 des 128 séquences du répertoire sont
-> jouables, 6 132 mesures dont 3 661 jouables (59,7 %). Les barres de trémolo
+> jouables, 6 132 mesures dont 3 672 jouables (59,9 %). Les barres de trémolo
 > étaient comptées comme des ligatures, ce qui divisait leur note par deux :
 > 6 619 traits dans 47 partitions, +177 mesures jouables une fois lues comme
 > les roulements qu'elles sont. Le détail de ce qui
@@ -75,7 +75,7 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**991 mesures (16,2 %) dont les durées ne bouclent pas.** C'était 44,5 % en
+**980 mesures (16,0 %) dont les durées ne bouclent pas.** C'était 44,5 % en
 début de parcours ; seize causes distinctes ont été trouvées et corrigées,
 aucune deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
 
@@ -116,8 +116,8 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 3 661 (59,7 %) |
-| **somme fausse** | **991 (16,2 %)** |
+| jouables | 3 672 (59,9 %) |
+| **somme fausse** | **980 (16,0 %)** |
 | que des silences (vérifiées, muettes) | 886 (14,4 %) |
 | sans métrique | 314 (5,1 %) |
 | vides | 84 (1,4 %) |
