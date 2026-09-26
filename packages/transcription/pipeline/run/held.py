@@ -38,6 +38,14 @@ REASONS = [
      "Les notes sont là, mais leurs hampes ou leurs ligatures ne se "
      "laissent pas mesurer, donc la mesure retombe sur l'espacement — une "
      "lecture trop faible pour être publiée."),
+    ('n-olet', "un chiffre de n-olet n'a pas pu être rattaché à ses notes",
+     "Un chiffre compte des subdivisions, pas des têtes de note, et "
+     "`rhythm.tuplet_groups` cherche autant de notes que le chiffre le dit — "
+     "vrai d'un groupe homogène, faux dès que les valeurs se mélangent. Ces "
+     "groupes portent un crochet, qui énonce l'étendue ; le lire est inscrit "
+     "dans ROADMAP.md. D'ici là, décision prise en connaissance du coût : une "
+     "partition qui laisse un chiffre non lu n'est pas livrée, même si le "
+     "reste de ses mesures boucle."),
     ('polyphonie', "deux voix sont écrites sur la même portée",
      "Un divisi : une partie hampes en l'air, l'autre hampes en bas. La "
      "page contient plus de musique qu'une mesure n'en peut tenir ici, où "
@@ -77,6 +85,9 @@ def survey():
         piece = transcribe.transcribe(path, entry)
         counts = collections.Counter()
         for bar in piece['bars']:
+            if bar.get('droppedTuplets'):
+                counts['n-olet'] += 1
+                continue
             if bar['meter'] is None:
                 counts['métrique'] += 1
             elif not bar['events']:
@@ -91,8 +102,14 @@ def survey():
                 played = sum(Fraction(*e['duration']) for e in bar['events'])
                 whole = Fraction(bar['meter'][0] * 4, bar['meter'][1])
                 counts['silences' if played == whole else 'somme'] += 1
-        reason = 'aucune' if not piece['bars'] else max(
-            counts.items(), key=lambda kv: kv[1])[0]
+        # One unread ratio holds a score back on its own, whatever else its
+        # bars say, so it names the reason rather than competing on count.
+        if not piece['bars']:
+            reason = 'aucune'
+        elif counts['n-olet']:
+            reason = 'n-olet'
+        else:
+            reason = max(counts.items(), key=lambda kv: kv[1])[0]
         rows.append({**entry, 'reason': reason, 'bars': len(piece['bars']),
                      'drawn': piece['extraction'].get('pagesDrawn', 0),
                      'counts': dict(counts.most_common())})
@@ -110,14 +127,16 @@ def write(rows, total, shipped):
         f'{shipped} des {total} séquences du répertoire sont jouables dans '
         f'l’application. Voici les {len(rows)} autres, et pourquoi.',
         '',
-        '> Généré par `pipeline/held.py`, à partir de la lecture que le '
+        '> Généré par `pipeline/run/held.py`, à partir de la lecture que le '
         'pipeline fait aujourd’hui. Une liste écrite à la main deviendrait '
         'fausse dès que quelque chose se met à marcher.',
         '',
         'La raison donnée est celle qui bloque **le plus grand nombre de '
-        'mesures** de la séquence ; le détail par mesure suit chaque entrée. '
-        'Une séquence n’est publiée que si au moins une de ses mesures boucle '
-        'exactement *et* contient une frappe.',
+        'mesures** de la séquence, sauf un chiffre de n-olet non rattaché, '
+        'qui écarte à lui seul ; le détail par mesure suit chaque entrée. '
+        'Une séquence n’est publiée que si assez de ses mesures bouclent '
+        'exactement *et* contiennent une frappe — la part est `batch.FLOOR` — '
+        'et si aucun chiffre de n-olet n’y est resté sans ses notes.',
         '',
     ]
     for key, title, explanation in REASONS:

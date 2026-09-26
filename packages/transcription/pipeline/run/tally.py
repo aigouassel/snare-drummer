@@ -22,6 +22,10 @@ def score(piece):
     for bar in piece['bars']:
         if bar['unnamedSymbols'] or bar['readFrom'] != 'notation':
             continue
+        # A printed ratio that went unread: the bar may still close, by
+        # coincidence, and that is exactly the reading not to trust.
+        if bar.get('droppedTuplets'):
+            continue
         if bar['meter'] is None or not bar['events']:
             continue
         if not any(not e.get('rest') for e in bar['events']):

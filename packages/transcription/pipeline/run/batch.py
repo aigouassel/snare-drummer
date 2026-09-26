@@ -196,6 +196,17 @@ def run(chosen):
             skipped.append((entry['id'], 'aucune mesure trouvée'))
             _discard(entry['id'])
             continue
+        unread = sum(1 for b in piece['bars'] if b.get('droppedTuplets'))
+        if unread:
+            # A tuplet number the matcher could not place. The bars around it
+            # may be fine, and mostly are -- but the decision, taken with the
+            # cost in view, is that a score with a printed ratio left unread
+            # does not ship at all. What it costs is written in ROADMAP.md.
+            skipped.append((entry['id'],
+                            f"{unread} n-olet{'s' if unread > 1 else ''} "
+                            f"non rattaché{'s' if unread > 1 else ''}"))
+            _discard(entry['id'])
+            continue
         good = score(piece)
         if good < FLOOR * len(piece['bars']):
             # A suspect bar belongs in the app: it is shown marked, beside

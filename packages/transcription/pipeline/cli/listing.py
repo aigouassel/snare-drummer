@@ -145,7 +145,9 @@ def do_show(args):
     from fractions import Fraction
     counts = Counter()
     for bar in bars:
-        if bar['meter'] is None:
+        if bar.get('droppedTuplets'):
+            counts['n-olet non rattaché'] += 1
+        elif bar['meter'] is None:
             counts['sans métrique'] += 1
         elif not bar['events']:
             counts['vide'] += 1

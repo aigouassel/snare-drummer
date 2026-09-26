@@ -257,7 +257,7 @@ def reconstruct(named, bar, meter, context):
     flush()
 
     if not onsets or meter is None:
-        return [], unnamed, 'none', onsets
+        return [], unnamed, 'none', onsets, 0
 
     total = Fraction(meter[0] * 4, meter[1])
 
@@ -274,16 +274,22 @@ def reconstruct(named, bar, meter, context):
         lengths = [total]
 
     source = 'notation'
+    dropped = 0
     if all(length is not None for length in lengths):
-        for start, stop, ratio in rhythm.tuplet_groups(
-                context['tuplets'], onsets, context['spacing']):
+        groups = rhythm.tuplet_groups(context['tuplets'], onsets,
+                                      context['spacing'])
+        # A number the matcher could not place is not applied, and the bar
+        # says so. Its arithmetic will usually fail; when by coincidence it
+        # does not, the bar is still one whose printed ratio went unread.
+        dropped = len(context['tuplets']) - len(groups)
+        for start, stop, ratio in groups:
             for i in range(start, stop):
                 lengths[i] *= ratio
     if any(length is None for length in lengths):
         source = 'spacing'
         lengths = _by_spacing(onsets, bar, total)
         if lengths is None:
-            return [], unnamed, 'none', onsets
+            return [], unnamed, 'none', onsets, dropped
 
     # Last, because it outranks the others: how the durations were read hardly
     # matters for a bar whose contents this model cannot hold in the first
@@ -303,7 +309,7 @@ def reconstruct(named, bar, meter, context):
                 event['graces'] = grace
         events.append(event)
 
-    return events, unnamed, source, onsets
+    return events, unnamed, source, onsets, dropped
 
 
 def _head_widths(glyph, symbol, context):
@@ -983,7 +989,7 @@ def transcribe(path, entry):
                     bar['x1'] - bar['x0'] < COURTESY_STRIP * system['spacing']:
                 continue
 
-            events, unnamed, source, onsets = reconstruct(
+            events, unnamed, source, onsets, dropped = reconstruct(
                 named, bar, meter, context)
             # A stroke belongs to this bar if it was drawn inside it, on this
             # system's staff. Both tests are needed: systems share x, bars
@@ -1011,6 +1017,10 @@ def transcribe(path, entry):
                 'events': events,
                 'unnamedSymbols': unnamed,
                 'readFrom': source,
+                # Tuplet numbers printed in the bar that could not be matched
+                # to a run of notes. A score holding one is not shipped: see
+                # batch.py, and ROADMAP.md for why the matching falls short.
+                **({'droppedTuplets': dropped} if dropped else {}),
                 'at': {'page': page['page'], 'system': bar['system'],
                        'x0': bar['x0'], 'x1': bar['x1']},
             })
