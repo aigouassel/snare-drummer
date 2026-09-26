@@ -1,5 +1,6 @@
 import { type Circuit, type Source } from '@snare-drummer/core/piece'
 import data from './catalogue.json' with { type: 'json' }
+import { type Hit, searchWorks } from './search'
 
 /**
  * Everything the site lists, grouped the way the music is actually organised.
@@ -147,3 +148,15 @@ export const filter = (f: Filter): readonly Work[] => {
         w.sequences.some((s) => s.title.toLowerCase().includes(needle))),
   )
 }
+
+export { type Hit, searchWorks } from './search'
+
+/**
+ * The repertoire matching what somebody typed, best match first.
+ *
+ * `filter` above is an exact facet: given a corps, it gives that corps. This
+ * is the other question -- given some words, what did they mean -- and the
+ * library asks only this one. See `search.ts` for why they are not the same
+ * function.
+ */
+export const search = (query: string): readonly Hit[] => searchWorks(WORKS, query)
