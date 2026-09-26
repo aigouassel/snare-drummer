@@ -1,15 +1,18 @@
 """Transcribe named scores, the repertoire, or everything.
 
 Both this and `run/batch.py`'s own entry point go through `batch.run()`: which
-scores are worth shipping is one rule, and a rule implemented twice drifts."""
-import json
-import os
+scores are worth shipping is one rule, and a rule implemented twice drifts.
 
-from pipeline import paths, transcribe as transcriber
-from pipeline.run import batch
+`batch` is imported inside the command rather than beside this docstring. It
+pulls in the whole reading half of the package, and the CLI loads every
+subcommand's module to build its parser -- so a module-level import here is
+paid by `list`, which needs nothing but a JSON file. It was: listing what the
+catalogue holds failed outright without pymupdf installed."""
+from pipeline.corpus import catalogue
+
 
 def do_transcribe(args):
-    _data, entries = batch.sequences(repertoire=args.repertoire)
+    _data, entries = catalogue.sequences(repertoire=args.repertoire)
     if args.repertoire or args.all:
         chosen = entries
     elif args.ids:
@@ -20,4 +23,7 @@ def do_transcribe(args):
         chosen = [by_id[i] for i in args.ids]
     else:
         raise SystemExit('donner des ids, --repertoire ou --all')
+
+    from pipeline.run import batch
+
     batch.run(chosen)

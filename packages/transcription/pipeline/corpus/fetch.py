@@ -11,7 +11,7 @@ be put back beside its siblings without anybody retyping anything.
 That metadata is also why the PDF stays disposable: everything needed to find
 it again is recorded in the piece.
 
-    python3 fetch.py 2019-circus-1
+    python3 -m pipeline.corpus.fetch 2019-circus-1
     python3 -m pipeline.corpus.fetch --search "blue devils 2019"
 """
 import argparse
@@ -21,14 +21,9 @@ import sys
 import urllib.request
 
 from pipeline import paths
+from pipeline.corpus import catalogue
 
-CATALOGUE = paths.CATALOGUE
 WORK = paths.WORK
-
-
-def catalogue():
-    with open(CATALOGUE, encoding='utf-8') as f:
-        return json.load(f)
 
 
 def main():
@@ -37,13 +32,7 @@ def main():
     ap.add_argument('--search', help='list matching entries instead of fetching')
     args = ap.parse_args()
 
-    data = catalogue()
-    # Flatten once: every sequence, carrying the work it came from.
-    entries = [
-        {**sequence, 'workId': work['id'], 'corps': work['corps'],
-         'circuit': work['circuit'], **({'year': work['year']} if work.get('year') else {})}
-        for work in data['works'] for sequence in work['sequences']
-    ]
+    _data, entries = catalogue.sequences()
 
     if args.search:
         needle = args.search.lower()
@@ -71,8 +60,6 @@ def main():
         f.write(body)
 
     meta = dict(entry)
-    meta['listedAt'] = data['source']
-    meta['read'] = data['read']
     with open(os.path.join(WORK, f"{entry['id']}.meta.json"), 'w', encoding='utf-8') as f:
         json.dump(meta, f, indent=1, ensure_ascii=False)
 

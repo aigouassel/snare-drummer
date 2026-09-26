@@ -28,14 +28,22 @@ Two rules follow, and everything here obeys them:
 Run everything as a module from this directory, with the pipeline's own venv:
 
 ```bash
-python3 -m pipeline.cli list                     # every sequence, and what came of it
-python3 -m pipeline.cli list --repertoire        # only what the app ships from
-python3 -m pipeline.cli list --held              # what is not shipped
-python3 -m pipeline.cli list --family Ash        # one engraving family
-python3 -m pipeline.cli show 2019-intro          # one score, bar by reason
-python3 -m pipeline.cli transcribe 2019-intro    # one score; manifest updated
-python3 -m pipeline.cli transcribe --repertoire  # the shipped repertoire
+PY=pipeline/.venv/bin/python
+
+$PY -m pipeline.cli list                     # every sequence, and what came of it
+$PY -m pipeline.cli list --repertoire        # only what the app ships from
+$PY -m pipeline.cli list --held              # what is not shipped
+$PY -m pipeline.cli list --family Ash        # one engraving family
+$PY -m pipeline.cli show 2019-intro          # one score, bar by reason
+$PY -m pipeline.cli transcribe 2019-intro    # one score; manifest updated
+$PY -m pipeline.cli transcribe --repertoire  # the shipped repertoire
 ```
+
+`list`, and `show` of a score already transcribed, read nothing but JSON: they
+run under a plain `python3` with none of this installed, because the modules
+that open a PDF are imported where the reading happens rather than at the top of
+the file. That is worth keeping — it broke once, and listing what the catalogue
+holds died on a missing `pymupdf`.
 
 `list` is instant: it reads the transcriptions already on disk. How a score is
 engraved is a property of its PDF, so for a score that has never been read the
@@ -51,9 +59,9 @@ on being served looking perfectly well.
 ### Measuring a change
 
 ```bash
-python3 -m pipeline.run.batch --sample 80    # a fixed spread across the catalogue
-python3 -m pipeline.run.batch --repertoire   # everything the app ships
-python3 -m pipeline.run.held                 # regenerate HELD-BACK.md
+$PY -m pipeline.run.batch --sample 80    # a fixed spread across the catalogue
+$PY -m pipeline.run.batch --repertoire   # everything the app ships
+$PY -m pipeline.run.held                 # regenerate HELD-BACK.md
 ```
 
 `--sample` takes `--seed` (default 7) so the same eighty scores come back every
@@ -81,8 +89,11 @@ pipeline/
     tables/           ash.json, maestro.json, opus.json, …
   rhythm/           durations, as exact fractions of a beat
   corpus/           the catalogue, and the PDFs it points at
+    catalogue.py      the listing, flattened to sequences
+    fetch.py          one PDF, by catalogue id
   run/              reading many at once
     batch.py          the engine, and the totals
+    tally.py          counting a piece already read — no PDF, no pymupdf
     held.py           generates HELD-BACK.md
 ```
 

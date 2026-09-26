@@ -8,8 +8,9 @@ tell, and `--probe` is there for when you do want them read."""
 import json
 import os
 
-from pipeline import paths, transcribe as transcriber
-from pipeline.run import batch
+from pipeline import paths
+from pipeline.corpus import catalogue
+from pipeline.run.tally import score
 
 WIDTH = 42
 
@@ -17,18 +18,18 @@ WIDTH = 42
 def _shipped():
     """What `src/pieces/` holds, by sequence id: families, bars, playable."""
     out = {}
-    if not os.path.isdir(batch.PIECES):
+    if not os.path.isdir(paths.PIECES):
         return out
-    for name in sorted(os.listdir(batch.PIECES)):
+    for name in sorted(os.listdir(paths.PIECES)):
         if not name.endswith('.json'):
             continue
-        with open(os.path.join(batch.PIECES, name), encoding='utf-8') as f:
+        with open(os.path.join(paths.PIECES, name), encoding='utf-8') as f:
             piece = json.load(f)
         out[name[:-5]] = {
             'families': piece.get('extraction', {}).get('families', []),
             'drawn': piece.get('extraction', {}).get('pagesDrawn', 0),
             'bars': len(piece['bars']),
-            'good': batch.score(piece),
+            'good': score(piece),
         }
     return out
 
@@ -41,7 +42,9 @@ def _probe(entry):
     reading. The PDF must already be in the corpus -- this will not fetch, so
     that a listing never turns into a download.
     """
-    path = os.path.join(batch.CORPUS, entry['id'] + '.pdf')
+    from pipeline import transcribe as transcriber  # the expensive half
+
+    path = os.path.join(paths.CORPUS, entry['id'] + '.pdf')
     if not os.path.exists(path):
         return None
     try:
@@ -52,7 +55,7 @@ def _probe(entry):
         'families': piece.get('extraction', {}).get('families', []),
         'drawn': piece.get('extraction', {}).get('pagesDrawn', 0),
         'bars': len(piece['bars']),
-        'good': batch.score(piece),
+        'good': score(piece),
     }
 
 
@@ -65,7 +68,7 @@ def _format(info):
 
 
 def do_list(args):
-    _data, entries = batch.sequences(repertoire=args.repertoire)
+    _data, entries = catalogue.sequences(repertoire=args.repertoire)
     shipped = _shipped()
     rows = []
 
@@ -106,26 +109,28 @@ def do_list(args):
 
 
 def do_show(args):
-    _data, entries = batch.sequences()
+    _data, entries = catalogue.sequences()
     entry = next((e for e in entries if e['id'] == args.id), None)
     if entry is None:
         raise SystemExit(f"inconnu: {args.id}")
 
-    path = os.path.join(batch.PIECES, args.id + '.json')
+    path = os.path.join(paths.PIECES, args.id + '.json')
     if os.path.exists(path):
         with open(path, encoding='utf-8') as f:
             piece = json.load(f)
         state = 'livrée'
     else:
-        pdf = os.path.join(batch.CORPUS, args.id + '.pdf')
+        pdf = os.path.join(paths.CORPUS, args.id + '.pdf')
         if not os.path.exists(pdf):
             raise SystemExit(f"{args.id}: pas dans le corpus, "
                              f"`transcribe {args.id}` la télécharge")
+        from pipeline import transcribe as transcriber  # the expensive half
+
         piece = transcriber.transcribe(pdf, entry)
         state = 'non livrée'
 
     bars = piece['bars']
-    good = batch.score(piece)
+    good = score(piece)
     extraction = piece.get('extraction', {})
     print(f"{args.id} — {state}")
     print(f"  {entry.get('corps', '?')} · {entry.get('year', '?')}")
