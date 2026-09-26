@@ -24,7 +24,7 @@ import random
 import sys
 import time
 import urllib.request
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from fractions import Fraction
 
 import transcribe
@@ -33,6 +33,50 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CATALOGUE = os.path.join(HERE, '..', '..', 'catalogue', 'src', 'catalogue.json')
 CORPUS = os.path.join(HERE, '..', 'work', 'corpus')
 PIECES = os.path.join(HERE, '..', 'src', 'pieces')
+
+# The share of a piece that must verify before it is worth shipping. Zero was
+# the rule at first -- one good bar among any number -- and it let through a
+# score of 118 bars holding a single playable one, which is a catalogue entry
+# with a staff drawn under it rather than something anyone can practise.
+#
+# Measured over the 117 pieces the repertoire then held, the proportions run
+# continuously up from 2.7% and that score sat alone at 0.8%, with nothing
+# between. The floor is placed in that gap rather than at a round number, and
+# it is a share and not a count on purpose: one good bar out of nine is a page
+# a player can still use, one out of a hundred and eighteen is not.
+WORKERS = max(1, (os.cpu_count() or 4) - 1)
+
+FLOOR = 0.02
+
+
+def _read(job):
+    """Transcribe one score in a worker, returning either it or why not.
+
+    An exception must come back as a value rather than kill the pool: one
+    unreadable score out of a hundred is a line in the report, not a run
+    thrown away.
+    """
+    path, entry = job
+    if not isinstance(path, str):
+        return None, f'telechargement: {str(path)[:40]}'
+    try:
+        return transcribe.transcribe(path, entry), None
+    except Exception as exc:
+        return None, f'{type(exc).__name__}: {str(exc)[:40]}'
+
+
+def _discard(piece_id):
+    """Forget a piece that no longer qualifies.
+
+    The manifest is built from whatever `src/pieces/` happens to hold, so a
+    score that stops verifying keeps its last good file and goes on being
+    served. That is not hypothetical: `training-day` was played from a
+    transcription older than the code that had produced it, and looked fine.
+    A piece left behind is worse than one missing, because nothing says so.
+    """
+    stale = os.path.join(PIECES, piece_id + '.json')
+    if os.path.exists(stale):
+        os.remove(stale)
 
 AGENT = 'snare-drummer/0.1'
 PAUSE = 0.3          # between requests, because this is someone else's server
@@ -151,36 +195,65 @@ def main():
     else:
         parser.error('donner des ids, --sample N, --repertoire ou --all')
 
+    return run(chosen)
+
+
+def refresh_manifest():
+    """Rewrite the manifest from what `src/pieces/` actually holds.
+
+    The app imports this list, so it is the app's view of the library. It is
+    derived from the directory rather than from the run that just happened:
+    a run of one score must still produce a manifest that names the other
+    hundred and fifteen, and a score that has just been discarded must
+    disappear from it in the same breath.
+    """
+    kept = sorted(os.listdir(PIECES))
+    ids = [name[:-5] for name in kept if name.endswith('.json')]
+    with open(os.path.join(PIECES, 'index.ts'), 'w', encoding='utf-8') as f:
+        f.write(manifest(ids))
+    return ids
+
+
+def run(chosen):
+    """Transcribe these sequences, write what verified, report the totals."""
     os.makedirs(CORPUS, exist_ok=True)
     os.makedirs(PIECES, exist_ok=True)
 
     with ThreadPoolExecutor(max_workers=4) as pool:
         paths = list(pool.map(fetch, chosen))
 
+    # Reading a score is arithmetic, not waiting, so it needs cores and not
+    # threads -- and separate processes rather than shared ones, because the
+    # readers memoise font attribution per document and nothing here was
+    # written to be entered twice at once. `map` keeps the order of `chosen`,
+    # so a run remains reproducible and `--sample --seed` still means one
+    # fixed sample.
+    with ProcessPoolExecutor(max_workers=WORKERS) as pool:
+        results = list(pool.map(_read, zip(paths, chosen)))
+
     written, skipped, bars_total, bars_trusted = [], [], 0, 0
-    for entry, path in zip(chosen, paths):
-        if not isinstance(path, str):
-            skipped.append((entry['id'], f'telechargement: {str(path)[:40]}'))
-            continue
-        try:
-            piece = transcribe.transcribe(path, entry)
-        except Exception as exc:
-            skipped.append((entry['id'], f'{type(exc).__name__}: {str(exc)[:40]}'))
+    for entry, (piece, failure) in zip(chosen, results):
+        if failure is not None:
+            skipped.append((entry['id'], failure))
+            if not failure.startswith('telechargement'):
+                _discard(entry['id'])
             continue
         if not piece['bars']:
             # Nothing was read at all. A piece with no bars has nothing to
             # show and nothing to flag, so it is left out and said so.
             skipped.append((entry['id'], 'aucune mesure trouvée'))
+            _discard(entry['id'])
             continue
         good = score(piece)
-        if good == 0:
+        if good < FLOOR * len(piece['bars']):
             # A suspect bar belongs in the app: it is shown marked, beside
-            # the bars around it that can be trusted. A piece where *nothing*
-            # verified has no such neighbours -- there is nothing to play and
-            # nothing to compare against -- so it is left out rather than
-            # shipped as a score that cannot be believed anywhere.
+            # the bars around it that can be trusted. A piece where almost
+            # nothing verified has no such neighbours -- there is nothing to
+            # play and nothing to compare against -- so it is left out rather
+            # than shipped as a score that cannot be believed anywhere.
             skipped.append((entry['id'],
-                            f"0/{len(piece['bars'])} mesures jouables"))
+                            f"{good}/{len(piece['bars'])} mesures jouables"))
+            _discard(entry['id'])
             continue
         with open(os.path.join(PIECES, entry['id'] + '.json'), 'w',
                   encoding='utf-8') as f:
@@ -189,10 +262,7 @@ def main():
         bars_total += len(piece['bars'])
         bars_trusted += good
 
-    kept = sorted(os.listdir(PIECES))
-    ids = [name[:-5] for name in kept if name.endswith('.json')]
-    with open(os.path.join(PIECES, 'index.ts'), 'w', encoding='utf-8') as f:
-        f.write(manifest(ids))
+    ids = refresh_manifest()
 
     written.sort(key=lambda r: -(r[1] / r[2]))
     for piece_id, good, total in written[:10]:
