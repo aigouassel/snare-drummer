@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
 import {
-  type Work, LISTED_COUNT, SEQUENCE_COUNT, WORKS, corpsList, filter, workTitle,
-  years,
+  type Work, LISTED_COUNT, SEQUENCE_COUNT, WORKS, findSequence, searchWorks,
+  workTitle,
 } from '@snare-drummer/catalogue'
-import { type Circuit } from '@snare-drummer/core/piece'
 import { TRANSCRIBED, TRANSCRIBED_WORKS } from '@snare-drummer/transcription'
 
 /**
@@ -25,11 +24,26 @@ import { TRANSCRIBED, TRANSCRIBED_WORKS } from '@snare-drummer/transcription'
  * The count still says how many were set aside, because a library that
  * quietly shrank would misrepresent the catalogue.
  */
-/** Works holding at least one sequence that can be played. */
-const PLAYABLE_WORKS = WORKS.filter((w) => TRANSCRIBED_WORKS.has(w.id)).length
+/** Works holding at least one sequence that can be played.
+ *
+ *  The search runs over these rather than over the whole repertoire and being
+ *  narrowed afterwards. It decides one thing globally -- that an approximate
+ *  match is withheld while an exact one exists -- and deciding it over shows
+ *  the library does not list would withhold the best answer it has on account
+ *  of a row nobody can see. */
+const PLAYABLE = WORKS.filter((w) => TRANSCRIBED_WORKS.has(w.id))
 
 /** Sequences of the repertoire the pipeline could not read. See HELD-BACK.md. */
 const HELD_BACK = SEQUENCE_COUNT - TRANSCRIBED.size
+
+/** The passage a search matched, named, or nothing if the show's own name did.
+ *
+ *  A held-back passage is not named: it matched, but it cannot be opened, and
+ *  pointing at it would promise something the library does not offer. */
+const matchedTitle = (id: string | null): string | null => {
+  if (id === null || !TRANSCRIBED.has(id)) return null
+  return findSequence(id)?.sequence.title ?? null
+}
 
 /** How many of a work's passages can actually be played. */
 const playableCount = (work: Work) =>
@@ -40,27 +54,20 @@ export const Library = ({ selected, onSelect }: {
   onSelect: (work: Work) => void
 }) => {
   const [text, setText] = useState('')
-  const [circuit, setCircuit] = useState<Circuit | ''>('')
-  const [corps, setCorps] = useState('')
-  const [year, setYear] = useState('')
 
-  const works = useMemo(
-    () =>
-      filter({
-        ...(text ? { text } : {}),
-        ...(circuit ? { circuit } : {}),
-        ...(corps ? { corps } : {}),
-        ...(year ? { year: Number(year) } : {}),
-      }).filter((w) => TRANSCRIBED_WORKS.has(w.id)),
-    [text, circuit, corps, year],
-  )
+  const hits = useMemo(() => searchWorks(PLAYABLE, text), [text])
+
+  /* A search that had to fall back on edit distance says so. The alternative
+     is presenting a guess with the same face as a fact, which is the failure
+     this whole project is built to avoid. */
+  const approximate = text.trim() !== '' && hits[0]?.exact === false
 
   return (
     <aside className="library">
       <header>
         <h1>snare drummer</h1>
         <div className="count">
-          {works.length} / {PLAYABLE_WORKS} morceaux · {TRANSCRIBED.size}{' '}
+          {hits.length} / {PLAYABLE.length} morceaux · {TRANSCRIBED.size}{' '}
           séquences jouables
         </div>
         {/* The library is each corps at its most recent season, and only the
@@ -73,35 +80,31 @@ export const Library = ({ selected, onSelect }: {
         </div>
       </header>
 
+      {/* One field, and no dropdowns. Each of the three said one thing about a
+          show, and all three things are in the text of the entry: the search
+          now reads the circuit too, which it never did while that was a
+          dropdown's job. The words may come from different fields -- `bd 2019`,
+          `dci snare break` -- and the placeholder says so, because a field that
+          accepts more than it looks like it does gets used for less. */}
       <div className="filters">
         <input
-          placeholder="chercher un ensemble, une année, une séquence…"
+          type="search"
+          autoComplete="off"
+          spellCheck={false}
+          aria-label="chercher dans la bibliothèque"
+          placeholder="blue devils 2019 · dci · snare break · bd…"
           value={text}
           onChange={(e) => setText(e.target.value)}
         />
-        <select value={circuit} onChange={(e) => setCircuit(e.target.value as Circuit | '')}>
-          <option value="">tous les circuits</option>
-          <option value="DCI">DCI</option>
-          <option value="WGI">WGI</option>
-          <option value="DCA">DCA</option>
-          <option value="other">autres</option>
-        </select>
-        <select value={corps} onChange={(e) => setCorps(e.target.value)}>
-          <option value="">tous les ensembles</option>
-          {corpsList().map((name) => (
-            <option key={name} value={name}>{name}</option>
-          ))}
-        </select>
-        <select value={year} onChange={(e) => setYear(e.target.value)}>
-          <option value="">toutes les années</option>
-          {[...years()].reverse().map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+        {approximate && (
+          <div className="note">
+            rien ne correspond exactement — voici le plus proche
+          </div>
+        )}
       </div>
 
       <div className="entries">
-        {works.slice(0, 300).map((work) => (
+        {hits.map(({ work, matched }) => (
           <button
             key={work.id}
             className="entry"
@@ -112,15 +115,14 @@ export const Library = ({ selected, onSelect }: {
             <div className="meta">
               {work.circuit} · {playableCount(work)} séquence
               {playableCount(work) > 1 ? 's' : ''}
+              {/* Why this row came back, when it was a passage that matched and
+                  not the show's own name. Without it, searching `circus` returns
+                  `Blue Devils 2019` and the row looks like a stray. */}
+              {matchedTitle(matched) && <> · {matchedTitle(matched)}</>}
             </div>
           </button>
         ))}
-        {works.length > 300 && (
-          <div className="empty" style={{ padding: '12px 16px' }}>
-            … et {works.length - 300} autres. Affine la recherche.
-          </div>
-        )}
-        {works.length === 0 && (
+        {hits.length === 0 && (
           <div className="empty" style={{ padding: '20px 16px' }}>Rien ne correspond.</div>
         )}
       </div>
