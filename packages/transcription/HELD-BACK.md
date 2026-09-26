@@ -1,41 +1,21 @@
 # Ce qui n’est pas retranscrit
 
-112 des 128 séquences du répertoire sont jouables dans l’application. Voici les 16 autres, et pourquoi.
+117 des 128 séquences du répertoire sont jouables dans l’application. Voici les 11 autres, et pourquoi.
 
 > Généré par `pipeline/held.py`, à partir de la lecture que le pipeline fait aujourd’hui. Une liste écrite à la main deviendrait fausse dès que quelque chose se met à marcher.
 
 La raison donnée est celle qui bloque **le plus grand nombre de mesures** de la séquence ; le détail par mesure suit chaque entrée. Une séquence n’est publiée que si au moins une de ses mesures boucle exactement *et* contient une frappe.
 
-## Aucun chiffrage de mesure n'a été lu — 6 séquences
+## Aucun chiffrage de mesure n'a été lu — 2 séquences
 
 Le pipeline ne devine jamais une métrique. Ces partitions n'en impriment pas au début, ou l'impriment dans une fonte qu'aucun vocabulaire ne nomme — et sans métrique, une mesure n'a rien contre quoi boucler.
 
-- **Blue Devils B 2017 — Opening Snare Break** (`2017-opening-snare-break`) · musique tracée en courbes  
-  6 mesures lues : 6 métrique  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2017-Opening-Snare-Break.pdf)
-- **Center Grove HS 2017 — Movement 3** (`2017-movement-3-5`)  
-  26 mesures lues : 26 métrique  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2017-Movement-3-5.pdf)
-- **Dartmouth HS 2014 — Solo** (`2014-solo-1`)  
-  1 mesure lue : 1 métrique  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2014-Solo-1.pdf)
 - **Santa Clara Vanguard (SCV) 2019 — Intro** (`2019-intro`)  
   47 mesures lues : 47 métrique  
   [source](https://lothype.com/wp-content/uploads/2020/01/2019-Intro.pdf)
 - **Santa Clara Vanguard (SCV) 2019 — Snare Break** (`2019-snare-break-1`)  
   9 mesures lues : 9 métrique  
   [source](https://lothype.com/wp-content/uploads/2020/01/2019-Snare-Break-1.pdf)
-- **Star of Indiana 1993 — Drum Break** (`1993-drum-break`)  
-  16 mesures lues : 16 métrique  
-  [source](https://lothype.com/wp-content/uploads/2020/01/1993-Drum-Break.pdf)
-
-## Les notes n'ont pas été lues — 1 séquence
-
-Les portées et les barres sont trouvées, mais rien de rythmique ne l'est. En général une police de gravure que personne n'a nommée : une famille inconnue reste invisible, puisque l'attribution par forme ne compare qu'aux vocabulaires existants.
-
-- **Great Lakes Percussion 2004 — Feature** (`2004-feature`)  
-  20 mesures lues : 16 vide, 4 somme  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2004-Feature.pdf)
 
 ## Le rythme n'a pas pu être lu dans la notation — 2 séquences
 
@@ -77,10 +57,10 @@ Ni portée ni barre de mesure : soit la page dessine ses lignes d'une façon que
 - **Cadets Winter Percussion 2016 — Feature** (`2016-feature-7`)  
   0 mesure lue  
   [source](https://lothype.com/wp-content/uploads/2020/01/2016-Feature-7.pdf)
+- **Dartmouth HS 2014 — Solo** (`2014-solo-1`)  
+  0 mesure lue  
+  [source](https://lothype.com/wp-content/uploads/2020/01/2014-Solo-1.pdf)
 - **Matrix 2016 — Snare Break** (`2016-snare-break-4`) · musique tracée en courbes  
   0 mesure lue  
   [source](https://lothype.com/wp-content/uploads/2020/01/2016-Snare-Break-4.pdf)
-- **Oregon Crusaders 2017 — Movement 2 Break** (`2017-movement-2-break`) · musique tracée en courbes  
-  0 mesure lue  
-  [source](https://lothype.com/wp-content/uploads/2020/01/2017-Movement-2-Break.pdf)
 
