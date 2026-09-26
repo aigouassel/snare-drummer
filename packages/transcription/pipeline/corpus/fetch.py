@@ -12,7 +12,7 @@ That metadata is also why the PDF stays disposable: everything needed to find
 it again is recorded in the piece.
 
     python3 fetch.py 2019-circus-1
-    python3 fetch.py --search "blue devils 2019"
+    python3 -m pipeline.corpus.fetch --search "blue devils 2019"
 """
 import argparse
 import json
@@ -20,9 +20,10 @@ import os
 import sys
 import urllib.request
 
-HERE = os.path.dirname(__file__)
-CATALOGUE = os.path.join(HERE, '..', '..', 'catalogue', 'src', 'catalogue.json')
-WORK = os.path.join(HERE, '..', 'work')
+from pipeline import paths
+
+CATALOGUE = paths.CATALOGUE
+WORK = paths.WORK
 
 
 def catalogue():

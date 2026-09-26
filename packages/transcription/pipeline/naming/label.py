@@ -31,8 +31,9 @@ from fontTools.pens.recordingPen import RecordingPen
 
 import pymupdf
 
-import ink
-from fonts import _encoding, _flatten, _glyphset, base_encoding
+from pipeline.ink import ink
+from pipeline.ink.fonts import (_encoding, _flatten, _glyphset,
+                              base_encoding)
 
 TILE = 90          # points per tile on the sheet
 COLUMNS = 10

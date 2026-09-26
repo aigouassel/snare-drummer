@@ -14,12 +14,11 @@ import os
 import sys
 from fractions import Fraction
 
-import batch
-import ink
-import transcribe
+from pipeline import paths, transcribe
+from pipeline.ink import ink
+from pipeline.run import batch
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, '..', 'HELD-BACK.md')
+OUT = paths.HELD_BACK
 
 # The reasons a bar can fail, most specific first: a bar with no metre cannot
 # be judged on anything else, a bar with nothing in it has no durations to

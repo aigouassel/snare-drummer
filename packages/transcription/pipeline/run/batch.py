@@ -27,12 +27,11 @@ import urllib.request
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from fractions import Fraction
 
-import transcribe
+from pipeline import paths, transcribe
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-CATALOGUE = os.path.join(HERE, '..', '..', 'catalogue', 'src', 'catalogue.json')
-CORPUS = os.path.join(HERE, '..', 'work', 'corpus')
-PIECES = os.path.join(HERE, '..', 'src', 'pieces')
+CATALOGUE = paths.CATALOGUE
+CORPUS = paths.CORPUS
+PIECES = paths.PIECES
 
 # The share of a piece that must verify before it is worth shipping. Zero was
 # the rule at first -- one good bar among any number -- and it let through a

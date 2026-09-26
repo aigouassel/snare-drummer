@@ -32,9 +32,10 @@ keeps two symbols of similar outline but different proportions apart.
 import json
 import os
 
-from fonts import hamming
+from pipeline import paths
+from pipeline.ink.fonts import hamming
 
-TABLE_DIR = os.path.join(os.path.dirname(__file__), 'vocabulary')
+TABLE_DIR = paths.TABLES
 
 MAX_DISTANCE = 16      # bits out of 256; true matches measured at 0-6
 MAX_ASPECT_DRIFT = 0.08

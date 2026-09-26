@@ -30,12 +30,12 @@ import sys
 from collections import defaultdict
 from fractions import Fraction
 
-import ink
-import layout
-import rhythm
-import text
-from fonts import MUSIC_FAMILIES
-from vocabulary import (MUSICAL, RHYTHMIC, Vocabulary, attribute, corroborate,
+from pipeline.ink import ink
+from pipeline.layout import layout
+from pipeline.naming import text
+from pipeline.rhythm import rhythm
+from pipeline.ink.fonts import MUSIC_FAMILIES
+from pipeline.naming.vocabulary import (MUSICAL, RHYTHMIC, Vocabulary, attribute, corroborate,
                         role)
 
 # Durations an engraver actually writes, as a fraction of a quarter-note beat.

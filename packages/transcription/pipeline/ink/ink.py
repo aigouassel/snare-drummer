@@ -31,7 +31,7 @@ from collections import defaultdict
 
 import pymupdf
 
-from fonts import font_table, outline
+from pipeline.ink.fonts import font_table, outline
 
 TOKEN = re.compile(rb"""
       (?P<hex><[0-9A-Fa-f\s]*>)
