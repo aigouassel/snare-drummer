@@ -91,6 +91,21 @@ lieu d'être remplies (une seule partition sur 203), fioritures mal classées
 (MuseScore les grave à 0,700 de la taille pleine, Opus à 0,602, les deux du bon
 côté du seuil).
 
+Une troisième cause est **diagnostiquée mais pas corrigée**, et le diagnostic
+vaut d'être gardé : `rhythm.tuplet_groups` cherche exactement `count` onsets
+consécutifs sous un chiffre de n-olet. Or un chiffre compte des **subdivisions,
+pas des têtes de note** — « 9 » veut dire neuf unités dans le temps de huit, et
+si le groupe mélange les valeurs, le nombre de têtes n'a plus rien à voir avec
+le chiffre. L'illusion tient à ce que la plupart des groupes sont homogènes.
+Mesuré : 123 mesures échouent avec au moins un chiffre lâché, dont 54 pour
+« 3 demandées, 2 restantes ».
+
+La page dit pourtant l'étendue quand elle trace un **crochet**, ce qui est le
+cas de ces groupes-là : le crochet énonce ce que rien d'autre n'énonce.
+`CLAUDE.md` a raison de dire que la plupart des n-olets ligaturés n'en portent
+pas — mais ceux qui échouent en portent. Lire le crochet est une capacité
+nouvelle dans `ink`, pas une réparation, d'où son inscription ici.
+
 Une deuxième cause a été identifiée et **écartée du compte plutôt que corrigée** :
 69 mesures sont des divisi, deux parties écrites sur une même portée, l'une
 hampes en l'air et l'autre hampes en bas. Leurs durées ne sont pas fausses ; le
