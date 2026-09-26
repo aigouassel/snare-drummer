@@ -18,7 +18,7 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > fichier.
 
 > État au 26 septembre 2026 : 116 des 128 séquences du répertoire sont
-> jouables, 6 132 mesures dont 3 662 jouables (59,7 %). Les barres de trémolo
+> jouables, 6 132 mesures dont 3 661 jouables (59,7 %). Les barres de trémolo
 > étaient comptées comme des ligatures, ce qui divisait leur note par deux :
 > 6 619 traits dans 47 partitions, +177 mesures jouables une fois lues comme
 > les roulements qu'elles sont. Le détail de ce qui
@@ -75,7 +75,7 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**1 058 mesures (17,3 %) dont les durées ne bouclent pas.** C'était 44,5 % en
+**991 mesures (16,2 %) dont les durées ne bouclent pas.** C'était 44,5 % en
 début de parcours ; seize causes distinctes ont été trouvées et corrigées,
 aucune deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
 
@@ -90,6 +90,16 @@ manquée (les mesures fautives ne sont pas plus larges), ligatures tracées au
 lieu d'être remplies (une seule partition sur 203), fioritures mal classées
 (MuseScore les grave à 0,700 de la taille pleine, Opus à 0,602, les deux du bon
 côté du seuil).
+
+Une deuxième cause a été identifiée et **écartée du compte plutôt que corrigée** :
+69 mesures sont des divisi, deux parties écrites sur une même portée, l'une
+hampes en l'air et l'autre hampes en bas. Leurs durées ne sont pas fausses ; le
+modèle ne sait pas tenir deux voix dans une mesure, alors les deux sont lues
+dans le même flux et la somme double. Elles portent maintenant
+`readFrom: 'polyphonic'` et sortent de M1, où elles auraient envoyé quelqu'un
+réparer ce qui n'est pas cassé. Les rendre jouables demanderait deux voix dans
+`packages/core`, le lecteur et l'affichage : c'est une fonctionnalité, pas une
+réparation, et elle n'est pas engagée.
 
 La méthode qui marche : prendre **une** mesure fautive, la découper de son PDF
 avec ses coordonnées (`bar.py` dans le bac à sable le fait), et comparer ce que
@@ -106,12 +116,13 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 3 662 (59,7 %) |
-| **somme fausse** | **1 058 (17,3 %)** |
+| jouables | 3 661 (59,7 %) |
+| **somme fausse** | **991 (16,2 %)** |
 | que des silences (vérifiées, muettes) | 886 (14,4 %) |
 | sans métrique | 314 (5,1 %) |
 | vides | 84 (1,4 %) |
 | lues à l'espacement | 75 (1,2 %) |
+| deux voix sur la portée | 69 (1,1 %) |
 | symbole inconnu | 53 (0,9 %) |
 
 Ces sept lignes comptent les mesures **livrées**, comme `bars_total` dans

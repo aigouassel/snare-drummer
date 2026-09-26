@@ -48,6 +48,14 @@ export type Concern =
   | { kind: 'meterUnknown' }
   /** The durations were measured off the page, not read from the notation. */
   | { kind: 'spacingOnly' }
+  /**
+   * Two parts were written on the one staff, one stemmed up and one down.
+   *
+   * Not a misreading: the page holds more music than a bar can, since a bar
+   * carries a single stream of events. The reading is refused because it would
+   * be the two voices run together, which is neither part.
+   */
+  | { kind: 'polyphonic' }
 
 /**
  * Playable as read, or shown with its reasons.

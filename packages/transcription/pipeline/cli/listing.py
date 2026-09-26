@@ -151,6 +151,8 @@ def do_show(args):
             counts['vide'] += 1
         elif bar['unnamedSymbols']:
             counts['symbole inconnu'] += 1
+        elif bar['readFrom'] == 'polyphonic':
+            counts['deux voix sur la portée'] += 1
         elif bar['readFrom'] != 'notation':
             counts["lue à l'espacement"] += 1
         else:

@@ -22,10 +22,10 @@ Le pipeline ne devine jamais une métrique. Ces partitions n'en impriment pas au
 Les notes sont là, mais leurs hampes ou leurs ligatures ne se laissent pas mesurer, donc la mesure retombe sur l'espacement — une lecture trop faible pour être publiée.
 
 - **BYOS — Faded** (`faded`)  
-  26 mesures lues : 14 espacement, 7 somme, 5 inconnu  
+  26 mesures lues : 13 espacement, 7 polyphonie, 5 inconnu, 1 somme  
   [source](https://lothype.com/wp-content/uploads/2020/01/Faded.pdf)
 - **BYOS — Stainless Drum Set** (`stainless-drum-set`)  
-  33 mesures lues : 20 espacement, 5 inconnu, 5 somme, 3 vide  
+  33 mesures lues : 15 espacement, 5 inconnu, 5 somme, 5 polyphonie, 3 vide  
   [source](https://lothype.com/wp-content/uploads/2020/01/Stainless-Drum-Set.pdf)
 
 ## Des symboles n'ont pas pu être nommés — 1 séquence
@@ -33,7 +33,7 @@ Les notes sont là, mais leurs hampes ou leurs ligatures ne se laissent pas mesu
 Une forme sans étiquette rend sa mesure suspecte plutôt que d'être rapprochée de la plus proche, ce qui est la règle du projet.
 
 - **Keelan Tobia — The 10 Second Lick** (`the-10-second-lick`)  
-  3 mesures lues : 2 inconnu, 1 somme  
+  3 mesures lues : 2 inconnu, 1 polyphonie  
   [source](https://lothype.com/wp-content/uploads/2020/01/The-10-Second-Lick.pdf)
 
 ## Les durées ne bouclent pas — 3 séquences
@@ -55,7 +55,7 @@ Tout est lu, mais la somme d'une mesure ne fait pas sa métrique. Parfois c'est 
 La partition est vérifiable et muette : il n'y a rien à travailler.
 
 - **Cadets 2018 — Demonic Thesis** (`2018-demonic-thesis`) · musique tracée en courbes  
-  118 mesures lues : 52 silences, 45 vide, 21 somme  
+  118 mesures lues : 52 silences, 45 vide, 20 somme, 1 polyphonie  
   [source](https://lothype.com/wp-content/uploads/2020/01/2018-_Demonic-Thesis_.pdf)
 
 ## Aucune portée n'a été trouvée — 3 séquences

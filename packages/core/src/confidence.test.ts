@@ -111,3 +111,32 @@ describe('durations measured rather than read', () => {
     ).toBe(true)
   })
 })
+
+describe('two voices on one staff', () => {
+  it('refuses a divisi bar even when its two voices happen to close', () => {
+    // One does: five quarters in 5/4, a snare part and a bass part read into
+    // one stream. The arithmetic has nothing to object to, which is exactly
+    // why the reading has to say so itself.
+    const verdict = judge({
+      meter: [5, 4],
+      events: strokes(QUARTER, 5),
+      readFrom: 'polyphonic',
+    })
+    expect(verdict.trusted).toBe(false)
+    expect(verdict.trusted === false && verdict.concerns).toContainEqual({
+      kind: 'polyphonic',
+    })
+  })
+
+  it('says so as well as reporting the arithmetic, not instead of it', () => {
+    // A divisi usually sums to about twice its metre. Both facts are kept: the
+    // arithmetic is the evidence, the divisi is what it means.
+    const verdict = judge({
+      meter: [4, 4],
+      events: strokes(QUARTER, 8),
+      readFrom: 'polyphonic',
+    })
+    expect(verdict.trusted === false && verdict.concerns.map((c) => c.kind))
+      .toEqual(expect.arrayContaining(['polyphonic', 'arithmetic']))
+  })
+})

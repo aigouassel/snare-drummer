@@ -16,7 +16,7 @@ from fractions import Fraction
 
 from pipeline import paths, transcribe
 from pipeline.ink import ink
-from pipeline.run import batch
+from pipeline.corpus import catalogue
 
 OUT = paths.HELD_BACK
 
@@ -38,6 +38,13 @@ REASONS = [
      "Les notes sont là, mais leurs hampes ou leurs ligatures ne se "
      "laissent pas mesurer, donc la mesure retombe sur l'espacement — une "
      "lecture trop faible pour être publiée."),
+    ('polyphonie', "deux voix sont écrites sur la même portée",
+     "Un divisi : une partie hampes en l'air, l'autre hampes en bas. La "
+     "page contient plus de musique qu'une mesure n'en peut tenir ici, où "
+     "une mesure porte un seul flux d'événements. Ce n'est pas une lecture "
+     "ratée, c'est un modèle trop étroit — la lecture est refusée plutôt "
+     "que de livrer les deux voix confondues, qui ne sont ni l'une ni "
+     "l'autre."),
     ('inconnu', "des symboles n'ont pas pu être nommés",
      "Une forme sans étiquette rend sa mesure suspecte plutôt que d'être "
      "rapprochée de la plus proche, ce qui est la règle du projet."),
@@ -55,14 +62,14 @@ REASONS = [
 
 
 def survey():
-    _data, entries = batch.sequences(repertoire=True)
-    shipped = {name[:-5] for name in os.listdir(batch.PIECES)
+    _data, entries = catalogue.sequences(repertoire=True)
+    shipped = {name[:-5] for name in os.listdir(paths.PIECES)
                if name.endswith('.json')}
     rows = []
     for entry in entries:
         if entry['id'] in shipped:
             continue
-        path = os.path.join(batch.CORPUS, entry['id'] + '.pdf')
+        path = os.path.join(paths.CORPUS, entry['id'] + '.pdf')
         if not os.path.exists(path):
             rows.append({**entry, 'reason': 'aucune', 'bars': 0,
                          'drawn': 0, 'counts': {}})
@@ -76,6 +83,8 @@ def survey():
                 counts['vide'] += 1
             elif bar['unnamedSymbols']:
                 counts['inconnu'] += 1
+            elif bar['readFrom'] == 'polyphonic':
+                counts['polyphonie'] += 1
             elif bar['readFrom'] != 'notation':
                 counts['espacement'] += 1
             else:

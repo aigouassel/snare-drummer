@@ -49,7 +49,7 @@ export const judge = (input: {
   /** Symbols found inside this bar that the extractor could not name. */
   unnamedSymbols?: number
   /** Whether the durations were read from the notation or measured off it. */
-  readFrom?: 'notation' | 'spacing'
+  readFrom?: 'notation' | 'spacing' | 'polyphonic'
 }): Verdict => {
   const concerns: Concern[] = []
 
@@ -64,6 +64,14 @@ export const judge = (input: {
 
   if (input.readFrom === 'spacing') {
     concerns.push({ kind: 'spacingOnly' })
+  }
+
+  /* Before the arithmetic, and not instead of it: a divisi bar will also fail
+     to add up, and saying so twice is less use than saying the one thing that
+     explains the other. Both concerns are kept, because the arithmetic is
+     evidence and this is the reading of it. */
+  if (input.readFrom === 'polyphonic') {
+    concerns.push({ kind: 'polyphonic' })
   }
 
   if (input.meter === null) {
@@ -96,5 +104,7 @@ export const explain = (concern: Concern): string => {
       return 'aucune métrique connue, donc rien à vérifier'
     case 'spacingOnly':
       return 'durées mesurées à l’espacement, faute d’avoir pu lire les ligatures'
+    case 'polyphonic':
+      return 'deux voix écrites sur la même portée : la mesure en contient deux'
   }
 }

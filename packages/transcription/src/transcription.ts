@@ -34,7 +34,7 @@ type RawBar = {
   meter: [number, number] | null
   events: readonly RawEvent[]
   unnamedSymbols: number
-  readFrom?: 'notation' | 'spacing' | 'none'
+  readFrom?: 'notation' | 'spacing' | 'polyphonic' | 'none'
   at?: { page: number; system: number; x0: number; x1: number }
 }
 
@@ -81,6 +81,9 @@ const toBar = (raw: RawBar): Bar => {
       // 'none' means nothing was read at all, which the empty-bar signal
       // already covers; only a measured reading is its own concern.
       ...(raw.readFrom === 'spacing' ? { readFrom: 'spacing' as const } : {}),
+      ...(raw.readFrom === 'polyphonic'
+        ? { readFrom: 'polyphonic' as const }
+        : {}),
     }),
     ...(raw.at ? { at: raw.at } : {}),
   }

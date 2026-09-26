@@ -250,6 +250,22 @@ def stem_of(x, widths, y, candidates, spacing):
     return best
 
 
+def stem_direction(x, y, widths, candidates, spacing):
+    """Which way the stem of this notehead points, or None if it has none.
+
+    Read against the notehead itself and not against the staff's middle line.
+    A snare staff carries one pitch, so direction there says nothing about
+    where the note sits and everything about which voice it belongs to -- a
+    divisi is written as one part stemmed up and the other stemmed down. The
+    middle line would answer a different question and answer it wrongly for
+    every note engraved away from the centre.
+    """
+    stem = stem_of(x, widths, y, candidates, spacing)
+    if stem is None:
+        return None
+    return 'up' if (stem['y0'] + stem['y1']) / 2 > y else 'down'
+
+
 def on_stem(stem, page_beams, spacing):
     """How many beams cross a stem."""
     return sum(1 for b in page_beams

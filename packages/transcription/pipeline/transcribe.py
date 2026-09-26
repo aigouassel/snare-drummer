@@ -57,6 +57,22 @@ ZONES = {
 # A flam is one grace note, a drag two, a ruff three. There is no fourth.
 MAX_GRACES = 3
 
+# How many noteheads must be stemmed each way before a bar is read as a divisi
+# -- two parts written on one staff, one stemmed up and one stemmed down.
+#
+# A bar like that holds twice the music this model can represent: there is one
+# stream of events per bar, both voices are read into it, and the durations sum
+# to about twice the metre. The arithmetic refuses it, which is right, but it
+# refuses it as a duration fault, which is wrong -- and a bar filed under the
+# wrong cause is a bar somebody will try to fix where nothing is broken.
+#
+# Two each rather than one, because a single stem the other way is a stem read
+# off the wrong notehead. Measured over the corpus: 96 bars that fail carry
+# stems both ways, against one bar that closes. That one is a divisi too -- its
+# two voices happen to sum to the metre -- so the separation is not 5654 to 1,
+# it is clean.
+MIN_VOICE = 2
+
 # How many musical shapes a page has to draw before its outlines are read as
 # music at all. A handful of accidental matches among slurs and brackets is
 # not a score.
@@ -268,6 +284,12 @@ def reconstruct(named, bar, meter, context):
         lengths = _by_spacing(onsets, bar, total)
         if lengths is None:
             return [], unnamed, 'none', onsets
+
+    # Last, because it outranks the others: how the durations were read hardly
+    # matters for a bar whose contents this model cannot hold in the first
+    # place.
+    if _divisi(onsets, context):
+        source = 'polyphonic'
 
     events = []
     for (g, symbol), duration, grace in zip(onsets, lengths, graces):
@@ -694,6 +716,25 @@ def _by_spacing(onsets, bar, total):
     if span <= 0:
         return None
     return [snap(float(total) * gap / span)[0] for gap in gaps]
+
+
+def _divisi(onsets, context):
+    """Whether this bar is written in two voices, one stemmed each way.
+
+    Direction is read against each notehead, never against the staff's middle
+    line: a snare staff carries a single pitch, so where a note sits says
+    nothing and which way its stem points says everything.
+    """
+    sides = defaultdict(int)
+    for g, symbol in onsets:
+        if role(symbol) != 'notehead':
+            continue
+        side = rhythm.stem_direction(g['x'], g['y'],
+                                     _head_widths(g, symbol, context),
+                                     context['stems'], context['spacing'])
+        if side:
+            sides[side] += 1
+    return sides['up'] >= MIN_VOICE and sides['down'] >= MIN_VOICE
 
 
 def decorate(events, named, onsets, strokes=()):
