@@ -1,6 +1,6 @@
 # Ce qui n’est pas retranscrit
 
-117 des 128 séquences du répertoire sont jouables dans l’application. Voici les 11 autres, et pourquoi.
+116 des 128 séquences du répertoire sont jouables dans l’application. Voici les 12 autres, et pourquoi.
 
 > Généré par `pipeline/held.py`, à partir de la lecture que le pipeline fait aujourd’hui. Une liste écrite à la main deviendrait fausse dès que quelque chose se met à marcher.
 
@@ -49,6 +49,14 @@ Tout est lu, mais la somme d'une mesure ne fait pas sa métrique. Parfois c'est 
 - **Teal Sound 2011 — Movement 3** (`2011-movement-3-3`)  
   23 mesures lues : 18 somme, 5 vide  
   [source](https://lothype.com/wp-content/uploads/2020/01/2011-Movement-3-3.pdf)
+
+## Rien que des silences — 1 séquence
+
+La partition est vérifiable et muette : il n'y a rien à travailler.
+
+- **Cadets 2018 — Demonic Thesis** (`2018-demonic-thesis`) · musique tracée en courbes  
+  118 mesures lues : 52 silences, 45 vide, 21 somme  
+  [source](https://lothype.com/wp-content/uploads/2020/01/2018-_Demonic-Thesis_.pdf)
 
 ## Aucune portée n'a été trouvée — 3 séquences
 

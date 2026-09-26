@@ -17,8 +17,10 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > commit, dans le `README` ou dans `CLAUDE.md` ; le reste s'en va avec le
 > fichier.
 
-> État au 26 septembre 2026 : 117 des 128 séquences du répertoire sont
-> jouables, 6 250 mesures dont 3 486 jouables (55,8 %). Le détail de ce qui
+> État au 26 septembre 2026 : 116 des 128 séquences du répertoire sont
+> jouables, 6 132 mesures dont 3 485 jouables (56,8 %). Le taux monte de
+> 55,8 % en perdant une séquence : `2018-demonic-thesis` apportait 118 mesures
+> pour une seule jouable, et un plancher de livraison l'a écartée. Le détail de ce qui
 > est écarté vit dans [`packages/transcription/HELD-BACK.md`](packages/transcription/HELD-BACK.md),
 > qui est généré et ne peut pas vieillir.
 
@@ -72,7 +74,7 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**1 256 mesures (20,1 %) dont les durées ne bouclent pas.** C'était 44,5 % en
+**1 235 mesures (20,1 %) dont les durées ne bouclent pas.** C'était 44,5 % en
 début de parcours ; quinze causes distinctes ont été trouvées et corrigées,
 aucune deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
 
@@ -91,17 +93,17 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 3 486 (55,8 %) |
-| **somme fausse** | **1 256 (20,1 %)** |
-| que des silences (vérifiées, muettes) | 937 (15,0 %) |
-| sans métrique | 314 (5,0 %) |
-| vides | 129 (2,1 %) |
+| jouables | 3 485 (56,8 %) |
+| **somme fausse** | **1 235 (20,1 %)** |
+| que des silences (vérifiées, muettes) | 886 (14,4 %) |
+| sans métrique | 314 (5,1 %) |
+| vides | 84 (1,4 %) |
 | lues à l'espacement | 75 (1,2 %) |
-| symbole inconnu | 53 (0,8 %) |
+| symbole inconnu | 53 (0,9 %) |
 
 Ces sept lignes comptent les mesures **livrées**, comme `bars_total` dans
 `run/batch.py`, qui n'incrémente qu'après le `continue` écartant une pièce sans
-rien de jouable. Le même décompte étendu aux onze séquences écartées donne
+rien de jouable. Le même décompte étendu aux douze séquences écartées donne
 un autre total, juste aussi et portant le même nom.
 
 ---
@@ -144,7 +146,7 @@ Les options :
 
 ---
 
-## 4 · Les 11 séquences écartées
+## 4 · Les 12 séquences écartées
 
 ### A2 — Aucun chiffrage imprimé · 2 séquences · **tranché : elles restent dehors**
 
@@ -156,12 +158,17 @@ et on a choisi de ne pas ouvrir ce fichier pour deux partitions. Rien à faire
 ici : l'entrée ne survit que pour dire que c'est réglé, et part avec le
 fichier.
 
-### A5 — La police Helsinki de Sibelius · *livrée, à peine — pas écartée*
+### A5 — La police Helsinki de Sibelius · 1 séquence · **tranché : on ne la fera pas**
 
-`2018-demonic-thesis` est publiée depuis que les empreintes décrivent une
-forme, mais **1 mesure sur 118** boucle. Les 401 empreintes restent à nommer
-si on veut en faire une partition et pas une ligne au catalogue. Beaucoup
-d'effort pour une seule partition ; à faire en dernier, ou jamais.
+`2018-demonic-thesis`, 118 mesures dont **une** bouclait. Elle a été publiée un
+temps, sur la règle d'alors — une mesure jouable suffisait — ce qui en faisait
+une entrée de catalogue avec une portée dessinée dessous. Le plancher de
+livraison l'a écartée, et `HELD-BACK.md` en donne la raison mesurée : 52 de ses
+mesures ne contiennent que des silences.
+
+La rouvrir voudrait dire nommer **401 empreintes** à l'œil pour une seule
+partition. C'est décidé : on ne le fera pas. L'entrée ne survit que pour dire
+que ce n'est pas un oubli.
 
 ### A6 — Aucune portée trouvée · 3 séquences, trois causes distinctes
 
