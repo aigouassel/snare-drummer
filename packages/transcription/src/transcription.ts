@@ -38,7 +38,7 @@ type RawBar = {
   at?: { page: number; system: number; x0: number; x1: number }
 }
 
-type RawPiece = {
+export type RawPiece = {
   id: string
   title: string
   workId: string
@@ -88,6 +88,13 @@ const toBar = (raw: RawBar): Bar => {
     ...(raw.at ? { at: raw.at } : {}),
   }
 }
+
+/**
+ * A raw piece, judged. Exported because the app's own editor writes the same
+ * shape the pipeline does -- one file format, whoever produced it -- and a
+ * piece typed by hand deserves exactly the verdict a read one gets.
+ */
+export const fromRaw = (raw: RawPiece): Piece => toPiece(raw)
 
 const toPiece = (raw: RawPiece): Piece => ({
   id: raw.id,
