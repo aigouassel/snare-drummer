@@ -9,11 +9,15 @@ under `pipeline/`.
 ## Why this is harder than it looks
 
 This package reads scores **nobody will proof read**. A parser that mis-reads
-does not crash; it produces a plausible score that is wrong. Fifteen distinct
+does not crash; it produces a plausible score that is wrong. Some twenty distinct
 causes of that have been found here, and **not one raised an error** — a regex
 stopping at a nested `>>`, one-byte reads of two-byte glyph codes, a fingerprint
 that measured a shape *and how many curve segments its author used*, a staff
 line swallowed by a beam so that one score read eight times too fast.
+
+Every one of them is written up in [`FAILURES.md`](FAILURES.md), grouped by
+shape rather than by date — the next one will not be any of them, it will be one
+of those kinds.
 
 Two rules follow, and everything here obeys them:
 
