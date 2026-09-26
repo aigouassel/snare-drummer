@@ -13,19 +13,18 @@ To re-derive anything here:
 
 ```bash
 # fetch a score by its catalogue id
-python3 pipeline/fetch.py <catalogue-id>
+pipeline/.venv/bin/python3 -m pipeline.corpus.fetch <catalogue-id>
 
 # look at the symbols a family uses, to name them
-pipeline/.venv/bin/python pipeline/label.py 'work/*.pdf' \
+pipeline/.venv/bin/python3 -m pipeline.naming.label 'work/*.pdf' \
     --family Opus --out work/opus-sheet.png --json work/opus-listing.json
 
-# read one score into a piece
-pipeline/.venv/bin/python pipeline/transcribe.py \
-    work/<id>.pdf work/<id>.meta.json src/pieces/<id>.json
+# read one score into a piece, and update the manifest with it
+pipeline/.venv/bin/python3 -m pipeline.cli transcribe <catalogue-id>
 ```
 
 The one thing that *is* committed is the vocabulary in
-`pipeline/vocabulary/*.json`: the labels read off a contact sheet once per
+`pipeline/naming/tables/*.json`: the labels read off a contact sheet once per
 engraving family. That is the human judgement in this pipeline, it is small,
 and it is what makes every other score in the family readable without
 re-deriving anything.

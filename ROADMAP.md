@@ -100,7 +100,7 @@ Le reste du tableau, pour situer :
 | symbole inconnu | 53 (0,8 %) |
 
 Ces sept lignes comptent les mesures **livrées**, comme `bars_total` dans
-`batch.py`, qui n'incrémente qu'après le `continue` écartant une pièce sans
+`run/batch.py`, qui n'incrémente qu'après le `continue` écartant une pièce sans
 rien de jouable. Le même décompte étendu aux onze séquences écartées donne
 un autre total, juste aussi et portant le même nom.
 
@@ -199,7 +199,7 @@ bloque en premier mais son vocabulaire.
 
 ### C1 — Aucun test côté Python
 
-Le pipeline n'a que la mesure de masse (`batch.py`) pour preuve. `text.py`
+Le pipeline n'a que la mesure de masse (`run/batch.py`) pour preuve. `text.py`
 mérite mieux : les trois dialectes de tempo (`q = 168`, le clavier Sibelius
 `q»¡§•`, `mm=180`) et l'établissement des lignes de base sont exactement le
 genre de code qui casse en silence. L'ajout de pytest a été écarté en cours de

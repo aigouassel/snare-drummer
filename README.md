@@ -189,14 +189,21 @@ that drift.
 ## The pipeline
 
 ```bash
-cd packages/transcription/pipeline
-.venv/bin/python fetch.py --search "blue devils 2019"   # find a score
-.venv/bin/python batch.py --sample 80                   # read a spread of them
-.venv/bin/python batch.py 2019-circus-1 2019-circus-2   # or named ones
+cd packages/transcription
+P=pipeline/.venv/bin/python3
 
-.venv/bin/python label.py '../work/corpus/*.pdf' \
-    --family Opus --out ../work/opus-sheet.png --json ../work/opus-listing.json
+$P -m pipeline.cli list --held               # what is not shipped, and why
+$P -m pipeline.cli show 2019-circus-1        # one score, bar by reason
+$P -m pipeline.cli transcribe 2019-circus-1  # read it; the manifest follows
+
+$P -m pipeline.run.batch --sample 80         # a fixed spread, to judge a change
+$P -m pipeline.corpus.fetch --search "blue devils 2019"
+$P -m pipeline.naming.label 'work/corpus/*.pdf' \
+    --family Opus --out work/opus-sheet.png --json work/opus-listing.json
 ```
+
+`packages/transcription/README.md` has the rest of the command line, and the
+layout of `pipeline/`, which follows the path a page takes.
 
 Four layers, each trusting only what the one below actually read:
 
@@ -242,7 +249,7 @@ transcribed piece carries the URL it was read from — so the source is one clic
 from the page that displays it, and the downloaded copy is a working file.
 
 The one thing committed from the pipeline's own work is the vocabulary in
-`pipeline/vocabulary/*.json`: the labels read off a contact sheet once per
+`pipeline/naming/tables/*.json`: the labels read off a contact sheet once per
 family. That is the only human judgement in the pipeline, it is small, and it
 is what makes every other score readable without re-deriving anything.
 
