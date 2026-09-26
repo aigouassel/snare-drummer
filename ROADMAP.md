@@ -18,9 +18,10 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > fichier.
 
 > État au 26 septembre 2026 : 116 des 128 séquences du répertoire sont
-> jouables, 6 132 mesures dont 3 485 jouables (56,8 %). Le taux monte de
-> 55,8 % en perdant une séquence : `2018-demonic-thesis` apportait 118 mesures
-> pour une seule jouable, et un plancher de livraison l'a écartée. Le détail de ce qui
+> jouables, 6 132 mesures dont 3 662 jouables (59,7 %). Les barres de trémolo
+> étaient comptées comme des ligatures, ce qui divisait leur note par deux :
+> 6 619 traits dans 47 partitions, +177 mesures jouables une fois lues comme
+> les roulements qu'elles sont. Le détail de ce qui
 > est écarté vit dans [`packages/transcription/HELD-BACK.md`](packages/transcription/HELD-BACK.md),
 > qui est généré et ne peut pas vieillir.
 
@@ -74,9 +75,21 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**1 235 mesures (20,1 %) dont les durées ne bouclent pas.** C'était 44,5 % en
-début de parcours ; quinze causes distinctes ont été trouvées et corrigées,
+**1 058 mesures (17,3 %) dont les durées ne bouclent pas.** C'était 44,5 % en
+début de parcours ; seize causes distinctes ont été trouvées et corrigées,
 aucune deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
+
+Ce qui a été mesuré en cherchant la seizième, et qui évite de refaire le
+diagnostic : l'écart `lu − attendu` en noires est un bien meilleur instrument
+que le rapport, qui mélange les métriques — une croche manquante vaut 15/16 en
+4/4 et 7/8 en 2/4, donc une cause apparaît sous deux nombres. Le taux par
+famille de gravure est ce qui a désigné le coupable : 9,8 % des mesures Bravura
+contre 0,2 % des Opus, un facteur 40 qui ne peut pas être du bruit. Trois
+hypothèses ont été écartées par la mesure avant la bonne — barre de mesure
+manquée (les mesures fautives ne sont pas plus larges), ligatures tracées au
+lieu d'être remplies (une seule partition sur 203), fioritures mal classées
+(MuseScore les grave à 0,700 de la taille pleine, Opus à 0,602, les deux du bon
+côté du seuil).
 
 La méthode qui marche : prendre **une** mesure fautive, la découper de son PDF
 avec ses coordonnées (`bar.py` dans le bac à sable le fait), et comparer ce que
@@ -93,8 +106,8 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 3 485 (56,8 %) |
-| **somme fausse** | **1 235 (20,1 %)** |
+| jouables | 3 662 (59,7 %) |
+| **somme fausse** | **1 058 (17,3 %)** |
 | que des silences (vérifiées, muettes) | 886 (14,4 %) |
 | sans métrique | 314 (5,1 %) |
 | vides | 84 (1,4 %) |

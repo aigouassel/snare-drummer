@@ -35,6 +35,23 @@ STEM_MIN = 1.6
 STEM_MAX = 6.5
 
 BEAM_MIN_LENGTH = 0.8      # spaces; shorter than this is a stub, still a beam
+
+# A tremolo stroke -- the slash that says "roll this note" -- is filled, and
+# short, and so is a beam stub. What separates them is slant.
+#
+# Measured over the whole corpus: of 52,188 filled horizontals long enough to
+# span a run, all but 25 slant less than 0.2, so that is as steep as beaming
+# gets here. Among the short ones the distribution is in two pieces -- 9,704
+# level, then a near-empty band, then some eight thousand at 0.20 and above,
+# with barely 130 in between. A stub belongs to a beam group and shares its
+# slope, so a stub slanting more steeply than any beam does is not a stub.
+#
+# It is worth the trouble because of what happens otherwise. A tremolo stroke
+# counted as a beam halves its note, and the bar comes up short by exactly
+# that difference -- no symbol is unnamed, nothing is unread, and the bar is
+# simply wrong. 6,619 of them across 47 scores.
+TREMOLO_SLOPE = 0.2        # steeper than any beam this catalogue draws
+TREMOLO_LENGTH = 2.5       # spaces; longer than this is a beam, however slanted
 BEAM_MAX_THICKNESS = 0.9   # spaces; a beam is about half a space
 NEAR_STEM = 0.35           # spaces; how far a stem may sit from a head's edge
 DOT_REACH = 2.2            # spaces to the right of a notehead
@@ -113,6 +130,33 @@ def _staff_line_edges(edges, staves):
     return drop
 
 
+def _is_tremolo(dx, dy, spacing):
+    """A short filled run, slanted more steeply than beaming ever is here."""
+    return dx < TREMOLO_LENGTH * spacing and dy > TREMOLO_SLOPE * dx
+
+
+def tremolos(segments, spacing):
+    """The tremolo strokes on a page, each as the point it crosses a stem.
+
+    Returned rather than merely refused. A stroke dropped from the beams and
+    nowhere else would make the bar close while losing the roll the page
+    prints -- a score that reads as plain eighths where the engraver wrote a
+    roll, correct in its arithmetic and wrong on its face. That is the one
+    kind of error this project holds to be worse than an open bar.
+    """
+    out = []
+    for s in segments:
+        if not s['fill']:
+            continue
+        dx, dy = abs(s['x1'] - s['x0']), abs(s['y1'] - s['y0'])
+        if dx < BEAM_MIN_LENGTH * spacing or dy > 0.5 * dx:
+            continue
+        if _is_tremolo(dx, dy, spacing):
+            out.append({'x': (s['x0'] + s['x1']) / 2,
+                        'y': (s['y0'] + s['y1']) / 2})
+    return out
+
+
 def beams(segments, spacing, staves=()):
     """The beams on a page, each as the span it covers.
 
@@ -123,6 +167,10 @@ def beams(segments, spacing, staves=()):
 
     `staves` is what layout.py read off the same page, and it is what keeps a
     drawn page's own staff lines out of the count; see `_is_staff_line`.
+
+    Tremolo strokes are filled too, and short enough to pass for a beam stub.
+    They are taken out here and read by `tremolos()` instead; leaving them in
+    halved a note apiece.
     """
     edges = []
     for s in segments:
@@ -130,6 +178,8 @@ def beams(segments, spacing, staves=()):
             continue
         dx, dy = abs(s['x1'] - s['x0']), abs(s['y1'] - s['y0'])
         if dx < BEAM_MIN_LENGTH * spacing or dy > 0.5 * dx:
+            continue
+        if _is_tremolo(dx, dy, spacing):
             continue
         x0, x1 = min(s['x0'], s['x1']), max(s['x0'], s['x1'])
         y = (s['y0'] + s['y1']) / 2

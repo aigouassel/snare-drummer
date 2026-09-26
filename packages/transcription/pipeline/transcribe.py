@@ -696,7 +696,7 @@ def _by_spacing(onsets, bar, total):
     return [snap(float(total) * gap / span)[0] for gap in gaps]
 
 
-def decorate(events, named, onsets):
+def decorate(events, named, onsets, strokes=()):
     """Hang articulations on the note they sit above or below.
 
     Proximity is the only available evidence -- a PDF says where a mark was
@@ -708,10 +708,16 @@ def decorate(events, named, onsets):
     of the bar. Rebuilding the list here counted grace noteheads as notes
     while reconstruction had folded them into the note they decorate, so in
     every bar holding a flam each accent landed one note late.
+
+    `strokes` are the tremolo slashes drawn as paths rather than typed as a
+    glyph, which is how several engravers here write them. They say the same
+    thing as `tremolo.slash` and are hung the same way; the only difference is
+    which stage found them.
     """
     marks = [(g, s) for g, s in named
              if s in ('articulation.accent', 'articulation.marcato',
                       'tremolo.slash', 'roll.buzz')]
+    marks += [(stroke, 'tremolo.slash') for stroke in strokes]
     for mark, symbol in marks:
         if not onsets:
             break
@@ -878,6 +884,8 @@ def transcribe(path, entry):
                 'beams': rhythm.beams(page['segments'], system['spacing'],
                                       systems),
                 'stems': rhythm.stems(page['segments'], system['spacing']),
+                'tremolos': rhythm.tremolos(page['segments'],
+                                            system['spacing']),
             }
 
         for bar in found:
@@ -936,7 +944,14 @@ def transcribe(path, entry):
 
             events, unnamed, source, onsets = reconstruct(
                 named, bar, meter, context)
-            events = decorate(events, named, onsets)
+            # A stroke belongs to this bar if it was drawn inside it, on this
+            # system's staff. Both tests are needed: systems share x, bars
+            # share y.
+            strokes = [t for t in geometry[bar['system']]['tremolos']
+                       if bar['x0'] <= t['x'] <= bar['x1']
+                       and system['bottom'] - system['spacing']
+                       <= t['y'] <= system['top'] + 2 * system['spacing']]
+            events = decorate(events, named, onsets, strokes)
             # The page's own words, last: they say who plays the note and how
             # loud, neither of which any other reading can recover.
             events = annotate(
