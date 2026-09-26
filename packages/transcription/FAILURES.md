@@ -177,14 +177,38 @@ ends at a typographic gap.
 four triplets came out as runs 0–3, 3–6, 5–8 and 9–12: one note had the ratio
 applied twice and another never got it. Runs are now disjoint and in order.
 
-**A tuplet number read as a count of noteheads.** *Diagnosed, not fixed.* A
-tuplet number counts **subdivisions**, not heads: "9" means nine units in the
-time of eight, and if the group mixes values the number of heads has nothing to
-do with the figure. `tuplet_groups` looks for exactly `count` consecutive
-onsets, which is true only of a homogeneous group — the common case, which is
-what makes the assumption look sound. 123 bars fail with a number dropped, 54 of
-them for want of room. Those groups carry a **bracket**, which states the extent
-outright; reading it is a new capability in `ink`, so it lives in `ROADMAP.md`.
+**A tuplet number read as a count of noteheads.** A tuplet number counts
+**subdivisions**, not heads: "9" means nine units in the time of eight, and if
+the group mixes values the number of heads has nothing to do with the figure.
+`tuplet_groups` looked for exactly `count` consecutive onsets, which is true
+only of a homogeneous group — the common case, which is what made the
+assumption look sound. On Finale a "3" over a quarter and an eighth spans two
+heads; on MuseScore a "9" spans seven. Those groups carry a **bracket**, which
+states the extent outright, and `rhythm.brackets()` now reads it: a level run
+with a short tick turned in at an end. The number's count is then used for the
+ratio only.
+
+**A beam's short sides taken for a bracket's ticks.** The first bracket reader
+found 2,700 brackets on a page of 33 bars and displaced 1,324 beams. A filled
+beam is a quadrilateral, and its two short sides are verticals exactly as tall
+as the beam is thick, standing at its ends — which is what a tick looks like.
+What a beam has and a bracket has not is the *second long edge*, so a run with
+a co-extent partner a beam's thickness away is a beam whatever stands at its
+ends. Found on the fixed sample, where the playable count halved. The drawn
+pages then broke 22 more bars: their beams are *stroked*, with no second edge
+to give them away, and a stub of secondary beam shifted triplets by a note. What
+every beam has, filled or stroked, is the stems that end on it — a run with a
+stem through it is a beam, and a bracket stands clear of the notes.
+
+**A digit placed at its word's x.** MuseScore draws a bracket's two ends as
+glyphs of the music font, so a bracketed "3" reaches the text reader as one
+word of three glyphs, `\ue190 3 \ue190`. The digit's position was estimated
+as the word's x plus half a type size per character — counting only the
+characters kept after stripping the marks — which put it at the bracket's left
+end instead of in the gap. Read against the bracket, the left half alone then
+"contained" the number, and a triplet came out as one note in three. Words now
+keep the glyphs they were spelled from, and a digit stands where its glyph
+does.
 
 ---
 

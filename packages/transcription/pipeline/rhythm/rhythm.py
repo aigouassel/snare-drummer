@@ -183,7 +183,7 @@ def tremolos(segments, spacing):
     return out
 
 
-def beams(segments, spacing, staves=()):
+def beams(segments, spacing, staves=(), found=()):
     """The beams on a page, each as the span it covers.
 
     A beam is filled, not stroked -- it is a quadrilateral the engraver fills,
@@ -196,9 +196,11 @@ def beams(segments, spacing, staves=()):
 
     Tremolo strokes are filled too, and short enough to pass for a beam stub.
     They are taken out here and read by `tremolos()` instead; leaving them in
-    halved a note apiece.
+    halved a note apiece. So is a MuseScore tuplet bracket, a filled level run
+    a space above the staff: `found` are the brackets already read, and an
+    edge that is one is not a beam either.
     """
-    found = stems(segments, spacing)
+    stems_found = stems(segments, spacing)
     edges = []
     for s in segments:
         if not s['fill']:
@@ -206,10 +208,13 @@ def beams(segments, spacing, staves=()):
         dx, dy = abs(s['x1'] - s['x0']), abs(s['y1'] - s['y0'])
         if dx < BEAM_MIN_LENGTH * spacing or dy > 0.5 * dx:
             continue
-        if _is_tremolo(s, spacing, found):
+        if _is_tremolo(s, spacing, stems_found):
             continue
         x0, x1 = min(s['x0'], s['x1']), max(s['x0'], s['x1'])
         y = (s['y0'] + s['y1']) / 2
+        if any(abs(b['y'] - y) <= 0.2 * spacing and abs(b['x0'] - x0) <= 0.5 * spacing
+               and abs(b['x1'] - x1) <= 0.5 * spacing for b in found):
+            continue
         edges.append((x0, x1, y))
     edges = [e for i, e in enumerate(edges)
              if i not in _staff_line_edges(edges, staves)]
@@ -404,6 +409,29 @@ def written(symbol, x, y, ink_y, widths, context):
     return dotted(length, dots(x, y, context['dots'], spacing))
 
 
+# A tuplet bracket, as engraved here: a level run with a short vertical tick
+# turned in at one or both ends. MuseScore fills it and draws it whole, the
+# number sitting above; Finale strokes it in two halves with the number in the
+# gap. Neither a beam, a hairpin nor a staff line carries the tick, which is
+# what makes it recognisable without a threshold on anything else.
+BRACKET_MIN = 1.5          # spaces; shorter is a tick or an accent's stroke
+BRACKET_MAX = 20.0         # spaces; longer is a hairpin or a rule
+TICK_MIN, TICK_MAX = 0.4, 1.5   # spaces; the turned-in end
+TICK_REACH = 0.3           # spaces; how far a tick may sit from the run's end
+BRACKET_LEVEL = 2.0        # spaces; how far a bracket may sit from its number
+# A bracket is looked for only where a number can be: transcribe.py reads
+# tuplet numbers within TUPLET_REACH of the staff, and the bracket sits within
+# BRACKET_LEVEL of its number. Mirrored here rather than imported, because
+# rhythm.py is what transcribe.py imports.
+BRACKET_REACH = 4.0 + BRACKET_LEVEL
+BRACKET_GAP = 3.0          # spaces; the widest gap a number is set into
+# The bracket's left tick stands at the first note's stem, and a notehead
+# sits to the left of its stem: measured, the first onset's origin is 1.2
+# spaces left of the tick on MuseScore and level with it on Finale, while the
+# note *after* the group starts a full space past the right tick. So the
+# reach is asymmetric on purpose.
+BRACKET_LEAD = 1.5         # spaces a group's first onset may precede its tick
+
 # How many notes a tuplet number stands in the time of, when the engraver
 # prints only the count. Three in the time of two, five in the time of four:
 # the convention is the largest power of two below the number, and the two
@@ -411,14 +439,89 @@ def written(symbol, x, y, ink_y, widths, context):
 IN_THE = {2: 3, 3: 2, 4: 3, 5: 4, 6: 4, 7: 4, 9: 8, 10: 8, 11: 8, 13: 8}
 
 
-def tuplet_groups(numbers, onsets, spacing):
+def brackets(segments, spacing, system):
+    """The tuplet brackets on a system, each as the span it covers.
+
+    Returned as drawn, halves and all: which halves belong together is decided
+    beside the number they flank, in `tuplet_groups`.
+    """
+    low = system['bottom'] - BRACKET_REACH * spacing
+    high = system['top'] + BRACKET_REACH * spacing
+    ticks, runs = [], []
+    for seg in segments:
+        dx, dy = abs(seg['x1'] - seg['x0']), abs(seg['y1'] - seg['y0'])
+        y = (seg['y0'] + seg['y1']) / 2
+        if not (low <= y <= high):
+            continue
+        if dx <= 0.2 * spacing and TICK_MIN * spacing <= dy <= TICK_MAX * spacing:
+            ticks.append((seg['x0'], min(seg['y0'], seg['y1']),
+                          max(seg['y0'], seg['y1'])))
+        elif dy <= 0.2 * spacing and \
+                BRACKET_MIN * spacing <= dx <= BRACKET_MAX * spacing:
+            if system['bottom'] - 0.5 * spacing <= y <= system['top'] + 0.5 * spacing:
+                continue
+            runs.append((min(seg['x0'], seg['x1']), max(seg['x0'], seg['x1']), y))
+
+    # A filled beam is a quadrilateral, and its two short sides are verticals
+    # exactly as tall as the beam is thick, standing at its ends -- which is
+    # what a tick looks like. What a beam has and a bracket has not is the
+    # second long edge: a run with a co-extent partner a beam's thickness away
+    # is a beam, whatever stands at its ends.
+    def paired(x0, x1, y):
+        return any(abs(a0 - x0) <= 0.4 * spacing and abs(a1 - x1) <= 0.4 * spacing
+                   and 0 < abs(b - y) <= BEAM_MAX_THICKNESS * spacing
+                   for a0, a1, b in runs)
+
+    # And a beam drawn as a stroke -- which the drawn pages do -- has no
+    # second edge to give it away. What every beam has, filled or stroked, is
+    # the stems that end on it: a run with a stem through it is a beam, and a
+    # bracket stands clear of the notes by construction. Measured over the
+    # repertoire, 541 of the runs found on Opus pages had a stem through them
+    # and 120 of the Ash ones; those were the beams shifting triplets by a note.
+    stems_found = stems(segments, spacing)
+    out = []
+    for x0, x1, y in runs:
+        if paired(x0, x1, y) or _spans(x0, x1, y, stems_found, spacing):
+            continue
+        turned = any(
+            (abs(tx - x0) <= TICK_REACH * spacing or abs(tx - x1) <= TICK_REACH * spacing)
+            and ty0 - TICK_REACH * spacing <= y <= ty1 + TICK_REACH * spacing
+            for tx, ty0, ty1 in ticks)
+        if turned:
+            out.append({'x0': x0, 'x1': x1, 'y': y})
+    return out
+
+
+def _bracket_for(x, y, found, spacing):
+    """The span a number's bracket covers, or None when it has none."""
+    level = [b for b in found if abs(b['y'] - y) <= BRACKET_LEVEL * spacing]
+    # Inset by half a space: a number standing at the very end of a run is
+    # one set into the gap between two halves, measured a little short.
+    whole = [b for b in level
+             if b['x0'] + 0.5 * spacing <= x <= b['x1'] - 0.5 * spacing]
+    if whole:
+        return min(b['x0'] for b in whole), max(b['x1'] for b in whole)
+    left = [b for b in level if b['x1'] <= x <= b['x1'] + BRACKET_GAP * spacing]
+    right = [b for b in level if b['x0'] - BRACKET_GAP * spacing <= x <= b['x0']]
+    if left and right:
+        return min(b['x0'] for b in left), max(b['x1'] for b in right)
+    return None
+
+
+def tuplet_groups(numbers, onsets, spacing, found=()):
     """Which notes each tuplet number governs, and by what ratio.
 
-    A tuplet number is printed over the group it applies to, so the group is
-    the run of notes it sits over: the `count` consecutive onsets whose span
-    is centred nearest the number. Nothing else on the page states the extent
-    -- a bracket does when there is one, and beamed tuplets, which is most of
-    them here, have no bracket at all.
+    A number counts subdivisions, not noteheads: "9" is nine units in the time
+    of eight, and a group may spell those nine units in seven notes of mixed
+    value, or a "3" its three in two. Nothing about the count says how many
+    heads there are. What does say is the bracket, when one is drawn -- so a
+    number with a bracket beside it takes every onset the bracket spans, and
+    the count is used only for the ratio.
+
+    Without a bracket the extent is guessed, and the guess is the old one: the
+    `count` consecutive onsets whose span is centred nearest the number. It is
+    right for a homogeneous group, which is what a beamed tuplet without a
+    bracket almost always is.
 
     The runs are disjoint and in order, which is not a refinement but the
     whole difference between right and wrong. Chosen independently, two
@@ -433,12 +536,32 @@ def tuplet_groups(numbers, onsets, spacing):
     """
     groups = []
     centres = [g['x'] for g, _ in onsets]
+    taken = set()
+
+    # Stated extents first. A bracket that spans nothing, or spans notes some
+    # other bracket already claimed, is not trusted over the guess below.
+    guessed = []
+    for number in sorted(numbers):
+        x, count, inthe = number[0], number[1], number[2]
+        y = number[3] if len(number) > 3 else None
+        span = _bracket_for(x, y, found, spacing) if y is not None else None
+        members = [] if span is None else [
+            i for i, c in enumerate(centres)
+            if span[0] - BRACKET_LEAD * spacing <= c <= span[1] and i not in taken]
+        if not members or members != list(range(members[0], members[-1] + 1)):
+            guessed.append((x, count, inthe))
+            continue
+        groups.append((members[0], members[-1] + 1, Fraction(inthe, count)))
+        taken.update(members)
+
     floor = 0
-    for x, count, inthe in sorted(numbers):
+    for x, count, inthe in guessed:
         if count < 2 or floor + count > len(centres):
             continue
         best, best_gap = None, None
         for start in range(floor, len(centres) - count + 1):
+            if any(i in taken for i in range(start, start + count)):
+                continue
             run = centres[start:start + count]
             gap = abs((run[0] + run[-1]) / 2 - x)
             if best_gap is None or gap < best_gap:
@@ -446,5 +569,6 @@ def tuplet_groups(numbers, onsets, spacing):
         if best is None or best_gap > spacing * 12:
             continue
         groups.append((best, best + count, Fraction(inthe, count)))
+        taken.update(range(best, best + count))
         floor = best + count
-    return groups
+    return sorted(groups)

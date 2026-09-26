@@ -277,7 +277,8 @@ def reconstruct(named, bar, meter, context):
     dropped = 0
     if all(length is not None for length in lengths):
         groups = rhythm.tuplet_groups(context['tuplets'], onsets,
-                                      context['spacing'])
+                                      context['spacing'],
+                                      context.get('brackets', ()))
         # A number the matcher could not place is not applied, and the bar
         # says so. Its arithmetic will usually fail; when by coincidence it
         # does not, the bar is still one whose printed ratio went unread.
@@ -590,11 +591,21 @@ def tuplet_numbers(named, system, words=(), x0=None):
                 continue
             if x0 is not None and word['x'] - x0 < BAR_NUMBER_EDGE * system['spacing']:
                 continue
-            for offset, character in enumerate(characters):
-                marks.append(({'x': word['x'] + offset * word['size'] * 0.5,
-                               'y': word['y']},
-                              'text.colon' if character == ':'
-                              else f'digit.{character}'))
+            # Each digit at the x of the glyph that drew it. The old estimate
+            # -- the word's x plus half a type size per character -- counted
+            # only the characters kept above, so a digit wedged between two
+            # bracket-end glyphs was placed at the bracket's left end; read
+            # against the bracket, that made the left half alone look like the
+            # whole, and a triplet came out as one note in three.
+            for text, gx, gsize in word.get('glyphs', [(word['text'], word['x'],
+                                                        word['size'])]):
+                for offset, character in enumerate(text):
+                    if not (character.isdigit() or character == ':'):
+                        continue
+                    marks.append(({'x': gx + offset * gsize * 0.5,
+                                   'y': word['y']},
+                                  'text.colon' if character == ':'
+                                  else f'digit.{character}'))
         marks.sort(key=lambda p: p[0]['x'])
 
     if not marks:
@@ -612,6 +623,7 @@ def tuplet_numbers(named, system, words=(), x0=None):
     out = []
     for cluster in clusters:
         x = sum(g['x'] for g, _ in cluster) / len(cluster)
+        y = sum(g['y'] for g, _ in cluster) / len(cluster)
         if any(s == 'text.colon' for _g, s in cluster):
             left, right, seen = [], [], False
             for _g, s in cluster:
@@ -630,7 +642,9 @@ def tuplet_numbers(named, system, words=(), x0=None):
                 continue
             inthe = rhythm.IN_THE[count]
         if 2 <= count <= 32 and 1 <= inthe <= 32:
-            out.append((x, count, inthe))
+            # The height travels with the number so that its bracket, which
+            # sits at that height, can be found beside it.
+            out.append((x, count, inthe, y))
     return out
 
 
@@ -927,9 +941,11 @@ def transcribe(path, entry):
 
         geometry = {}
         for index, system in enumerate(systems):
+            hooked = rhythm.brackets(page['segments'], system['spacing'], system)
             geometry[index] = {
+                'brackets': hooked,
                 'beams': rhythm.beams(page['segments'], system['spacing'],
-                                      systems),
+                                      systems, hooked),
                 'stems': rhythm.stems(page['segments'], system['spacing']),
                 'tremolos': rhythm.tremolos(page['segments'],
                                             system['spacing']),
@@ -984,6 +1000,7 @@ def transcribe(path, entry):
                 'headWidth': notehead_ink,
                 'lines': len(system.get('lines') or []),
                 'tuplets': tuplet_numbers(named, system, in_bar, bar['x0']),
+                'brackets': geometry[bar['system']]['brackets'],
             }
             if not any(role(s) in RHYTHMIC for _g, s in named) and \
                     bar['x1'] - bar['x0'] < COURTESY_STRIP * system['spacing']:

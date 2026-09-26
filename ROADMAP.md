@@ -17,14 +17,15 @@ aujourd'hui ce qu'on lui a demandé de faire.
 > commit, dans le `README` ou dans `CLAUDE.md` ; le reste s'en va avec le
 > fichier.
 
-> État au 26 septembre 2026 : **68 des 128 séquences** du répertoire sont
-> jouables, 3 174 mesures dont 2 157 jouables (68,0 %). C'était 116 séquences
+> État au 26 septembre 2026 : **69 des 128 séquences** du répertoire sont
+> jouables, 3 180 mesures dont 2 194 jouables (69,0 %). C'était 116 séquences
 > et 3 672 mesures jouables le matin même : 48 séquences ont été écartées
 > parce qu'un chiffre de n-olet y reste sans ses notes, décision prise avec le
 > coût en vue — 1 515 mesures jouables retirées pour 110 mesures fautives. Le
 > taux monte parce que le dénominateur part avec elles, pas parce que la
 > lecture s'est améliorée ; ce qui l'a améliorée, c'est la lecture des barres
-> de trémolo comme les roulements qu'elles sont (+177 mesures). Le détail de ce qui
+> de trémolo comme les roulements qu'elles sont (+177 mesures), puis celle des
+> crochets de n-olet (+37 mesures, 3 séquences revenues, 2 sorties). Le détail de ce qui
 > est écarté vit dans [`packages/transcription/HELD-BACK.md`](packages/transcription/HELD-BACK.md),
 > qui est généré et ne peut pas vieillir.
 
@@ -78,7 +79,7 @@ la main (panoramique ? rien ?).
 
 ### M1 — Finir les corrections de mesures
 
-**391 mesures (12,3 %) dont les durées ne bouclent pas**, sur les 68
+**359 mesures (11,3 %) dont les durées ne bouclent pas**, sur les 69
 séquences livrées. C'était 44,5 % en
 début de parcours ; seize causes distinctes ont été trouvées et corrigées,
 aucune deux fois la même. Ce qui reste est une longue traîne sans coupable unique.
@@ -95,9 +96,8 @@ lieu d'être remplies (une seule partition sur 203), fioritures mal classées
 (MuseScore les grave à 0,700 de la taille pleine, Opus à 0,602, les deux du bon
 côté du seuil).
 
-Une troisième cause est **diagnostiquée, pas corrigée, et tranchée** : les
-séquences qui la portent ne sont plus livrées. Le diagnostic vaut d'être
-gardé : `rhythm.tuplet_groups` cherche exactement `count` onsets
+Une troisième cause est **corrigée là où la page le permet, et tranchée
+ailleurs**. Le diagnostic vaut d'être gardé : `rhythm.tuplet_groups` cherche exactement `count` onsets
 consécutifs sous un chiffre de n-olet. Or un chiffre compte des **subdivisions,
 pas des têtes de note** — « 9 » veut dire neuf unités dans le temps de huit, et
 si le groupe mélange les valeurs, le nombre de têtes n'a plus rien à voir avec
@@ -107,18 +107,33 @@ Mesuré : 123 mesures échouent avec au moins un chiffre lâché, dont 54 pour
 
 La page dit pourtant l'étendue quand elle trace un **crochet**, ce qui est le
 cas de ces groupes-là : le crochet énonce ce que rien d'autre n'énonce.
-`CLAUDE.md` a raison de dire que la plupart des n-olets ligaturés n'en portent
-pas — mais ceux qui échouent en portent. Lire le crochet est une capacité
-nouvelle dans `ink`, pas une réparation, d'où son inscription ici.
+`rhythm.brackets()` lit maintenant le crochet : une course plate avec un
+crochet vertical rentré à un bout, **qu'aucune hampe ne traverse** — une
+ligature, remplie ou tracée, a des hampes qui finissent dessus, et c'est ce qui
+les distingue, pas un seuil. Deux formes lues : MuseScore (remplie, continue,
+le chiffre au-dessus) et Finale (tracée en deux moitiés, le chiffre dans le
+trou). Le chiffre lui-même est placé au x de *son* glyphe et non de son mot,
+faute de quoi un « 3 » coincé entre les deux bouts du crochet se retrouvait à
+l'extrémité gauche. Effet : 30 mesures rendues, 3 séquences revenues, 1 mesure
+et 2 séquences perdues — voir ci-dessous.
 
-**Décision** : plutôt que de nommer le refus mesure par mesure, comme pour les
-divisi, toute séquence contenant un chiffre non rattaché est écartée entière.
-La mesure porte `droppedTuplets`, `batch.py` retient la séquence, et
-`HELD-BACK.md` la liste sous sa raison. Le coût, mesuré avant de décider : 48
-séquences sur 116 et 1 515 mesures jouables sur 3 672, pour 110 mesures
-fautives — la plupart de ces séquences n'en portaient qu'une. Lire les crochets
-rend tout cela d'un coup, ce qui fait de cette entrée la plus rentable de la
-liste.
+**Décision** : toute séquence contenant un chiffre non rattaché est écartée
+entière, plutôt que marquée mesure par mesure comme les divisi. La mesure porte
+`droppedTuplets`, `batch.py` retient la séquence, et `HELD-BACK.md` la liste
+sous sa raison. Le coût au moment de décider : 48 séquences sur 116 et 1 515
+mesures jouables sur 3 672, pour 110 mesures fautives.
+
+**Deux pistes, mesurées et non creusées.** Sur les séquences encore écartées,
+les chiffres lâchés sont *sans crochet trouvé* : 81 « trop loin ou autre » et
+**52 « 3 demandées, 2 libres »** — la signature Finale (noire + croche) sur des
+pages où le détecteur ne voit pas de crochet. Soit il n'y en a pas, soit sa
+forme échappe aux constantes `BRACKET_*` ; regarder une de ces pages tranche.
+Et le groupe sous crochet prend parfois **une note de trop** : le premier onset
+s'aligne sur le crochet gauche en Finale et `BRACKET_LEAD` (1,5 interligne)
+l'englobe, ou le crochet déborde d'une note à droite. C'est ce qui a fait
+sortir `2017-opener-13` et `2018-movement-2-7`, et cassé la mesure 4 de
+`2016-movement-4-2`. `work/a4-tools/my.bardump.py <id> dropped` montre tout
+cela sans rien relire.
 
 Une deuxième cause a été identifiée et **écartée du compte plutôt que corrigée** :
 69 mesures sont des divisi, deux parties écrites sur une même portée, l'une
@@ -145,16 +160,14 @@ Le reste du tableau, pour situer :
 
 | | mesures |
 | --- | --- |
-| jouables | 2 157 (68,0 %) |
-| **somme fausse** | **391 (12,3 %)** |
-| que des silences (vérifiées, muettes) | 385 (12,1 %) |
-| sans métrique | 136 (4,3 %) |
+| jouables | 2 194 (69,0 %) |
+| **somme fausse** | **359 (11,3 %)** |
+| que des silences (vérifiées, muettes) | 388 (12,2 %) |
+| sans métrique, vides, symbole inconnu | 184 (5,8 %) |
 | lues à l'espacement | 50 (1,6 %) |
-| vides | 35 (1,1 %) |
-| symbole inconnu | 15 (0,5 %) |
 | deux voix sur la portée | 5 (0,2 %) |
 
-Ces huit lignes comptent les mesures **livrées**, comme `bars_total` dans
+Ces six lignes comptent les mesures **livrées**, comme `bars_total` dans
 `run/batch.py`, qui n'incrémente qu'après le `continue` écartant une pièce sans
 rien de jouable. Le même décompte étendu aux soixante séquences écartées donne
 un autre total, juste aussi et portant le même nom.
@@ -199,7 +212,7 @@ Les options :
 
 ---
 
-## 4 · Les 60 séquences écartées
+## 4 · Les 59 séquences écartées
 
 ### A2 — Aucun chiffrage imprimé · 2 séquences · **tranché : elles restent dehors**
 

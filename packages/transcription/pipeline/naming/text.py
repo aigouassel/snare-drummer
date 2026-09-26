@@ -140,13 +140,23 @@ def words(page):
             if current and glyph['x'] - current['x1'] < current['size'] * 0.45:
                 current['text'] += glyph['text']
                 current['x1'] = glyph['x'] + glyph['size'] * 0.55
+                current['glyphs'].append(
+                    (glyph['text'], glyph['x'], glyph['size']))
             else:
                 if current:
                     out.append(current)
+                # The glyphs are kept beside the text they spell, because a
+                # word's x is only where its *first* glyph stands. A tuplet
+                # number wedged between the two ends of its bracket -- three
+                # glyphs, two of them from the music font -- has its digit
+                # some way into the word, and estimating that from a type size
+                # put it at the bracket's end instead of in the gap.
                 current = {'text': glyph['text'], 'x': glyph['x'],
                            'x1': glyph['x'] + glyph['size'] * 0.55,
                            'y': glyph['y'], 'size': glyph['size'],
-                           'music': glyph['music'], 'font': glyph['font']}
+                           'music': glyph['music'], 'font': glyph['font'],
+                           'glyphs': [(glyph['text'], glyph['x'],
+                                       glyph['size'])]}
         if current:
             out.append(current)
             current = None
